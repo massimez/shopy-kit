@@ -1,0 +1,20 @@
+{
+	"editor.codeActionsOnSave": {
+		"source.fixAll.biome": "explicit"
+	},
+	"editor.defaultFormatter": "biomejs.biome",
+	"[javascript]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"[typescript]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"[typescriptreact]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"i18n-ally.localesPaths": ["./public/messages"],
+	"i18n-ally.keystyle": "nested",
+	"i18n-ally.sourceLanguage": "en",
+	"i18n-ally.displayLanguage": "en",
+	"cSpell.words": ["nums", "oklch", "shadcn", "Sonner", "tiktok"]
+}
