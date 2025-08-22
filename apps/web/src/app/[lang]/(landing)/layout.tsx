@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from "next-intl";
 
 import { FooterMain } from "@/app/[lang]/(landing)/layout/footer";
 import { HeaderMain } from "@/app/[lang]/(landing)/layout/header";
+import { ThemeProvider } from "@/app/providers/theme";
 import { ModalProvider } from "@/components/modals/modal-context";
 import ModalRenderer from "@/components/modals/modal-render";
 import { Toaster } from "@/components/ui/sonner";
@@ -31,7 +32,7 @@ export default async function DashBoardLayout({
 	const { lang } = await params;
 
 	return (
-		<html lang={lang} dir={"ltr"}>
+		<html lang={lang} dir={"ltr"} suppressHydrationWarning>
 			<body
 				className={cn(
 					"min-h-screen bg-gradient-to-br from-background via-background to-muted/20",
@@ -39,13 +40,20 @@ export default async function DashBoardLayout({
 				)}
 			>
 				<NextIntlClientProvider>
-					<ModalProvider>
-						<ModalRenderer />
-						<Toaster position="top-center" richColors />
-						<HeaderMain />
-						<main className="flex-1">{children}</main>
-						<FooterMain />
-					</ModalProvider>
+					<ThemeProvider
+						attribute="class"
+						defaultTheme="system"
+						enableSystem
+						disableTransitionOnChange
+					>
+						<ModalProvider>
+							<ModalRenderer />
+							<Toaster position="top-center" richColors />
+							<HeaderMain />
+							<main className="flex-1">{children}</main>
+							<FooterMain />
+						</ModalProvider>
+					</ThemeProvider>
 				</NextIntlClientProvider>
 			</body>
 		</html>

@@ -15,6 +15,7 @@ import { useParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { GitHubIcon } from "@/components/icons/brands/github-icon";
 import { useModal } from "@/components/modals/modal-context";
+import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useSession } from "@/lib/auth-client";
+import { ThemeToggle } from "./toogle-theme";
 
 const navigation = [
 	{ name: "Home", href: "/", icon: Zap },
@@ -93,13 +95,13 @@ export const HeaderMain = () => {
 						{/* Language Selector Dropdown */}
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
-								<button className="flex items-center space-x-2 rounded-lg px-3 py-2 font-medium text-muted-foreground text-sm transition-colors hover:bg-muted hover:text-foreground">
+								<Button variant="ghost">
 									<Globe className="h-4 w-4" />
 									<span className="hidden sm:inline">
 										{locales.find((l) => l.code === currentLocale)?.flag ??
 											"🌐"}
 									</span>
-								</button>
+								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end">
 								{locales.map((locale) => (
@@ -113,41 +115,37 @@ export const HeaderMain = () => {
 								))}
 							</DropdownMenuContent>
 						</DropdownMenu>
-
 						{/* Theme Toggle */}
-						<button className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-							{/* {theme === 'dark' ? (
-            <Sun className="h-5 w-5" />
-          ) : ( */}
-							<Moon className="h-5 w-5" />
-						</button>
-
+						<ThemeToggle />
 						{/* GitHub Link */}
-						<a
-							href="https://github.com"
-							target="_blank"
-							rel="noopener noreferrer"
-							className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-						>
-							<GitHubIcon className="h-5 w-5" />
-						</a>
+						<Button variant={"ghost"} size={"icon"}>
+							<a
+								href="https://github.com"
+								target="_blank"
+								rel="noopener noreferrer"
+								className=""
+							>
+								<GitHubIcon className="h-5 w-5" />
+							</a>
+						</Button>
+
 						{/* Profile Link / Sign In Button */}
 						{session ? (
-							<a
-								href="/dashboard"
-								className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-							>
-								<User className="h-5 w-5" />
-							</a>
+							<Button variant={"ghost"} size={"icon"}>
+								<a href="/dashboard" className="">
+									<User className="h-5 w-5" />
+								</a>
+							</Button>
 						) : (
-							<button
+							<Button
+								variant={"ghost"}
+								size={"icon"}
 								onClick={() => openModal("signIn", null)}
-								className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+								className=""
 							>
 								<User className="h-5 w-5" />
-							</button>
+							</Button>
 						)}
-
 						{/* Mobile Menu Button */}
 						<button className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden">
 							{/* {mobileMenuOpen ? (
