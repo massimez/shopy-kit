@@ -6,6 +6,7 @@ import {
 	organization,
 	phoneNumber,
 } from "better-auth/plugins";
+import type { GoogleProfile } from "better-auth/social-providers";
 import { db } from "starter-db";
 import * as schema from "starter-db/schema";
 export const auth = betterAuth({
@@ -76,12 +77,12 @@ export const auth = betterAuth({
 		google: {
 			clientId: "GOOGLE_CLIENT_ID",
 			clientSecret: "GOOGLE_CLIENT_SECRET",
-			// mapProfileToUser: (profile: GoogleProfile) => {
-			// 	return {
-			// 		firstName: profile.given_name,
-			// 		lastName: profile.family_name,
-			// 	};
-			// },
+			mapProfileToUser: (profile: GoogleProfile) => {
+				return {
+					firstName: profile.given_name,
+					lastName: profile.family_name,
+				};
+			},
 		},
 	},
 });
