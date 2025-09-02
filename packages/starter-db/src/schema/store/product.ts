@@ -53,9 +53,9 @@ export const productCategoryTranslation = pgTable(
 		categoryId: uuid("category_id")
 			.notNull()
 			.references(() => productCategory.id, { onDelete: "cascade" }),
-		languageId: integer("language_id")
+		languageId: text("language_id")
 			.notNull()
-			.references(() => language.id, { onDelete: "cascade" }),
+			.references(() => language.code, { onDelete: "cascade" }),
 
 		name: varchar("name", { length: 255 }).notNull(),
 		slug: varchar("slug", { length: 255 }).notNull(),
@@ -174,9 +174,9 @@ export const productVariantTranslation = pgTable(
 		productVariantId: uuid("product_variant_id")
 			.notNull()
 			.references(() => productVariant.id, { onDelete: "cascade" }),
-		languageId: integer("language_id")
+		languageId: text("language_id")
 			.notNull()
-			.references(() => language.id, { onDelete: "cascade" }),
+			.references(() => language.code, { onDelete: "cascade" }),
 
 		name: varchar("name", { length: 255 }), // e.g. "Red / L"
 		attributes: jsonb("attributes"), // optional localized attrs

@@ -53,7 +53,8 @@ export const organizationInfo = pgTable("organization_info", {
 	id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),
 	organizationId: text("organization_id")
 		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "cascade" })
+		.unique(),
 	// Contact Info
 	contactName: varchar("contact_name", { length: 100 }),
 	contactEmail: varchar("contact_email", { length: 100 }),
@@ -144,7 +145,7 @@ export const updateOrganizationInfoSchema = createSelectSchema(
 			.string()
 			.regex(/^\d+(\.\d{1,2})?$/, "Tax rate must be a valid monetary value")
 			.optional(),
-		defaultLanguage: z.number().int().optional(),
+		defaultLanguage: z.string().optional(),
 		activeLanguages: z.string().optional().or(z.literal("")),
 		images: z
 			.array(

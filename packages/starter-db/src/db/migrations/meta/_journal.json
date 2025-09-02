@@ -15,6 +15,13 @@
       "when": 1756411632283,
       "tag": "0001_curious_snowbird",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1756651377023,
+      "tag": "0002_fancy_slipstream",
+      "breakpoints": true
     }
   ]
 }
