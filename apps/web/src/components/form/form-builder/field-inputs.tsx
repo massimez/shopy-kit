@@ -1,0 +1,158 @@
+"use client";
+
+import type React from "react";
+import { useMemo } from "react";
+import { Input } from "@/components/ui/input";
+import MultipleSelector from "@/components/ui/multi-select";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import type { FormFieldConfig } from "./types";
+
+// ============================================================================
+// TEXT INPUT COMPONENT
+// ============================================================================
+
+export const TextInput: React.FC<{
+	field: FormFieldConfig<any>;
+	fieldProps: any;
+	t: (key: string) => string;
+}> = ({ field, fieldProps, t }) => (
+	<Input
+		type={field.type}
+		name={fieldProps.name}
+		value={fieldProps.value ?? ""}
+		onChange={(e) => {
+			let value = e.target.value;
+			if (field.transformValue?.fromForm) {
+				value = field.transformValue.fromForm(value);
+			}
+			fieldProps.onChange(value);
+		}}
+		onBlur={fieldProps.onBlur}
+		ref={fieldProps.ref}
+		placeholder={field.placeholderKey ? t(field.placeholderKey) : undefined}
+	/>
+);
+
+// ============================================================================
+// TEXTAREA INPUT COMPONENT
+// ============================================================================
+
+export const TextareaInput: React.FC<{ fieldProps: any }> = ({
+	fieldProps,
+}) => <Textarea {...fieldProps} />;
+
+// ============================================================================
+// SELECT INPUT COMPONENT
+// ============================================================================
+
+export const SelectInput: React.FC<{
+	field: FormFieldConfig<any>;
+	fieldProps: any;
+	t: (key: string) => string;
+}> = ({ field, fieldProps, t }) => (
+	<Select
+		onValueChange={fieldProps.onChange}
+		value={String(fieldProps.value ?? "")}
+	>
+		<SelectTrigger className="w-full">
+			<SelectValue
+				placeholder={field.placeholderKey ? t(field.placeholderKey) : ""}
+			/>
+		</SelectTrigger>
+		<SelectContent>
+			{field.options?.map((option) => (
+				<SelectItem key={option.value} value={option.value.toString()}>
+					{option.label}
+				</SelectItem>
+			))}
+		</SelectContent>
+	</Select>
+);
+
+// ============================================================================
+// MULTI-SELECT INPUT COMPONENT
+// ============================================================================
+
+export const MultiSelectInput: React.FC<{
+	field: FormFieldConfig<any>;
+	fieldProps: any;
+	t: (key: string) => string;
+}> = ({ field, fieldProps, t }) => {
+	const selectedValues = fieldProps.value || [];
+
+	const selectedOptions = useMemo(
+		() =>
+			field.options
+				?.filter((option) => selectedValues.includes(option.value.toString()))
+				.map((option) => ({
+					...option,
+					value: option.value.toString(),
+				})) || [],
+		[field.options, selectedValues],
+	);
+
+	const stringOptions = useMemo(
+		() =>
+			field.options?.map((option) => ({
+				...option,
+				value: option.value.toString(),
+			})) || [],
+		[field.options],
+	);
+
+	return (
+		<MultipleSelector
+			value={selectedOptions}
+			options={stringOptions}
+			placeholder={field.placeholderKey ? t(field.placeholderKey) : ""}
+			onChange={(options) => {
+				const values = options.map((option) => option.value);
+				fieldProps.onChange(values);
+			}}
+		/>
+	);
+};
+
+// ============================================================================
+// SWITCH INPUT COMPONENT
+// ============================================================================
+
+export const SwitchInput: React.FC<{ fieldProps: any }> = ({ fieldProps }) => (
+	<Switch
+		checked={fieldProps.value || false}
+		onCheckedChange={fieldProps.onChange}
+	/>
+);
+
+// ============================================================================
+// JSON INPUT COMPONENT
+// ============================================================================
+
+export const JsonInput: React.FC<{ fieldProps: any }> = ({ fieldProps }) => (
+	<Textarea
+		{...fieldProps}
+		onChange={(e) => {
+			fieldProps.onChange(e.target.value);
+		}}
+	/>
+);
+
+// ============================================================================
+// CUSTOM INPUT ERROR COMPONENT
+// ============================================================================
+
+export const CustomFieldError: React.FC<{ fieldName: string }> = ({
+	fieldName,
+}) => (
+	<div className="text-destructive">
+		Custom renderer not found for field: {fieldName}
+	</div>
+);
