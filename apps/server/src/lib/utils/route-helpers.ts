@@ -1,7 +1,5 @@
-import type { Context, ValidationTargets } from "hono";
+import type { Context } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import { validator } from "hono/validator";
-import z from "zod";
 
 // Helper for standardized error responses
 export const handleRouteError = (

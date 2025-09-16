@@ -8,6 +8,7 @@ import {
 	pgTable,
 	text,
 	timestamp,
+	uniqueIndex,
 	uuid,
 	varchar,
 } from "drizzle-orm/pg-core";
@@ -33,7 +34,6 @@ export const productCategory = pgTable("product_category", {
 	parentId: uuid("parent_id").references((): PgColumn => productCategory.id, {
 		onDelete: "set null",
 	}),
-
 	name: varchar("name", { length: 255 }).notNull(),
 	slug: varchar("slug", { length: 255 }).notNull(),
 	description: text("description"),
@@ -64,6 +64,13 @@ export const productCategoryTranslation = pgTable(
 		metaDescription: text("meta_description"),
 		...softAudit,
 	},
+	(table) => [
+		uniqueIndex("product_category_language_idx").on(
+			table.organizationId,
+			table.categoryId,
+			table.languageId,
+		),
+	],
 );
 
 /**
@@ -98,31 +105,41 @@ export const product = pgTable("product", {
 	...softAudit,
 });
 
-export const productTranslation = pgTable("product_translation", {
-	id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),
-	organizationId: text("organization_id")
-		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
-	productId: uuid("product_id")
-		.notNull()
-		.references(() => product.id, { onDelete: "cascade" }),
-	languageId: integer("language_id")
-		.notNull()
-		.references(() => language.id, { onDelete: "cascade" }),
+export const productTranslation = pgTable(
+	"product_translation",
+	{
+		id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),
+		organizationId: text("organization_id")
+			.notNull()
+			.references(() => organization.id, { onDelete: "cascade" }),
+		productId: uuid("product_id")
+			.notNull()
+			.references(() => product.id, { onDelete: "cascade" }),
+		languageId: text("language_id")
+			.notNull()
+			.references(() => language.code, { onDelete: "cascade" }),
 
-	name: varchar("name", { length: 255 }).notNull(),
-	slug: varchar("slug", { length: 255 }).notNull(),
-	shortDescription: text("short_description"),
-	description: text("description"),
+		name: varchar("name", { length: 255 }).notNull(),
+		slug: varchar("slug", { length: 255 }).notNull(),
+		shortDescription: text("short_description"),
+		description: text("description"),
 
-	brandName: varchar("brand_name", { length: 100 }),
-	images: jsonb("images").$type<TImage>(), // [{url, alt}]
-	seoTitle: varchar("seo_title", { length: 255 }),
-	seoDescription: text("seo_description"),
-	tags: jsonb("tags"), // ["tag1","tag2"]
+		brandName: varchar("brand_name", { length: 100 }),
+		images: jsonb("images").$type<TImage[]>(), // [{url, alt}]
+		seoTitle: varchar("seo_title", { length: 255 }),
+		seoDescription: text("seo_description"),
+		tags: text("tags"),
 
-	...softAudit,
-});
+		...softAudit,
+	},
+	(table) => [
+		uniqueIndex("product_language_idx").on(
+			table.organizationId,
+			table.productId,
+			table.languageId,
+		),
+	],
+);
 
 /**
  * ---------------------------------------------------------------------------
@@ -184,6 +201,13 @@ export const productVariantTranslation = pgTable(
 		specifications: jsonb("specifications"),
 		...softAudit,
 	},
+	(table) => [
+		uniqueIndex("product_variant_language_idx").on(
+			table.organizationId,
+			table.productVariantId,
+			table.languageId,
+		),
+	],
 );
 
 // Structured attributes for filtering/indexing
@@ -287,8 +311,8 @@ export const productReview = pgTable("product_review", {
 	cons: text("cons"),
 
 	// Media attachments
-	images: jsonb("images").$type<TImage[]>(), // [{url, alt}]
-	videos: jsonb("videos").$type<TVideo[]>(), // [{url, thumbnail}]
+	images: jsonb("images").$type<TImage[]>(),
+	videos: jsonb("videos").$type<TVideo[]>(),
 
 	// Verification & moderation
 	isVerifiedPurchase: boolean("is_verified_purchase").default(false),

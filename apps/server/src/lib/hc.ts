@@ -1,4 +1,5 @@
 import { hc } from "hono/client";
+
 import type { App } from "./app"; // or "../lib/app" depending on structure
 
 const client = hc<App>("");

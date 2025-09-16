@@ -66,7 +66,7 @@ export function errorHandler(error: Error, c: Context): Response {
 				name: "ZodError",
 				issues: zodError.issues?.map((issue) => ({
 					code: issue.code || "VALIDATION_ERROR",
-					path: issue.path || [],
+					path: (issue.path as (string | number)[]) || [],
 					message: issue.message,
 				})) || [
 					{

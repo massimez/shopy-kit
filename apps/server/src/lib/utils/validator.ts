@@ -84,3 +84,7 @@ export const cookieValidator = <T extends z.ZodSchema>(schema: T) => {
 		return parsed.data;
 	});
 };
+
+export const idParamSchema = z.object({
+	id: z.string().min(1, "id is required"),
+});

@@ -1,20 +1,3 @@
-// API Response types
-export interface ApiResponse<T = unknown> {
-	success: boolean;
-	data?: T;
-	error?: string;
-	message?: string;
-}
-
-export interface PaginatedResponse<T> extends ApiResponse<T[]> {
-	pagination: {
-		page: number;
-		limit: number;
-		total: number;
-		totalPages: number;
-	};
-}
-
 // Common error types
 export class AppError extends Error {
 	constructor(
