@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "starter-db";
 import { product, productTranslation } from "starter-db/schema";
 import z from "zod";
+import { withPaginationAndTotal } from "@/helpers/pagination";
 import { createRouter } from "@/lib/create-hono-app";
 import { handleRouteError } from "@/lib/utils/route-helpers";
 import {
@@ -65,14 +66,17 @@ export const productRoute = createRouter()
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const paginationParams = c.req.valid("query");
 
-				const products = db
-					.select()
-					.from(product)
-					.where(eq(product.organizationId, activeOrgId))
-					.orderBy();
+				const result = await withPaginationAndTotal({
+					db: db,
+					query: null,
+					table: product,
+					params: paginationParams,
+					orgId: activeOrgId,
+				});
 
-				return c.json({ data: products });
+				return c.json({ total: result.total, data: result.data });
 			} catch (error) {
 				return handleRouteError(c, error, "fetch products");
 			}
