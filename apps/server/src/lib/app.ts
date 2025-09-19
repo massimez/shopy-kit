@@ -3,6 +3,8 @@ import healthRoutes from "@/routes/health";
 import { locationRoute } from "@/routes/organization/location";
 import { organizationInfoRoute } from "@/routes/organization/organization-info";
 import storageRoutes from "@/routes/storage";
+import { inventoryRoute } from "@/routes/store/inventory/route";
+import { orderRoute } from "@/routes/store/order/route";
 import { productRoute } from "@/routes/store/product/product";
 import { productCategoryRoute } from "@/routes/store/product/product-category";
 import { productReviewRoute } from "@/routes/store/product/product-review";
@@ -22,8 +24,10 @@ const app = createApp()
 	.route("/store", productVariantRoute)
 	.route("/store", productCategoryRoute)
 	.route("/store", productReviewRoute)
+	.route("/store", inventoryRoute)
 	.route("/store", supplierRoute)
-	.route("/store", brandRoute);
+	.route("/store", brandRoute)
+	.route("/store", orderRoute);
 
 export const honoApp = app;
 export type App = typeof honoApp;

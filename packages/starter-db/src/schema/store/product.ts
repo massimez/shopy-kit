@@ -17,9 +17,8 @@ import type { TImage, TProductStatus, TVideo } from "../helpers/types";
 import { organization } from "../organization";
 import { language } from "../system";
 import { user } from "../user";
-import { location } from "./location";
 import { order } from "./order";
-import { brand, supplier } from "./supplier";
+import { brand } from "./supplier";
 
 /**
  * ---------------------------------------------------------------------------
@@ -176,11 +175,10 @@ export const productVariant = pgTable("product_variant", {
 	price: numeric("price", { precision: 12, scale: 2 }).notNull(),
 	compareAtPrice: numeric("compare_at_price", { precision: 12, scale: 2 }),
 	cost: numeric("cost", { precision: 12, scale: 2 }),
-
+	unit: varchar("unit", { length: 255 }),
 	isActive: boolean("is_active").default(true).notNull(),
 	...softAudit,
 });
-
 export const productVariantTranslation = pgTable(
 	"product_variant_translation",
 	{
@@ -227,21 +225,6 @@ export const productVariantAttribute = pgTable("product_variant_attribute", {
 	...softAudit,
 });
 
-// Current stock snapshot (fast reads)
-export const productVariantStock = pgTable("product_variant_stock", {
-	productVariantId: uuid("product_variant_id")
-		.primaryKey()
-		.references(() => productVariant.id, { onDelete: "cascade" }),
-	organizationId: text("organization_id")
-		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
-	locationId: uuid("location_id")
-		.notNull()
-		.references(() => location.id),
-	quantity: integer("quantity").default(0).notNull(),
-	...softAudit,
-});
-
 /**
  * ---------------------------------------------------------------------------
  * PRODUCT-CATEGORY ASSIGNMENTS & SUPPLIERS
@@ -263,29 +246,6 @@ export const productCategoryAssignment = pgTable(
 		...softAudit,
 	},
 );
-
-export const productSupplier = pgTable("product_supplier", {
-	id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),
-	organizationId: text("organization_id")
-		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
-
-	productVariantId: uuid("product_variant_id")
-		.notNull()
-		.references(() => productVariant.id, { onDelete: "cascade" }),
-
-	supplierId: uuid("supplier_id")
-		.notNull()
-		.references(() => supplier.id, { onDelete: "cascade" }),
-
-	supplierSku: varchar("supplier_sku", { length: 100 }),
-	unitCost: numeric("unit_cost", { precision: 12, scale: 2 }).notNull(),
-	minOrderQuantity: integer("min_order_quantity").default(1).notNull(),
-	leadTimeDays: integer("lead_time_days"),
-	isPreferred: boolean("is_preferred").default(false).notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-	...softAudit,
-});
 
 export const productReview = pgTable("product_review", {
 	id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),

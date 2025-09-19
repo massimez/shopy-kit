@@ -1,5 +1,7 @@
 export type * from "./helpers/types";
 export * from "./organization";
+export * from "./store/bonus";
+export * from "./store/inventory";
 export * from "./store/location";
 export * from "./store/order";
 export * from "./store/product";

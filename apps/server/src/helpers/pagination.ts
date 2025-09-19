@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noExplicitAny: <> */
 import {
 	and,
 	asc,
@@ -7,7 +8,7 @@ import {
 	getTableColumns,
 	isNull,
 	sql,
-} from "drizzle-orm"; // Assuming isNull is needed here too
+} from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import type { OffsetPaginationParams } from "@/types/api";
 
@@ -53,14 +54,19 @@ interface WithPaginationAndTotalParams<T extends PgTable> {
 }
 
 export async function withPaginationAndTotal<
-	T extends PgTable & { organizationId: any; deletedAt: any },
+	T extends PgTable & { organizationId: any; deletedAt?: any },
 >(args: WithPaginationAndTotalParams<T>) {
 	const { db, table, params, orgId } = args;
 
+	// Conditionally apply deletedAt filter if the table has it
+	const deletedAtFilter =
+		"deletedAt" in table && table.deletedAt
+			? isNull(table.deletedAt)
+			: undefined;
+
 	// Default to organization-scoped soft delete filter
 	const baseFilters =
-		args.baseFilters ??
-		and(eq(table.organizationId, orgId), isNull(table.deletedAt));
+		args.baseFilters ?? and(eq(table.organizationId, orgId), deletedAtFilter);
 
 	// Build the base query with filters
 	const baseQuery = db.select().from(table).where(baseFilters);

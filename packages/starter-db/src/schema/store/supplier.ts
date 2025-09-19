@@ -4,6 +4,7 @@ import {
 	decimal,
 	integer,
 	jsonb,
+	numeric,
 	pgTable,
 	text,
 	uuid,
@@ -12,6 +13,7 @@ import {
 import { softAudit } from "../helpers/common";
 import type { TAddress } from "../helpers/types";
 import { organization } from "../organization";
+import { productVariant } from "./product";
 
 /**
  * ---------------------------------------------------------------------------
@@ -56,5 +58,28 @@ export const brand = pgTable("brand", {
 	isActive: boolean("is_active").default(true).notNull(),
 	metadata: jsonb("metadata"),
 
+	...softAudit,
+});
+
+export const productSupplier = pgTable("product_supplier", {
+	id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),
+	organizationId: text("organization_id")
+		.notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+
+	productVariantId: uuid("product_variant_id")
+		.notNull()
+		.references(() => productVariant.id, { onDelete: "cascade" }),
+
+	supplierId: uuid("supplier_id")
+		.notNull()
+		.references(() => supplier.id, { onDelete: "cascade" }),
+
+	supplierSku: varchar("supplier_sku", { length: 100 }),
+	unitCost: numeric("unit_cost", { precision: 12, scale: 2 }).notNull(),
+	minOrderQuantity: integer("min_order_quantity").default(1).notNull(),
+	leadTimeDays: integer("lead_time_days"),
+	isPreferred: boolean("is_preferred").default(false).notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
 	...softAudit,
 });

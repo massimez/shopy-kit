@@ -1,0 +1,237 @@
+import { and, eq, isNull } from "drizzle-orm";
+import { db } from "starter-db";
+import { order } from "starter-db/schema";
+import { withPaginationAndTotal } from "@/helpers/pagination";
+import { createRouter } from "@/lib/create-hono-app";
+import { handleRouteError } from "@/lib/utils/route-helpers";
+import {
+	idParamSchema,
+	jsonValidator,
+	paramValidator,
+	queryValidator,
+	validateOrgId,
+} from "@/lib/utils/validator";
+import { authMiddleware } from "@/middleware/auth";
+import { hasOrgPermission } from "@/middleware/org-permission";
+import { offsetPaginationSchema } from "@/middleware/pagination";
+import { cancelOrder, completeOrder, createOrder } from "./order.service";
+import { createOrderSchema, updateOrderSchema } from "./schema";
+
+export const orderRoute = createRouter()
+	// CREATE order (status = pending, add bonusPending)
+	.post(
+		"/orders",
+		authMiddleware,
+		jsonValidator(createOrderSchema),
+		async (c) => {
+			try {
+				const activeOrgId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+				const user = c.get("user");
+				const payload = c.req.valid("json");
+
+				const result = await createOrder(
+					payload,
+					user?.id || null,
+					activeOrgId,
+				);
+
+				return c.json(result, 201);
+			} catch (error) {
+				return handleRouteError(c, error, "create order");
+			}
+		},
+	)
+
+	// GET orders (with pagination)
+	.get(
+		"/orders",
+		authMiddleware,
+		hasOrgPermission("order:read"),
+		queryValidator(offsetPaginationSchema),
+		async (c) => {
+			try {
+				const activeOrgId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+
+				const { limit, offset, orderBy, direction } = c.req.valid("query");
+
+				const { data: orders, total } = await withPaginationAndTotal({
+					db,
+					query: db.select().from(order),
+					baseFilters: and(
+						eq(order.organizationId, activeOrgId),
+						isNull(order.deletedAt),
+					),
+					table: order,
+					params: { limit, offset, orderBy, direction },
+					orgId: activeOrgId,
+				});
+
+				return c.json({ total, data: orders });
+			} catch (error) {
+				return handleRouteError(c, error, "fetch orders");
+			}
+		},
+	)
+
+	// GET single order
+	.get(
+		"/orders/:id",
+		authMiddleware,
+		hasOrgPermission("order:read"),
+		paramValidator(idParamSchema),
+		async (c) => {
+			try {
+				const { id } = c.req.valid("param");
+				const activeOrgId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+
+				const result = await db.query.order.findFirst({
+					where: (orders, { and, eq }) =>
+						and(
+							eq(orders.id, id),
+							eq(orders.organizationId, activeOrgId),
+							isNull(orders.deletedAt),
+						),
+					with: { items: true },
+				});
+
+				if (!result) {
+					return c.json({ message: "Order not found" }, 404);
+				}
+
+				return c.json(result);
+			} catch (error) {
+				return handleRouteError(c, error, "fetch order");
+			}
+		},
+	)
+
+	// UPDATE order
+	.patch(
+		"/orders/:id",
+		authMiddleware,
+		hasOrgPermission("order:update"),
+		paramValidator(idParamSchema),
+		jsonValidator(updateOrderSchema),
+		async (c) => {
+			try {
+				const { id } = c.req.valid("param");
+				const activeOrgId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+
+				const payload = c.req.valid("json");
+
+				const [updated] = await db
+					.update(order)
+					.set(payload)
+					.where(
+						and(
+							eq(order.id, id),
+							eq(order.organizationId, activeOrgId),
+							isNull(order.deletedAt),
+						),
+					)
+					.returning();
+
+				if (!updated) {
+					return c.json({ message: "Order not found" }, 404);
+				}
+
+				const result = await db.query.order.findFirst({
+					where: eq(order.id, id),
+					with: { items: true },
+				});
+				const items = result?.items || [];
+
+				return c.json({ ...updated, items });
+			} catch (error) {
+				return handleRouteError(c, error, "update order");
+			}
+		},
+	)
+
+	// COMPLETE order (moves bonusPending → bonus, decreases reservedQuantity and quantity)
+	.patch(
+		"/orders/:id/complete",
+		paramValidator(idParamSchema),
+		hasOrgPermission("order:complete"),
+		authMiddleware,
+		async (c) => {
+			try {
+				const { id } = c.req.valid("param");
+				const activeOrgId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+
+				const ord = await completeOrder(id, activeOrgId);
+
+				return c.json({ order: ord });
+			} catch (error) {
+				return handleRouteError(c, error, "complete order");
+			}
+		},
+	)
+
+	// CANCEL order (subtracts from bonusPending, decreases reservedQuantity)
+	// TODO CHECK IF USER CAN CANCEL
+	.patch(
+		"/orders/:id/cancel",
+		authMiddleware,
+		paramValidator(idParamSchema),
+		async (c) => {
+			try {
+				const { id } = c.req.valid("param");
+				const activeOrgId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+
+				const ord = await cancelOrder(id, activeOrgId);
+
+				return c.json({ order: ord });
+			} catch (error) {
+				return handleRouteError(c, error, "cancel order");
+			}
+		},
+	)
+
+	// DELETE order
+	.delete(
+		"/orders/:id",
+		authMiddleware,
+		hasOrgPermission("order:delete"),
+		paramValidator(idParamSchema),
+		async (c) => {
+			try {
+				const { id } = c.req.valid("param");
+				const activeOrgId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+
+				const [deleted] = await db
+					.update(order)
+					.set({ deletedAt: new Date() })
+					.where(
+						and(
+							eq(order.id, id),
+							eq(order.organizationId, activeOrgId),
+							isNull(order.deletedAt),
+						),
+					)
+					.returning();
+
+				if (!deleted) {
+					return c.json({ message: "Order not found or already deleted" }, 404);
+				}
+
+				return c.json({ message: "Order deleted successfully", deleted });
+			} catch (error) {
+				return handleRouteError(c, error, "delete order");
+			}
+		},
+	);

@@ -16,8 +16,8 @@ import type {
 	TPaymentStatus,
 	TStockMovementType,
 } from "../helpers/types";
-import { organization } from "../organization"; // organization.id: text
-import { user } from "../user"; // user.id: text
+import { organization } from "../organization";
+import { user } from "../user";
 import { location } from "./location";
 import { productVariant } from "./product";
 
@@ -93,7 +93,9 @@ export const order = pgTable("order", {
 	shippedAt: timestamp("shipped_at"),
 	deliveredAt: timestamp("delivered_at"),
 	cancelledAt: timestamp("cancelled_at"),
-	locationId: uuid("location_id").references(() => location.id),
+	locationId: uuid("location_id")
+		.notNull()
+		.references(() => location.id),
 
 	notes: text("notes"),
 	tags: jsonb("tags"), // ["rush", "vip", "wholesale"]
@@ -113,6 +115,9 @@ export const orderItem = pgTable("order_item", {
 	productVariantId: uuid("product_variant_id")
 		.notNull()
 		.references(() => productVariant.id, { onDelete: "restrict" }),
+	locationId: uuid("location_id") // Add locationId to orderItem schema
+		.notNull()
+		.references(() => location.id),
 
 	// Snapshot fields
 	productName: varchar("product_name", { length: 255 }).notNull(),

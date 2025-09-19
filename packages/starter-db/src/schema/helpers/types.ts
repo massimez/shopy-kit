@@ -87,3 +87,22 @@ export type TStockMovementType =
 	| "found" // Found inventory
 	| "reservation" // Reserved for order
 	| "unreservation"; // Released reservation
+
+export type TBonusTransactionType =
+	| "earned_purchase"
+	| "earned_signup"
+	| "earned_referral"
+	| "earned_manual"
+	| "redeemed_discount"
+	| "redeemed_product"
+	| "redeemed_cash"
+	| "expired";
+
+export type TRewardType =
+	| "percentage_discount"
+	| "fixed_discount"
+	| "free_shipping"
+	| "free_product"
+	| "cash_back";
+
+export type TCouponStatus = "active" | "used" | "expired" | "cancelled";

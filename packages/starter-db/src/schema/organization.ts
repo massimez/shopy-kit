@@ -75,6 +75,9 @@ export const organizationInfo = pgTable("organization_info", {
 	taxRate: numeric("tax_rate", { precision: 5, scale: 2 })
 		.default("0.00")
 		.notNull(),
+	bonusPercentage: numeric("bonus_percentage", { precision: 5, scale: 2 })
+		.default("0")
+		.notNull(),
 	defaultLanguage: text("default_language"),
 	activeLanguages: jsonb("active_languages").$type<string[]>(),
 	images: jsonb("images").$type<TImage[]>(),
@@ -100,6 +103,13 @@ export const insertOrganizationInfoSchema = createInsertSchema(
 		taxRate: z
 			.string()
 			.regex(/^\d+(\.\d{1,2})?$/, "Tax rate must be a valid monetary value")
+			.optional(),
+		bonusPercentage: z
+			.string()
+			.regex(
+				/^\d+(\.\d{1,2})?$/,
+				"Bonus percentage must be a valid monetary value",
+			)
 			.optional(),
 		defaultLanguage: z.string().optional(),
 		activeLanguages: z.array(z.string()).optional(),
@@ -148,6 +158,13 @@ export const updateOrganizationInfoSchema = createSelectSchema(
 		taxRate: z
 			.string()
 			.regex(/^\d+(\.\d{1,2})?$/, "Tax rate must be a valid monetary value")
+			.optional(),
+		bonusPercentage: z
+			.string()
+			.regex(
+				/^\d+(\.\d{1,2})?$/,
+				"Bonus percentage must be a valid monetary value",
+			)
 			.optional(),
 		defaultLanguage: z.string().optional(),
 		activeLanguages: z.array(z.string()).optional(),
