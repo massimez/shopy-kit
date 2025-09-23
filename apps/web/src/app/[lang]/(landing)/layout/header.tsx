@@ -2,10 +2,8 @@
 
 import {
 	BookOpen,
-	Github,
 	Globe,
 	Menu,
-	Moon,
 	Palette,
 	Sparkles,
 	User,
