@@ -6,7 +6,7 @@ export default defineConfig({
 		hc: "src/lib/hc.ts",
 	},
 	dts: {
-		resolve: true,
+		resolve: false,
 		compilerOptions: {
 			declaration: true,
 			declarationMap: true,

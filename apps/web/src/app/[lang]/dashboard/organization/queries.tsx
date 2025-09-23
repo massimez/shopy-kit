@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
 	insertOrganizationInfoSchema,
 	updateOrganizationInfoSchema,
-} from "starter-db/schema";
+} from "starter-plus-server/hc";
 import type { z } from "zod";
 import { hc } from "@/lib/api-client";
 import { authClient } from "@/lib/auth-client";
