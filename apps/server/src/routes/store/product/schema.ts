@@ -3,55 +3,80 @@ import {
 	product,
 	productCategory,
 	productCategoryAssignment,
-	productCategoryTranslation,
 	productReview,
 	productSupplier,
-	productTranslation,
 	productVariant,
 	productVariantAttribute,
 	productVariantStock,
-	productVariantTranslation,
 } from "starter-db/schema";
+import { z } from "zod";
 import { idAndAuditFields } from "@/helpers/constant/fields";
 
-export const insertProductSchema = createInsertSchema(product);
-export const updateProductSchema = createSelectSchema(product).partial();
+// Product Translation Schema for embedding
+export const productTranslationEmbeddedSchema = z.object({
+	languageCode: z.string().min(1, "languageCode is required"),
+	name: z.string().min(1, "name is required"),
+	slug: z.string().min(1, "slug is required"),
+	shortDescription: z.string().optional(),
+	description: z.string().optional(),
+	brandName: z.string().optional(),
+	images: z
+		.array(z.object({ url: z.string(), alt: z.string().optional() }))
+		.optional(),
+	seoTitle: z.string().optional(),
+	seoDescription: z.string().optional(),
+	tags: z.string().optional(),
+});
+
+// Product Variant Translation Schema for embedding
+export const productVariantTranslationEmbeddedSchema = z.object({
+	languageCode: z.string().min(1, "languageCode is required"),
+	name: z.string().optional(), // e.g. "Red / L"
+	attributes: z.record(z.string(), z.string()).optional(), // optional localized attrs
+	features: z.record(z.string(), z.string()).optional(),
+	specifications: z.record(z.string(), z.string()).optional(),
+});
+
+// Base product schemas
+export const baseInsertProductSchema = createInsertSchema(product);
+export const baseUpdateProductSchema = createSelectSchema(product).partial();
+
+// Combined Product Insert Schema
+export const insertProductSchema = baseInsertProductSchema.extend({
+	translations: z
+		.array(productTranslationEmbeddedSchema)
+		.min(1, "At least one translation is required"),
+});
+
+// Combined Product Update Schema
+export const updateProductSchema = baseUpdateProductSchema.extend({
+	translations: z.array(productTranslationEmbeddedSchema.partial()).optional(),
+});
 
 export const insertProductCategorySchema = createInsertSchema(productCategory);
 export const updateProductCategorySchema = createSelectSchema(productCategory)
 	.omit(idAndAuditFields)
 	.partial();
 
-export const insertProductCategoryTranslationSchema = createInsertSchema(
-	productCategoryTranslation,
-);
-export const updateProductCategoryTranslationSchema = createSelectSchema(
-	productCategoryTranslation,
-)
-	.omit(idAndAuditFields)
-	.partial();
-
-export const insertProductTranslationSchema =
-	createInsertSchema(productTranslation);
-export const updateProductTranslationSchema = createSelectSchema(
-	productTranslation,
-)
-	.omit(idAndAuditFields)
-	.partial();
-
-export const insertProductVariantSchema = createInsertSchema(productVariant);
+export const insertProductVariantSchema = createInsertSchema(
+	productVariant,
+).extend({
+	translations: z
+		.array(productVariantTranslationEmbeddedSchema)
+		.min(1, "At least one translation is required"),
+});
 export const updateProductVariantSchema = createSelectSchema(productVariant)
 	.omit(idAndAuditFields)
-	.partial();
-
-export const insertProductVariantTranslationSchema = createInsertSchema(
-	productVariantTranslation,
-);
-export const updateProductVariantTranslationSchema = createSelectSchema(
-	productVariantTranslation,
-)
-	.omit(idAndAuditFields)
-	.partial();
+	.partial()
+	.extend({
+		translations: z
+			.array(
+				productVariantTranslationEmbeddedSchema
+					.partial()
+					.required({ languageCode: true }),
+			)
+			.optional(),
+	});
 
 export const insertProductVariantAttributeSchema = createInsertSchema(
 	productVariantAttribute,

@@ -1,5 +1,6 @@
 import type { Context } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
+import type { ErrorSchema } from "@/middleware/error-handler";
 
 // Helper for standardized error responses
 export const handleRouteError = (
@@ -12,11 +13,35 @@ export const handleRouteError = (
 		error instanceof Error &&
 		error.message === "organizationId is required"
 	) {
-		return c.json({ error: error.message }, 400);
+		const errorResponse: ErrorSchema = {
+			success: false,
+			error: {
+				name: "BadRequestError",
+				issues: [
+					{
+						code: "ORGANIZATION_ID_REQUIRED",
+						path: [],
+						message: error.message,
+					},
+				],
+			},
+		};
+		return c.json(errorResponse, 400);
 	}
 	console.error(`Error ${message}:`, error);
-	return c.json(
-		{ error: `Failed to ${message}` },
-		statusCode as ContentfulStatusCode,
-	);
+	const errorResponse: ErrorSchema = {
+		success: false,
+		error: {
+			name: "InternalServerError",
+			message: `An error occurred while trying to ${message}`,
+			issues: [
+				{
+					code: "INTERNAL_ERROR",
+					path: [],
+					message: (error as any).cause || `Failed to ${message}`,
+				},
+			],
+		},
+	};
+	return c.json(errorResponse, statusCode as ContentfulStatusCode);
 };

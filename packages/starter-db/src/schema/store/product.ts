@@ -39,38 +39,19 @@ export const productCategory = pgTable("product_category", {
 	image: text("image"),
 	sortOrder: integer("sort_order").default(0).notNull(),
 	isActive: boolean("is_active").default(true).notNull(),
+	translations:
+		jsonb("translations").$type<
+			{
+				languageCode: string;
+				name: string;
+				slug: string;
+				description?: string;
+				metaTitle?: string;
+				metaDescription?: string;
+			}[]
+		>(),
 	...softAudit,
 });
-
-export const productCategoryTranslation = pgTable(
-	"product_category_translation",
-	{
-		id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),
-		organizationId: text("organization_id")
-			.notNull()
-			.references(() => organization.id, { onDelete: "cascade" }),
-		categoryId: uuid("category_id")
-			.notNull()
-			.references(() => productCategory.id, { onDelete: "cascade" }),
-		languageCode: text("language_code")
-			.notNull()
-			.references(() => language.code, { onDelete: "cascade" }),
-
-		name: varchar("name", { length: 255 }).notNull(),
-		slug: varchar("slug", { length: 255 }).notNull(),
-		description: text("description"),
-		metaTitle: varchar("meta_title", { length: 255 }),
-		metaDescription: text("meta_description"),
-		...softAudit,
-	},
-	(table) => [
-		uniqueIndex("product_category_language_idx").on(
-			table.organizationId,
-			table.categoryId,
-			table.languageCode,
-		),
-	],
-);
 
 /**
  * ---------------------------------------------------------------------------
@@ -85,6 +66,7 @@ export const product = pgTable("product", {
 	brandId: uuid("brand_id").references(() => brand.id, {
 		onDelete: "set null",
 	}),
+	name: varchar("name", { length: 255 }),
 	status: text("status").default("draft").notNull().$type<TProductStatus>(),
 	type: varchar("type", { length: 50 }).default("simple").notNull(), // simple, variable, digital
 	currency: varchar("currency", { length: 3 }).notNull(),
@@ -101,44 +83,25 @@ export const product = pgTable("product", {
 	isActive: boolean("is_active").default(true).notNull(),
 	metadata: jsonb("metadata"),
 
+	// Translations
+	translations:
+		jsonb("translations").$type<
+			{
+				languageCode: string;
+				name: string;
+				slug: string;
+				shortDescription?: string;
+				description?: string;
+				brandName?: string;
+				images?: TImage[];
+				seoTitle?: string;
+				seoDescription?: string;
+				tags?: string;
+			}[]
+		>(),
+
 	...softAudit,
 });
-
-export const productTranslation = pgTable(
-	"product_translation",
-	{
-		id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),
-		organizationId: text("organization_id")
-			.notNull()
-			.references(() => organization.id, { onDelete: "cascade" }),
-		productId: uuid("product_id")
-			.notNull()
-			.references(() => product.id, { onDelete: "cascade" }),
-		languageCode: text("language_code")
-			.notNull()
-			.references(() => language.code, { onDelete: "cascade" }),
-
-		name: varchar("name", { length: 255 }).notNull(),
-		slug: varchar("slug", { length: 255 }).notNull(),
-		shortDescription: text("short_description"),
-		description: text("description"),
-
-		brandName: varchar("brand_name", { length: 100 }),
-		images: jsonb("images").$type<TImage[]>(), // [{url, alt}]
-		seoTitle: varchar("seo_title", { length: 255 }),
-		seoDescription: text("seo_description"),
-		tags: text("tags"),
-
-		...softAudit,
-	},
-	(table) => [
-		uniqueIndex("product_language_idx").on(
-			table.organizationId,
-			table.productId,
-			table.languageCode,
-		),
-	],
-);
 
 /**
  * ---------------------------------------------------------------------------
@@ -177,36 +140,18 @@ export const productVariant = pgTable("product_variant", {
 	cost: numeric("cost", { precision: 12, scale: 2 }),
 	unit: varchar("unit", { length: 255 }),
 	isActive: boolean("is_active").default(true).notNull(),
+	translations:
+		jsonb("translations").$type<
+			{
+				languageCode: string;
+				name?: string; // e.g. "Red / L"
+				attributes?: Record<string, string>; // optional localized attrs
+				features?: Record<string, string>;
+				specifications?: Record<string, string>;
+			}[]
+		>(),
 	...softAudit,
 });
-export const productVariantTranslation = pgTable(
-	"product_variant_translation",
-	{
-		id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),
-		organizationId: text("organization_id")
-			.notNull()
-			.references(() => organization.id, { onDelete: "cascade" }),
-		productVariantId: uuid("product_variant_id")
-			.notNull()
-			.references(() => productVariant.id, { onDelete: "cascade" }),
-		languageCode: text("language_code")
-			.notNull()
-			.references(() => language.code, { onDelete: "cascade" }),
-
-		name: varchar("name", { length: 255 }), // e.g. "Red / L"
-		attributes: jsonb("attributes"), // optional localized attrs
-		features: jsonb("features"),
-		specifications: jsonb("specifications"),
-		...softAudit,
-	},
-	(table) => [
-		uniqueIndex("product_variant_language_idx").on(
-			table.organizationId,
-			table.productVariantId,
-			table.languageCode,
-		),
-	],
-);
 
 // Structured attributes for filtering/indexing
 export const productVariantAttribute = pgTable("product_variant_attribute", {

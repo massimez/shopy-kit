@@ -154,11 +154,11 @@ export default function OrganizationLocationsTab() {
 				</div>
 			) : !locations ||
 				!("data" in locations) ||
-				locations.data.length === 0 ? (
+				locations?.data?.length === 0 ? (
 				<p>No locations found</p>
 			) : (
 				<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-					{locations.data.map((location) => (
+					{locations?.data?.map((location) => (
 						<Card key={location.id}>
 							<CardHeader>
 								<CardTitle className="flex items-center justify-between">

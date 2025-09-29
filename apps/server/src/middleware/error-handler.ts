@@ -5,12 +5,13 @@ import type { ZodError } from "zod";
 import { AppError, ValidationError } from "@/types/utility";
 export type ErrorSchema = {
 	error: {
+		name: string;
+		message?: string;
 		issues: {
 			code: string;
 			path: (string | number)[];
 			message?: string | undefined;
 		}[];
-		name: string;
 	};
 	success: boolean;
 };
@@ -24,6 +25,7 @@ export function errorHandler(error: Error, c: Context): Response {
 			success: false,
 			error: {
 				name: "HTTPException",
+				message: error.message,
 				issues: [
 					{
 						code: `HTTP_${error.status}`,
@@ -42,6 +44,7 @@ export function errorHandler(error: Error, c: Context): Response {
 			success: false,
 			error: {
 				name: error.constructor.name,
+				message: error.message,
 				issues: [
 					{
 						code: error.code || "APP_ERROR",
@@ -63,6 +66,7 @@ export function errorHandler(error: Error, c: Context): Response {
 		const response: ErrorSchema = {
 			success: false,
 			error: {
+				message: "Validation error",
 				name: "ZodError",
 				issues: zodError.issues?.map((issue) => ({
 					code: issue.code || "VALIDATION_ERROR",
@@ -85,6 +89,7 @@ export function errorHandler(error: Error, c: Context): Response {
 		success: false,
 		error: {
 			name: error.name || "InternalError",
+			message: error.message,
 			issues: [
 				{
 					code: "INTERNAL_ERROR",

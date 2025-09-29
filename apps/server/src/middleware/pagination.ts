@@ -4,5 +4,5 @@ export const offsetPaginationSchema = z.object({
 	limit: z.coerce.number().min(1).default(20),
 	offset: z.coerce.number().min(0).default(0),
 	orderBy: z.string().max(100).optional(),
-	direction: z.enum(["asc", "desc"]).optional().default("asc"),
+	direction: z.enum(["asc", "desc"]).default("asc").optional(),
 });

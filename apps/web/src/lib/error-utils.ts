@@ -1,3 +1,5 @@
+import { toast } from "sonner";
+
 export const getErrorMessage = (error: unknown): string => {
 	if (
 		typeof error === "object" &&
@@ -23,4 +25,37 @@ export const getErrorMessage = (error: unknown): string => {
 		return (error as Record<string, any>).message;
 	}
 	return "An unexpected error occurred.";
+};
+
+interface BackendError {
+	issues: {
+		code: string;
+		path: (string | number)[];
+		message?: string | undefined;
+	}[];
+	name: string;
+}
+
+export const showError = (error: unknown, customMessage?: string): void => {
+	if (
+		typeof error === "object" &&
+		error !== null &&
+		"issues" in error &&
+		Array.isArray((error as BackendError).issues) &&
+		(error as BackendError).issues.length > 0
+	) {
+		const backendError = error as BackendError;
+		backendError.issues.forEach((issue) => {
+			toast.error(
+				issue.message || customMessage || "An unknown backend error occurred.",
+			);
+		});
+	} else {
+		const message = getErrorMessage(error);
+		toast.error(
+			message === "An unexpected error occurred."
+				? customMessage || message
+				: message,
+		);
+	}
 };
