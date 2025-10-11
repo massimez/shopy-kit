@@ -21,6 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { hc } from "@/lib/api-client";
 import { authClient } from "@/lib/auth-client";
+import { showError } from "@/lib/error-utils";
 
 type EditableLocation = LocationFormValues & {
 	id: string;
@@ -43,7 +44,7 @@ export default function OrganizationLocationsTab() {
 		useState<EditableLocation | null>(null);
 
 	if (error) {
-		toast.error("Failed to fetch locations");
+		showError(error, "Failed to fetch locations");
 		return <p>Error loading locations.</p>;
 	}
 
@@ -61,11 +62,11 @@ export default function OrganizationLocationsTab() {
 				});
 			} else {
 				const errorData = await res.json();
-				toast.error(errorData.error || "Failed to create location");
+				showError(errorData, "Failed to create location");
 			}
 		} catch (error) {
 			console.error("Error creating location:", error);
-			toast.error("Failed to create location");
+			showError(error, "Failed to create location");
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -88,11 +89,11 @@ export default function OrganizationLocationsTab() {
 				});
 			} else {
 				const errorData = await res.json();
-				toast.error((errorData as any).error || "Failed to update location");
+				showError(errorData, "Failed to update location");
 			}
 		} catch (error) {
 			console.error("Error updating location:", error);
-			toast.error("Failed to update location");
+			showError(error, "Failed to update location");
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -112,11 +113,11 @@ export default function OrganizationLocationsTab() {
 				});
 			} else {
 				const errorData = await res.json();
-				toast.error((errorData as any).error || "Failed to delete location");
+				showError(errorData, "Failed to delete location");
 			}
 		} catch (error) {
 			console.error("Error deleting location:", error);
-			toast.error("Failed to delete location");
+			showError(error, "Failed to delete location");
 		}
 	};
 

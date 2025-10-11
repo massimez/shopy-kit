@@ -9,6 +9,5 @@ const auditFields = {
 export const idAndAuditFields = {
 	id: true,
 	organizationId: true,
-	userId: true,
 	...auditFields,
 } as const;

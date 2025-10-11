@@ -78,7 +78,7 @@ export const useGetOrganizationInfo = (organizationId: string) => {
 				}
 				// Handle case where response has error property
 				if ("error" in result) {
-					throw new Error(result.error);
+					throw new Error(result.error.message || JSON.stringify(result.error));
 				}
 			}
 			return null;
@@ -133,12 +133,9 @@ export const useCreateOrganizationInfo = () => {
 				const data = await res.json(); // data is the organization info object directly
 				return data;
 			}
-			const errorData = (await res.json()) as {
-				error: string;
-				message: string;
-			}; // Type assertion for errorData
+			const errorData = await res.json(); // Type assertion for errorData
 			throw new Error(
-				errorData.message || "Failed to create organization info",
+				errorData.error.message || "Failed to create organization info",
 			);
 		},
 		onSuccess: (_, variables) => {

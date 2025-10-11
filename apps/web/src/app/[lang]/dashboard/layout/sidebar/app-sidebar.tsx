@@ -41,27 +41,31 @@ const data = {
 			items: [
 				{
 					title: "Products",
-					url: "/dashboard",
+					url: "/dashboard/store/products",
 				},
 				{
 					title: "Orders",
-					url: "#",
+					url: "/dashboard/store/orders",
 				},
 				{
 					title: "Clients",
-					url: "#",
+					url: "/dashboard/store/clients",
 				},
 				{
 					title: "Suppliers",
-					url: "#",
+					url: "/dashboard/store/suppliers",
 				},
 				{
-					title: "Referrals",
-					url: "#",
+					title: "Categories",
+					url: "/dashboard/store/product-categories",
+				},
+				{
+					title: "Brands",
+					url: "/dashboard/store/brands",
 				},
 				{
 					title: "Settings",
-					url: "#",
+					url: "/dashboard/store/settings",
 				},
 			],
 		},
@@ -75,14 +79,7 @@ const data = {
 					title: "Items",
 					url: "#",
 				},
-				{
-					title: "Orders",
-					url: "#",
-				},
-				{
-					title: "Clients",
-					url: "#",
-				},
+
 				{
 					title: "Suppliers",
 					url: "#",
@@ -123,7 +120,7 @@ const data = {
 			items: [
 				{
 					title: "General",
-					url: "#",
+					url: "/dashboard/organization/",
 				},
 				{
 					title: "Team",

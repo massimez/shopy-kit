@@ -59,3 +59,9 @@ export const showError = (error: unknown, customMessage?: string): void => {
 		);
 	}
 };
+
+export const handleClientError = async (res: Response): Promise<Error> => {
+	const errorData = await res.json();
+	const errorMessage = getErrorMessage(errorData);
+	return new Error(errorMessage);
+};

@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "starter-db";
 import { productCategory } from "starter-db/schema";
 import z from "zod";
@@ -8,6 +8,7 @@ import {
 	idParamSchema,
 	jsonValidator,
 	paramValidator,
+	queryValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
 import { authMiddleware } from "@/middleware/auth";
@@ -16,6 +17,10 @@ import {
 	insertProductCategorySchema,
 	updateProductCategorySchema,
 } from "./schema";
+
+const getProductCategoriesQuerySchema = z.object({
+	lang: z.string().length(2).optional(),
+});
 
 // --------------------
 // Product Category Routes
@@ -44,13 +49,20 @@ export const productCategoryRoute = createRouter()
 		"/product-categories",
 		authMiddleware,
 		hasOrgPermission("productCategory:read"),
+		queryValidator(getProductCategoriesQuerySchema),
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+
+				const whereConditions = [
+					eq(productCategory.organizationId, activeOrgId),
+				];
+
 				const foundProductCategories = await db
 					.select()
 					.from(productCategory)
-					.where(eq(productCategory.organizationId, activeOrgId));
+					.where(and(...whereConditions));
+
 				return c.json({ data: foundProductCategories });
 			} catch (error) {
 				return handleRouteError(c, error, "fetch product categories");

@@ -1,7 +1,12 @@
+import { PageDashboardHeader } from "@/components/sections/page-dashboard-header";
+
 const StorePage = () => {
 	return (
 		<div>
-			<h1>Store</h1>
+			<PageDashboardHeader
+				title="Store"
+				description="Store overview and management"
+			/>
 		</div>
 	);
 };

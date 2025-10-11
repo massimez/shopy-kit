@@ -6,3 +6,7 @@ export const offsetPaginationSchema = z.object({
 	orderBy: z.string().max(100).optional(),
 	direction: z.enum(["asc", "desc"]).default("asc").optional(),
 });
+
+export const languageCodeSchema = z.object({
+	languageCode: z.string().max(2).optional(),
+});
