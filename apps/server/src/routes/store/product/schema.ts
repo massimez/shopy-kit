@@ -6,7 +6,6 @@ import {
 	productReview,
 	productSupplier,
 	productVariant,
-	productVariantAttribute,
 	productVariantStock,
 } from "starter-db/schema";
 import { z } from "zod";
@@ -77,15 +76,6 @@ export const updateProductVariantSchema = createSelectSchema(productVariant)
 			)
 			.optional(),
 	});
-
-export const insertProductVariantAttributeSchema = createInsertSchema(
-	productVariantAttribute,
-);
-export const updateProductVariantAttributeSchema = createSelectSchema(
-	productVariantAttribute,
-)
-	.omit(idAndAuditFields)
-	.partial();
 
 export const insertProductVariantStockSchema =
 	createInsertSchema(productVariantStock);

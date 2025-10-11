@@ -51,11 +51,11 @@ export const location = pgTable("location", {
 
 // Zod Schemas for validation
 const TAddressSchema = z.object({
-	street: z.string().min(1).max(255).optional(),
-	city: z.string().min(1).max(100).optional(),
+	street: z.string().max(255).optional(),
+	city: z.string().max(100).optional(),
 	state: z.string().max(100).optional(),
 	zipCode: z.string().max(20).optional(),
-	country: z.string().min(1).max(100).optional(),
+	country: z.string().max(100).optional(),
 	office: z.string().max(255).optional(),
 	building: z.string().max(255).optional(),
 });

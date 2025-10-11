@@ -4,7 +4,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "starter-db";
 import { productReview } from "starter-db/schema";
-import type z from "zod";
 import { createRouter } from "@/lib/create-hono-app";
 import { handleRouteError } from "@/lib/utils/route-helpers";
 import {

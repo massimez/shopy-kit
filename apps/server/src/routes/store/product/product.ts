@@ -1,6 +1,10 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "starter-db";
-import { product, type TProductStatus } from "starter-db/schema";
+import {
+	product,
+	productVariant,
+	type TProductStatus,
+} from "starter-db/schema";
 import { withPaginationAndTotal } from "@/helpers/pagination";
 import { createRouter } from "@/lib/create-hono-app";
 import { handleRouteError } from "@/lib/utils/route-helpers";
@@ -13,7 +17,10 @@ import {
 } from "@/lib/utils/validator";
 import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
-import { offsetPaginationSchema } from "@/middleware/pagination";
+import {
+	languageCodeSchema,
+	offsetPaginationSchema,
+} from "@/middleware/pagination";
 import { insertProductSchema, updateProductSchema } from "./schema";
 
 // --------------------
@@ -49,10 +56,12 @@ export const productRoute = createRouter()
 		authMiddleware,
 		hasOrgPermission("product:read"),
 		queryValidator(offsetPaginationSchema),
+		queryValidator(languageCodeSchema),
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
 				const paginationParams = c.req.valid("query");
+				const whereConditions = [eq(product.organizationId, activeOrgId)];
 
 				const result = await withPaginationAndTotal({
 					db: db,
@@ -60,9 +69,35 @@ export const productRoute = createRouter()
 					table: product,
 					params: paginationParams,
 					orgId: activeOrgId,
+					baseFilters: and(...whereConditions),
 				});
 
-				return c.json({ total: result.total, data: result.data });
+				// Fetch variants for all products in the current page
+				const productIds = result.data.map((p) => p.id);
+
+				let variants: (typeof productVariant.$inferSelect)[] = [];
+				if (productIds.length > 0) {
+					const variantWhereConditions = [
+						inArray(productVariant.productId, productIds),
+						eq(productVariant.organizationId, activeOrgId),
+					];
+
+					variants = await db
+						.select()
+						.from(productVariant)
+						.where(and(...variantWhereConditions));
+				}
+
+				// Map variants to their respective products
+				const productsWithVariants = result.data.map((p) => ({
+					...p,
+					variants: variants.filter((v) => v.productId === p.id),
+				}));
+
+				return c.json({
+					total: result.total,
+					data: productsWithVariants,
+				});
 			} catch (error) {
 				return handleRouteError(c, error, "fetch products");
 			}

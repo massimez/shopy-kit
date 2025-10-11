@@ -8,14 +8,12 @@ import {
 	pgTable,
 	text,
 	timestamp,
-	uniqueIndex,
 	uuid,
 	varchar,
 } from "drizzle-orm/pg-core";
 import { softAudit } from "../helpers/common";
 import type { TImage, TProductStatus, TVideo } from "../helpers/types";
 import { organization } from "../organization";
-import { language } from "../system";
 import { user } from "../user";
 import { order } from "./order";
 import { brand } from "./supplier";
@@ -69,7 +67,6 @@ export const product = pgTable("product", {
 	name: varchar("name", { length: 255 }),
 	status: text("status").default("draft").notNull().$type<TProductStatus>(),
 	type: varchar("type", { length: 50 }).default("simple").notNull(), // simple, variable, digital
-	currency: varchar("currency", { length: 3 }).notNull(),
 	taxRate: numeric("tax_rate", { precision: 5, scale: 2 })
 		.default("0.00")
 		.notNull(),
@@ -145,7 +142,7 @@ export const productVariant = pgTable("product_variant", {
 			{
 				languageCode: string;
 				name?: string; // e.g. "Red / L"
-				attributes?: Record<string, string>; // optional localized attrs
+				attributes?: Record<string, string>;
 				features?: Record<string, string>;
 				specifications?: Record<string, string>;
 			}[]
@@ -153,19 +150,18 @@ export const productVariant = pgTable("product_variant", {
 	...softAudit,
 });
 
-// Structured attributes for filtering/indexing
-export const productVariantAttribute = pgTable("product_variant_attribute", {
+export const productVariantOption = pgTable("product_variant_option", {
 	id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),
 	organizationId: text("organization_id")
 		.notNull()
 		.references(() => organization.id, { onDelete: "cascade" }),
-	productVariantId: uuid("product_variant_id")
+	productId: uuid("product_id")
 		.notNull()
-		.references(() => productVariant.id, { onDelete: "cascade" }),
-
-	attributeName: varchar("attribute_name", { length: 100 }).notNull(),
-	attributeValue: varchar("attribute_value", { length: 255 }).notNull(),
-	sortOrder: integer("sort_order").default(0),
+		.references(() => product.id, { onDelete: "cascade" }),
+	name: varchar("name", { length: 100 }).notNull(), // "Size", "Color", "Material", "Finish"
+	displayName: jsonb("display_name").$type<Record<string, string>>(), // { "en": "Size", "fr": "Taille" }
+	position: integer("position").default(0).notNull(), // Display order
+	isRequired: boolean("is_required").default(true).notNull(),
 	isActive: boolean("is_active").default(true).notNull(),
 	...softAudit,
 });
