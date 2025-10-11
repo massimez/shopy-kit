@@ -10,3 +10,28 @@ import { twMerge } from "tailwind-merge";
 export function cn(...inputs: ClassValue[]): string {
 	return twMerge(clsx(inputs));
 }
+
+/**
+ * Safely retrieves a nested property from an object.
+ *
+ * @param obj - The object to query.
+ * @param key - The dot-separated path to the property.
+ * @returns The value of the property, or `undefined` if not found.
+ */
+export function getProperty<T, K extends string>(
+	obj: T,
+	key: K,
+): K extends keyof T ? T[K] : any {
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+	return key?.split(".").reduce((o, i) => (o ? o[i] : undefined), obj as any);
+}
+
+// Utility function to extract error message from response
+export async function extractErrorMessage(res: Response): Promise<string> {
+	try {
+		const errorData = await res.json();
+		return errorData.error.message || errorData.error || res.statusText;
+	} catch {
+		return res.statusText;
+	}
+}

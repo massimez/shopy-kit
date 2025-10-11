@@ -4,7 +4,6 @@ import z from "zod";
 export const insertOrganizationInfoSchema = createInsertSchema(
 	organizationInfo,
 	{
-		organizationId: z.string().min(1),
 		contactName: z.string().max(100).optional().or(z.literal("")),
 		contactEmail: z.email().max(100).optional().or(z.literal("")),
 		contactPhone: z.string().max(20).optional().or(z.literal("")),

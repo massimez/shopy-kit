@@ -46,6 +46,7 @@ export type FileUploadActions = {
 	removeFile: (id: string) => void;
 	clearFiles: () => void;
 	clearErrors: () => void;
+	triggerError: (errors: string[]) => void; // New action to trigger errors
 	handleDragEnter: (e: DragEvent<HTMLElement>) => void;
 	handleDragLeave: (e: DragEvent<HTMLElement>) => void;
 	handleDragOver: (e: DragEvent<HTMLElement>) => void;
@@ -310,6 +311,17 @@ export const useFileUpload = (
 		}));
 	}, []);
 
+	const triggerError = useCallback(
+		(newErrors: string[]) => {
+			setState((prev) => {
+				const updatedErrors = [...prev.errors, ...newErrors];
+				onError?.(updatedErrors);
+				return { ...prev, errors: updatedErrors };
+			});
+		},
+		[onError],
+	);
+
 	const handleDragEnter = useCallback((e: DragEvent<HTMLElement>) => {
 		e.preventDefault();
 		e.stopPropagation();
@@ -392,6 +404,7 @@ export const useFileUpload = (
 			removeFile,
 			clearFiles,
 			clearErrors,
+			triggerError, // Expose the new action
 			handleDragEnter,
 			handleDragLeave,
 			handleDragOver,

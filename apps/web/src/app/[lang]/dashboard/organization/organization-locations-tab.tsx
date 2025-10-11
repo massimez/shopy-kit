@@ -129,11 +129,11 @@ export default function OrganizationLocationsTab() {
 					<DialogTrigger asChild>
 						<Button>Add Location</Button>
 					</DialogTrigger>
-					<DialogContent className="flex max-h-[80vh] flex-col overflow-hidden sm:max-w-[600px]">
+					<DialogContent className="flex flex-col overflow-hidden sm:max-w-[600px]">
 						<DialogHeader className="mt-2">
 							<DialogTitle>Add New Location</DialogTitle>
 						</DialogHeader>
-						<div className="flex-1 overflow-y-auto pr-2">
+						<div className="flex-1 pr-2">
 							<LocationForm
 								onSubmit={handleAddLocation}
 								isSubmitting={isSubmitting}

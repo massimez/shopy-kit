@@ -13,7 +13,7 @@ import {
 	useFormState,
 } from "react-hook-form";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import { cn, getProperty } from "@/lib/utils";
 
 const Form = FormProvider;
 
@@ -135,9 +135,15 @@ function FormDescription({ className, ...props }: React.ComponentProps<"p">) {
 	);
 }
 
-function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
-	const { error, formMessageId } = useFormField();
-	const body = error ? String(error?.message ?? "") : props.children;
+function FormMessage({
+	className,
+	children,
+	...props
+}: React.ComponentProps<"p">) {
+	const { name, formMessageId } = useFormField();
+	const { errors } = useFormState({ name });
+	const error = getProperty(errors, name);
+	const body = error ? String(error.message) : children;
 
 	if (!body) {
 		return null;

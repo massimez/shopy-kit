@@ -1,4 +1,3 @@
-import { getTranslations } from "next-intl/server";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import OrganizationAdvancedTab from "./organization-advanced-tab";
 import OrganizationGeneralTab from "./organization-general-tab";
@@ -7,8 +6,6 @@ import OrganizationMembersTab from "./organization-members-tab";
 import OrganizationTravelFeesTab from "./organization-travel-fees-tab";
 
 export default async function OrganizationPage() {
-	const t = await getTranslations("common");
-
 	return (
 		<div className="space-y-6">
 			<div>

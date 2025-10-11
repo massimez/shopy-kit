@@ -22,6 +22,27 @@
       "when": 1758656540050,
       "tag": "0002_green_firebird",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1760181210578,
+      "tag": "0003_omniscient_aqueduct",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1760181249474,
+      "tag": "0004_stiff_wallow",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1760181784714,
+      "tag": "0005_gifted_hannibal_king",
+      "breakpoints": true
     }
   ]
 }

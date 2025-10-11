@@ -92,8 +92,7 @@ const NavigationFooter: React.FC<{
 	isLastTab: boolean;
 	isSubmitting: boolean;
 	onPrevious: () => void;
-	onNext: () => void;
-	onSubmit: () => void;
+	onNext: (e: React.MouseEvent<HTMLButtonElement>) => void; // Updated to accept event
 	submitButtonText?: string;
 	t: (key: string) => string;
 }> = ({
@@ -102,7 +101,6 @@ const NavigationFooter: React.FC<{
 	isSubmitting,
 	onPrevious,
 	onNext,
-	onSubmit,
 	submitButtonText,
 	t,
 }) => {
@@ -116,7 +114,7 @@ const NavigationFooter: React.FC<{
 	};
 
 	return (
-		<div className="sticky bottom-0 z-10 flex shrink-0 items-center justify-between border-t bg-background pt-6">
+		<div className="z-10 flex shrink-0 items-center justify-between border-t bg-background pt-6">
 			<div className="flex gap-2">
 				{!isFirstTab && (
 					<Button
@@ -139,7 +137,6 @@ const NavigationFooter: React.FC<{
 						type="submit"
 						disabled={isSubmitting}
 						className="min-w-[120px]"
-						onClick={onSubmit}
 					>
 						{getSubmitButtonText()}
 					</Button>
@@ -169,20 +166,31 @@ export const TabbedForm = <T extends FieldValues>({
 		isFirstTab,
 		isLastTab,
 		getTabErrorStatus,
-		goToNextTab,
+		goToNextTab: originalGoToNextTab, // Rename to avoid conflict
 		goToPrevTab,
 		handleTabChange,
 		navigateToFirstErrorTab,
 	} = useTabManagement(tabs, form, config);
 
-	const handleFormSubmit = useCallback(async () => {
-		try {
-			await form.handleSubmit(handleSubmit)();
-		} catch (error) {
-			console.error("Form submission error:", error);
-			navigateToFirstErrorTab();
-		}
-	}, [form, handleSubmit, navigateToFirstErrorTab]);
+	const goToNextTab = useCallback(
+		(e: React.MouseEvent<HTMLButtonElement>) => {
+			e.preventDefault();
+			originalGoToNextTab();
+		},
+		[originalGoToNextTab],
+	);
+
+	const handleFormSubmit = useCallback(
+		async (values: T) => {
+			try {
+				await handleSubmit(values);
+			} catch (error) {
+				console.error("Form submission error:", error);
+				navigateToFirstErrorTab();
+			}
+		},
+		[handleSubmit, navigateToFirstErrorTab],
+	);
 
 	const renderTabContent = useCallback(
 		(tab: FormTabConfig<T>) => (
@@ -204,8 +212,11 @@ export const TabbedForm = <T extends FieldValues>({
 	}
 
 	return (
-		<div className={`flex ${FORM_HEIGHT_CLASSES} flex-col ${className}`}>
-			<FormProvider {...form}>
+		<FormProvider {...form}>
+			<form
+				onSubmit={form.handleSubmit(handleFormSubmit)}
+				className={`flex ${FORM_HEIGHT_CLASSES} flex-col ${className}`}
+			>
 				<Tabs
 					value={activeTab}
 					onValueChange={handleTabChange}
@@ -226,7 +237,9 @@ export const TabbedForm = <T extends FieldValues>({
 					</div>
 
 					{/* Tab Contents */}
-					{tabs.map(renderTabContent)}
+					<div className="max-h-4/6 overflow-auto">
+						{tabs.map(renderTabContent)}
+					</div>
 
 					{/* Navigation Footer */}
 					<NavigationFooter
@@ -235,12 +248,11 @@ export const TabbedForm = <T extends FieldValues>({
 						isSubmitting={isSubmitting}
 						onPrevious={goToPrevTab}
 						onNext={goToNextTab}
-						onSubmit={handleFormSubmit}
 						submitButtonText={config.submitButtonText}
 						t={t}
 					/>
 				</Tabs>
-			</FormProvider>
-		</div>
+			</form>
+		</FormProvider>
 	);
 };

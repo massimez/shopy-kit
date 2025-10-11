@@ -36,6 +36,7 @@ export interface SelectOption {
 	label: string;
 	disable?: boolean;
 	fixed?: boolean;
+	helperText?: string;
 }
 
 export interface ValidationConfig {
@@ -111,6 +112,7 @@ export interface FormFieldConfig<T extends FieldValues = FieldValues> {
 	transformValue?: ValueTransform;
 	customRenderer?: CustomFieldRenderer<T>;
 	customProps?: Record<string, any>;
+	helperText?: string;
 }
 
 // ============================================================================

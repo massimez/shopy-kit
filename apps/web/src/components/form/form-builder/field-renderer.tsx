@@ -1,12 +1,7 @@
 "use client";
 
-import React, { useCallback } from "react";
-import {
-	type Control,
-	type FieldValues,
-	type Path,
-	useWatch,
-} from "react-hook-form";
+import React from "react";
+import { type FieldValues, useWatch } from "react-hook-form";
 import {
 	FormControl,
 	FormDescription,

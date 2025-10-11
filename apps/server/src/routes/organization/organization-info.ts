@@ -18,6 +18,7 @@ const buildOrganizationInfoQuery = (id: string, orgId: string) =>
 export const organizationInfoRoute = createRouter()
 	.post(
 		"/info",
+		authMiddleware,
 		hasOrgPermission("organization:create"),
 		jsonValidator(insertOrganizationInfoSchema),
 		async (c) => {
@@ -25,11 +26,11 @@ export const organizationInfoRoute = createRouter()
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
 
 				const data = c.req.valid("json");
-				data.organizationId = activeOrgId;
+				const insertData = { ...data, organizationId: activeOrgId };
 
 				const newOrganizationInfo = await db
 					.insert(organizationInfo)
-					.values(data)
+					.values(insertData)
 					.returning();
 
 				return c.json(newOrganizationInfo[0], 201);

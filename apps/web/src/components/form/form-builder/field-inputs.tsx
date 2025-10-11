@@ -27,13 +27,16 @@ export const TextInput: React.FC<{
 	<Input
 		type={field.type}
 		name={fieldProps.name}
-		value={fieldProps.value ?? ""}
+		value={fieldProps.value}
 		onChange={(e) => {
-			let value = e.target.value;
-			if (field.transformValue?.fromForm) {
-				value = field.transformValue.fromForm(value);
+			let value: string | number = e.target.value;
+
+			if (e.target.type === "number") {
+				value = e.target.valueAsNumber;
 			}
-			fieldProps.onChange(value);
+
+			const transformed = field.transformValue?.fromForm?.(value) ?? value;
+			fieldProps.onChange(transformed);
 		}}
 		onBlur={fieldProps.onBlur}
 		ref={fieldProps.ref}
