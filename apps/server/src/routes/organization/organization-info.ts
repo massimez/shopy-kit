@@ -162,4 +162,86 @@ export const organizationInfoRoute = createRouter()
 				return handleRouteError(c, error, "delete organization info");
 			}
 		},
+	)
+	.get(
+		"/basic-info/:orgSlug",
+		paramValidator(
+			z.object({
+				orgSlug: z.string().min(1, "orgSlug is required"),
+			}),
+		),
+		async (c) => {
+			try {
+				const orgSlug = c.req.param("orgSlug");
+
+				const foundOrganization = await db.query.organization.findFirst({
+					where: (organization, { eq }) => eq(organization.slug, orgSlug),
+					columns: {
+						id: true,
+						name: true,
+						slug: true,
+						logo: true,
+					},
+				});
+
+				if (!foundOrganization) {
+					return c.json({ error: "Organization not found" }, 404);
+				}
+
+				const foundOrganizationInfo = await db.query.organizationInfo.findFirst(
+					{
+						where: (organizationInfo, { eq }) =>
+							eq(organizationInfo.organizationId, foundOrganization.id),
+						columns: {
+							contactName: true,
+							contactEmail: true,
+							contactPhone: true,
+							travelFeeType: true,
+							travelFeeValue: true,
+							travelFeeValueByKm: true,
+							maxTravelDistance: true,
+							travelFeesPolicyText: true,
+							minimumTravelFees: true,
+							taxRate: true,
+							bonusPercentage: true,
+							defaultLanguage: true,
+							activeLanguages: true,
+							images: true,
+							socialLinks: true,
+						},
+					},
+				);
+
+				const defaultLocation = await db.query.location.findFirst({
+					where: (location, { eq, and }) =>
+						and(
+							eq(location.organizationId, foundOrganization.id),
+							eq(location.isDefault, true),
+						),
+					columns: {
+						name: true,
+						metadata: true,
+						description: true,
+						isActive: true,
+						address: true,
+						locationType: true,
+						latitude: true,
+						longitude: true,
+						isDefault: true,
+					},
+				});
+
+				return c.json({
+					...foundOrganization,
+					...{ defaultLocation },
+					...{ info: foundOrganizationInfo || null },
+				});
+			} catch (error) {
+				return handleRouteError(
+					c,
+					error,
+					"fetch organization basic info by slug",
+				);
+			}
+		},
 	);
