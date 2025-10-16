@@ -26,7 +26,7 @@ export const productVariantBatch = pgTable("product_variant_batch", {
 	productVariantId: uuid("product_variant_id")
 		.notNull()
 		.references(() => productVariant.id),
-	organizationId: uuid("organization_id").notNull(),
+	organizationId: text("organization_id").notNull(),
 
 	batchNumber: varchar("batch_number", { length: 100 }).notNull(),
 	expiryDate: timestamp("expiry_date"),
@@ -45,7 +45,7 @@ export const productVariantStockTransaction = pgTable(
 		productVariantId: uuid("product_variant_id")
 			.notNull()
 			.references(() => productVariant.id),
-		organizationId: uuid("organization_id").notNull(),
+		organizationId: text("organization_id").notNull(),
 		locationId: uuid("location_id").notNull(),
 		supplierId: uuid("supplier_id").references(() => supplier.id),
 
@@ -63,8 +63,9 @@ export const productVariantStockTransaction = pgTable(
 export const productVariantStock = pgTable(
 	"product_variant_stock",
 	{
+		id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),
 		productVariantId: uuid("product_variant_id")
-			.primaryKey()
+			.notNull()
 			.references(() => productVariant.id, { onDelete: "cascade" }),
 		organizationId: text("organization_id")
 			.notNull()

@@ -1,6 +1,9 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, getTableColumns, sql, sum } from "drizzle-orm";
 import { db } from "starter-db";
 import {
+	location,
+	product,
+	productVariant,
 	productVariantBatch,
 	productVariantStock,
 	productVariantStockTransaction,
@@ -113,20 +116,36 @@ export async function updateStockAfterTransaction(
  * Get stock transactions with pagination
  */
 export async function getStockTransactions(
-	productVariantId: string,
+	productVariantId: string | undefined,
 	orgId: string,
 	paginationParams: OffsetPaginationParams,
 ) {
+	const filters = [];
+
+	if (productVariantId) {
+		filters.push(
+			eq(productVariantStockTransaction.productVariantId, productVariantId),
+		);
+	}
+
+	const queryWithJoins = db
+		.select({
+			...getTableColumns(productVariantStockTransaction),
+			locationName: location.name,
+		})
+		.from(productVariantStockTransaction)
+		.innerJoin(
+			location,
+			eq(location.id, productVariantStockTransaction.locationId),
+		);
+
 	const result = await withPaginationAndTotal({
 		db: db,
-		query: db.select().from(productVariantStockTransaction),
-		baseFilters: and(
-			eq(productVariantStockTransaction.productVariantId, productVariantId),
-			eq(productVariantStockTransaction.organizationId, validateOrgId(orgId)),
-		),
+		query: queryWithJoins,
+		baseFilters: filters.length > 1 ? and(...filters) : filters[0],
 		table: productVariantStockTransaction,
 		params: paginationParams,
-		orgId: orgId,
+		orgId: validateOrgId(orgId),
 	});
 
 	return { total: result.total, data: result.data };
@@ -139,15 +158,32 @@ export async function createProductVariantBatch(
 	data: InsertProductVariantBatch,
 	orgId: string,
 ) {
-	const [newBatch] = await db
-		.insert(productVariantBatch)
-		.values({
-			...data,
-			organizationId: orgId,
-		})
-		.returning();
+	return await db.transaction(async (tx) => {
+		const [newBatch] = await tx
+			.insert(productVariantBatch)
+			.values({
+				...data,
+				organizationId: orgId,
+			})
+			.returning();
 
-	return newBatch;
+		// Create a stock transaction to sync batch stock with main stock
+		const [newTransaction] = await tx
+			.insert(productVariantStockTransaction)
+			.values({
+				productVariantId: data.productVariantId,
+				organizationId: orgId,
+				locationId: data.locationId,
+				quantityChange: data.quantity || 0,
+				reason: "purchase", // Reason for adding stock via batch
+			})
+			.returning();
+
+		// Update productVariantStock based on this transaction
+		await updateStockAfterTransaction(newTransaction, tx);
+
+		return newBatch;
+	});
 }
 
 /**
@@ -167,4 +203,94 @@ export async function getProductVariantBatches(
 			),
 		);
 	return foundBatches;
+}
+
+/**
+ * Get product variants grouped by product with inventory stock
+ */
+export async function getProductVariantsGroupedByProductWithStock(
+	orgId: string,
+	locationId?: string,
+) {
+	const orgIdValidated = validateOrgId(orgId);
+
+	// Single query with joins and aggregation
+	const result = await db
+		.select({
+			// Product fields
+			productId: product.id,
+			productName: product.name,
+			productTranslations: product.translations,
+			// Variant fields
+			variantId: productVariant.id,
+			variantSku: productVariant.sku,
+			variantPrice: productVariant.price,
+			variantTranslations: productVariant.translations,
+			// Aggregated stock fields
+			totalQuantity:
+				sql<number>`COALESCE(SUM(${productVariantStock.quantity}), 0)`.as(
+					"total_quantity",
+				),
+			totalReservedQuantity:
+				sql<number>`COALESCE(SUM(${productVariantStock.reservedQuantity}), 0)`.as(
+					"total_reserved",
+				),
+		})
+		.from(product)
+		.innerJoin(productVariant, eq(productVariant.productId, product.id))
+		.leftJoin(
+			productVariantStock,
+			and(
+				eq(productVariantStock.productVariantId, productVariant.id),
+				eq(productVariantStock.organizationId, orgIdValidated),
+				locationId ? eq(productVariantStock.locationId, locationId) : undefined,
+			),
+		)
+		.where(
+			and(
+				eq(product.organizationId, orgIdValidated),
+				eq(productVariant.organizationId, orgIdValidated),
+				locationId ? eq(productVariantStock.locationId, locationId) : undefined,
+			),
+		)
+		.groupBy(
+			product.id,
+			product.name,
+			product.translations,
+			productVariant.id,
+			productVariant.sku,
+			productVariant.price,
+			productVariant.translations,
+		)
+		.orderBy(product.createdAt, productVariant.createdAt);
+
+	// Group results by product
+	const productMap = new Map();
+
+	result.forEach((row) => {
+		const productId = row.productId;
+
+		if (!productMap.has(productId)) {
+			productMap.set(productId, {
+				id: productId,
+				name: row.productName,
+				translations: row.productTranslations,
+				variants: [],
+			});
+		}
+
+		const product = productMap.get(productId);
+		product.variants.push({
+			id: row.variantId,
+			sku: row.variantSku,
+			price: row.variantPrice ? Number(row.variantPrice) : undefined,
+			translations: row.variantTranslations,
+			stock: {
+				quantity: Number(row.totalQuantity),
+				reservedQuantity: Number(row.totalReservedQuantity),
+			},
+		});
+	});
+
+	return Array.from(productMap.values());
 }

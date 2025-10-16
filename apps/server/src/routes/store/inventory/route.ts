@@ -14,6 +14,7 @@ import {
 	createStockTransaction,
 	getProductVariantBatches,
 	getProductVariantStock,
+	getProductVariantsGroupedByProductWithStock,
 	getStockTransactions,
 } from "./inventory.service";
 import {
@@ -23,6 +24,10 @@ import {
 
 const productVariantIdParamSchema = z.object({
 	productVariantId: z.string().min(1, "productVariantId is required"),
+});
+
+const getGroupedInventoryQuerySchema = z.object({
+	locationId: z.string().optional(),
 });
 
 // --------------------
@@ -65,6 +70,27 @@ export const inventoryRoute = createRouter()
 				return c.json(newTransaction, 201);
 			} catch (error) {
 				return handleRouteError(c, error, "create stock transaction");
+			}
+		},
+	)
+	.get(
+		"/inventory/stock-transactions",
+		authMiddleware,
+		hasOrgPermission("inventory:read"),
+		queryValidator(offsetPaginationSchema),
+		async (c) => {
+			try {
+				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const paginationParams = c.req.valid("query");
+
+				const result = await getStockTransactions(
+					undefined,
+					activeOrgId,
+					paginationParams,
+				);
+				return c.json({ total: result.total, data: result.data });
+			} catch (error) {
+				return handleRouteError(c, error, "fetch stock transactions");
 			}
 		},
 	)
@@ -126,6 +152,27 @@ export const inventoryRoute = createRouter()
 				return c.json({ data: foundBatches });
 			} catch (error) {
 				return handleRouteError(c, error, "fetch product variant batches");
+			}
+		},
+	)
+	// Product variants grouped by product with stock
+	.get(
+		"/inventory/grouped-by-product",
+		authMiddleware,
+		hasOrgPermission("inventory:read"),
+		queryValidator(getGroupedInventoryQuerySchema),
+		async (c) => {
+			try {
+				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const { locationId } = c.req.valid("query");
+
+				const data = await getProductVariantsGroupedByProductWithStock(
+					activeOrgId,
+					locationId,
+				);
+				return c.json({ data });
+			} catch (error) {
+				return handleRouteError(c, error, "fetch grouped inventory");
 			}
 		},
 	);

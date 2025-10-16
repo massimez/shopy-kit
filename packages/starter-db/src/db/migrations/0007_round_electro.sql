@@ -1,1 +1,0 @@
-ALTER TABLE "brand" RENAME COLUMN "slug" TO "company_name";

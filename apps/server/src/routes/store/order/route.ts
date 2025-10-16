@@ -61,10 +61,6 @@ export const orderRoute = createRouter()
 				const { data: orders, total } = await withPaginationAndTotal({
 					db,
 					query: db.select().from(order),
-					baseFilters: and(
-						eq(order.organizationId, activeOrgId),
-						isNull(order.deletedAt),
-					),
 					table: order,
 					params: { limit, offset, orderBy, direction },
 					orgId: activeOrgId,

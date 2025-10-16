@@ -1,7 +1,6 @@
 "use client";
 
 import {
-	Bot,
 	ContainerIcon,
 	Frame,
 	Map as MapIcon,
@@ -26,12 +25,6 @@ import { TeamSwitcher } from "./team-switcher";
 // This is sample data.
 
 const data = {
-	user: {
-		name: "shadcn",
-		email: "m@example.com",
-		avatar: "/avatars/shadcn.jpg",
-	},
-
 	navMain: [
 		{
 			title: "Store",
@@ -68,15 +61,14 @@ const data = {
 		},
 		{
 			title: "Inventory",
-			url: "/dashboard",
+			url: "/dashboard/store/inventory",
 			icon: ContainerIcon,
 			isActive: true,
 			items: [
 				{
-					title: "Items",
-					url: "#",
+					title: "Overview",
+					url: "/dashboard/store/inventory",
 				},
-
 				{
 					title: "Suppliers",
 					url: "/dashboard/store/suppliers",

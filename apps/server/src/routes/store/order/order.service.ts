@@ -54,24 +54,13 @@ export async function validateOrderItems(
 			where: eq(schema.product.id, foundProductVariant.productId),
 			columns: {
 				allowBackorders: true,
+				name: true,
 			},
 		});
 
 		const allowBackorders = productInfo?.allowBackorders || false;
 
-		const productTranslationResult =
-			await tx.query.productTranslation.findFirst({
-				where: and(
-					eq(
-						schema.productTranslation.productId,
-						foundProductVariant.productId,
-					),
-					eq(schema.productTranslation.organizationId, activeOrgId),
-				),
-				columns: { name: true },
-			});
-
-		const productName = productTranslationResult?.name || "Unknown Product";
+		const productName = productInfo?.name || "Unknown Product";
 		const unitPrice = Number(foundProductVariant.price || 0);
 		const totalPrice = unitPrice * Number(item.quantity || 0);
 		subtotal += totalPrice;
