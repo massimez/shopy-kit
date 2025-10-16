@@ -64,7 +64,6 @@ export const productRoute = createRouter()
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
 				const paginationParams = c.req.valid("query");
-				const whereConditions = [eq(product.organizationId, activeOrgId)];
 
 				const result = await withPaginationAndTotal({
 					db: db,
@@ -72,7 +71,6 @@ export const productRoute = createRouter()
 					table: product,
 					params: paginationParams,
 					orgId: activeOrgId,
-					baseFilters: and(...whereConditions),
 				});
 
 				// Fetch variants for all products in the current page

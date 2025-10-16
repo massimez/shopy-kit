@@ -52,10 +52,6 @@ export const supplierRoute = createRouter()
 				const { data: suppliers, total } = await withPaginationAndTotal({
 					db,
 					query: db.select().from(supplier),
-					baseFilters: and(
-						eq(supplier.organizationId, activeOrgId),
-						isNull(supplier.deletedAt),
-					),
 					table: supplier,
 					params: { limit, offset, orderBy, direction },
 					orgId: activeOrgId,

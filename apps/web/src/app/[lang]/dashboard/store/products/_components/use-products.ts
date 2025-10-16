@@ -40,7 +40,7 @@ export type Product = {
 };
 
 type ProductsResponse = {
-	total: string;
+	total: number;
 	data: Product[];
 };
 

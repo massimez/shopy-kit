@@ -60,10 +60,6 @@ export const brandRoute = app
 				const { data: brandList, total } = await withPaginationAndTotal({
 					db,
 					query: db.select().from(brand),
-					baseFilters: and(
-						eq(brand.organizationId, activeOrgId),
-						isNull(brand.deletedAt),
-					),
 					table: brand,
 					params: { limit, offset, orderBy, direction },
 					orgId: activeOrgId,
