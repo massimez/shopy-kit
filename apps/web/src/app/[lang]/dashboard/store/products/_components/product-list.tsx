@@ -149,7 +149,7 @@ export const ProductList = ({
 					</p>
 				</div>
 			) : (
-				<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+				<div className="grid grid-cols-[repeat(auto-fit,minmax(200px,400px))] gap-4">
 					{filteredProducts.map((product) => (
 						<ProductCard
 							key={product.id}

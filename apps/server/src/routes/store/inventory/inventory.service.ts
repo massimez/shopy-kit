@@ -1,7 +1,6 @@
-import { and, eq, getTableColumns, sql, sum } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "starter-db";
 import {
-	location,
 	product,
 	productVariant,
 	productVariantBatch,
@@ -9,7 +8,6 @@ import {
 	productVariantStockTransaction,
 } from "starter-db/schema";
 import type { z } from "zod";
-import { withPaginationAndTotal } from "@/helpers/pagination";
 import { validateOrgId } from "@/lib/utils/validator";
 import type { offsetPaginationSchema } from "@/middleware/pagination";
 import type {
@@ -120,7 +118,12 @@ export async function getStockTransactions(
 	orgId: string,
 	paginationParams: OffsetPaginationParams,
 ) {
-	const filters = [];
+	const { limit, offset } = paginationParams;
+	const validatedOrgId = validateOrgId(orgId);
+
+	const filters = [
+		eq(productVariantStockTransaction.organizationId, validatedOrgId),
+	];
 
 	if (productVariantId) {
 		filters.push(
@@ -128,27 +131,32 @@ export async function getStockTransactions(
 		);
 	}
 
-	const queryWithJoins = db
-		.select({
-			...getTableColumns(productVariantStockTransaction),
-			locationName: location.name,
-		})
-		.from(productVariantStockTransaction)
-		.innerJoin(
-			location,
-			eq(location.id, productVariantStockTransaction.locationId),
-		);
+	const whereClause =
+		filters.length > 1
+			? and(...filters)
+			: filters.length === 1
+				? filters[0]
+				: undefined;
 
-	const result = await withPaginationAndTotal({
-		db: db,
-		query: queryWithJoins,
-		baseFilters: filters.length > 1 ? and(...filters) : filters[0],
-		table: productVariantStockTransaction,
-		params: paginationParams,
-		orgId: validateOrgId(orgId),
+	const data = await db.query.productVariantStockTransaction.findMany({
+		where: whereClause,
+		with: {
+			location: true,
+			variant: true,
+		},
+		limit,
+		offset,
+		orderBy: (tx, { desc }) => [desc(tx.createdAt)],
 	});
 
-	return { total: result.total, data: result.data };
+	// optional: total count if you need pagination info
+	const total = await db
+		.select({ count: sql<number>`count(*)` })
+		.from(productVariantStockTransaction)
+		.where(whereClause)
+		.then((res) => res[0]?.count ?? 0);
+
+	return { total, data };
 }
 
 /**

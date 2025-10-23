@@ -12,7 +12,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { useBatches } from "../hooks";
+import { useBatches } from "../hooks/use-batches";
 
 interface BatchesListProps {
 	productVariantId?: string;

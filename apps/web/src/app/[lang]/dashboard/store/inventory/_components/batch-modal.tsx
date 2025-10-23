@@ -32,7 +32,8 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { authClient } from "@/lib/auth-client";
-import { useCreateBatch, useInventory } from "../hooks";
+import { useInventory } from "../hooks/use-inventory";
+import { useCreateBatch } from "../hooks/use-batches";
 
 // -------------------------------
 // 🧩 Schema & Types

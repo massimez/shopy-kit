@@ -1,6 +1,6 @@
 "use client";
 
-import { Receipt, Search } from "lucide-react";
+import { Receipt } from "lucide-react";
 import { useState } from "react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { useInventoryTransactions } from "../hooks";
+import { useInventoryTransactions } from "../hooks/use-inventory";
 
 interface TransactionsListProps {
 	productVariantId?: string;
@@ -72,6 +72,7 @@ export const TransactionsList = ({
 				<Table>
 					<TableHeader>
 						<TableRow>
+							<TableHead>SKU</TableHead>
 							<TableHead>Reason</TableHead>
 							<TableHead>Quantity Change</TableHead>
 							<TableHead>Location</TableHead>
@@ -83,6 +84,7 @@ export const TransactionsList = ({
 					<TableBody>
 						{filteredTransactions.map((transaction) => (
 							<TableRow key={transaction.id}>
+								<TableCell>{transaction.variant?.sku || "N/A"}</TableCell>
 								<TableCell className="font-medium">
 									{transaction.reason?.replace("_", " ") || "N/A"}
 								</TableCell>
@@ -98,12 +100,9 @@ export const TransactionsList = ({
 										{transaction.quantityChange}
 									</span>
 								</TableCell>
-								<TableCell>{transaction.locationName || "N/A"}</TableCell>
+								<TableCell>{transaction.location.name || "N/A"}</TableCell>
 								<TableCell>
-									{transaction.unitCost &&
-									typeof transaction.unitCost === "number"
-										? `$${transaction.unitCost.toFixed(2)}`
-										: transaction.unitCost}
+									{Number.parseInt(transaction.unitCost || "0").toFixed(2)}
 								</TableCell>
 								<TableCell>{transaction.referenceId || "-"}</TableCell>
 								<TableCell>

@@ -36,7 +36,7 @@ export async function validateOrderItems(
 
 	for (const item of items) {
 		const foundProductVariant = await tx.query.productVariant.findFirst({
-			where: eq(schema.productVariant.id, item.productId),
+			where: eq(schema.productVariant.id, item.productVariantId),
 			columns: {
 				id: true,
 				price: true,
@@ -46,7 +46,9 @@ export async function validateOrderItems(
 		});
 
 		if (!foundProductVariant) {
-			throw new Error(`Product variant not found: " + ${item.productId}`);
+			throw new Error(
+				`Product variant not found: " + ${item.productVariantId}`,
+			);
 		}
 
 		// Separately fetch allowBackorders from the product table
@@ -67,7 +69,7 @@ export async function validateOrderItems(
 
 		if (!item.locationId) {
 			throw new Error(
-				`Location ID is required for product variant ${item.productId}`,
+				`Location ID is required for product variant ${item.productVariantId}`,
 			);
 		}
 
@@ -198,7 +200,7 @@ export async function addPendingBonus(
  */
 export async function createOrder(
 	payload: CreateOrderInput,
-	userId: string | null,
+	user: any,
 	activeOrgId: string,
 ) {
 	return await db.transaction(async (tx) => {
@@ -209,9 +211,25 @@ export async function createOrder(
 		);
 
 		const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+		const userId = user?.id || null;
 
-		if (!payload.locationId) {
-			throw new Error("Top-level Location ID is required for the order");
+		// Populate customer info from user session if not provided
+		let customerEmail = payload.customerEmail || null;
+		let customerPhone = payload.customerPhone || null;
+		let customerFullName = payload.customerFullName || null;
+
+		if (user && (!customerEmail || !customerPhone || !customerFullName)) {
+			if (!customerEmail && user.emailVerified) customerEmail = user.email;
+			if (!customerPhone && user.phoneNumberVerified)
+				customerPhone = user.phoneNumber || null;
+			if (!customerFullName) {
+				// Construct full name from firstName + lastName, or use name as fallback
+				if (user.firstName && user.lastName) {
+					customerFullName = `${user.firstName} ${user.lastName}`;
+				} else if (user.name) {
+					customerFullName = user.name;
+				}
+			}
 		}
 
 		// create order
@@ -225,10 +243,10 @@ export async function createOrder(
 				subtotal: subtotal.toString(),
 				totalAmount: subtotal.toString(),
 				shippingAddress: payload.shippingAddress,
-				customerEmail: payload.customerEmail || null,
-				customerPhone: payload.customerPhone || null,
+				customerEmail,
+				customerPhone,
+				customerFullName,
 				status: "pending",
-				locationId: payload.locationId,
 			})
 			.returning();
 

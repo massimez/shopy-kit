@@ -73,6 +73,7 @@ export const order = pgTable("order", {
 	totalAmount: numeric("total_amount", { precision: 12, scale: 2 }).notNull(),
 
 	// Customer snapshot
+	customerFullName: varchar("customer_full_name", { length: 255 }),
 	customerEmail: varchar("customer_email", { length: 255 }),
 	customerPhone: varchar("customer_phone", { length: 50 }),
 	customerNotes: text("customer_notes"),
@@ -92,9 +93,6 @@ export const order = pgTable("order", {
 	shippedAt: timestamp("shipped_at"),
 	deliveredAt: timestamp("delivered_at"),
 	cancelledAt: timestamp("cancelled_at"),
-	locationId: uuid("location_id")
-		.notNull()
-		.references(() => location.id),
 
 	notes: text("notes"),
 	tags: jsonb("tags"), // ["rush", "vip", "wholesale"]

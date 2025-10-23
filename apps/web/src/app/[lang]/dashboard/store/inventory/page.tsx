@@ -14,7 +14,7 @@ import {
 	TransactionModal,
 	TransactionsList,
 } from "./_components";
-import { useGroupedInventory } from "./hooks";
+import { useGroupedInventory } from "./hooks/use-inventory-grouped";
 
 export default function InventoryPage() {
 	const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
@@ -69,9 +69,7 @@ export default function InventoryPage() {
 						inventory={inventoryQueryResult || []}
 						onAddBatch={handleOpenBatchModal}
 						onAddTransaction={handleOpenTransactionModal}
-						locationsData={
-							locationsData && "data" in locationsData ? locationsData.data : []
-						}
+						locationsData={locationsData?.data ? locationsData.data : []}
 						onLocationChange={handleLocationChange}
 						defaultLocationId={selectedLocationId || "ALL"}
 						showLocationFilter={true}

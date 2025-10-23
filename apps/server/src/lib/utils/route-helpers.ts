@@ -15,6 +15,7 @@ export const handleRouteError = (
 	) {
 		const errorResponse: ErrorSchema = {
 			success: false,
+			data: null,
 			error: {
 				name: "BadRequestError",
 				issues: [
@@ -31,6 +32,7 @@ export const handleRouteError = (
 	console.error(`Error ${message}:`, error);
 	const errorResponse: ErrorSchema = {
 		success: false,
+		data: null,
 		error: {
 			name: "InternalServerError",
 			message: `An error occurred while trying to ${message}`,

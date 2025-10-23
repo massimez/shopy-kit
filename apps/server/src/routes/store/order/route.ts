@@ -1,7 +1,6 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { type AnyColumn, and, asc, count, desc, eq, isNull } from "drizzle-orm";
 import { db } from "starter-db";
 import { order } from "starter-db/schema";
-import { withPaginationAndTotal } from "@/helpers/pagination";
 import { createRouter } from "@/lib/create-hono-app";
 import { handleRouteError } from "@/lib/utils/route-helpers";
 import {
@@ -13,7 +12,7 @@ import {
 } from "@/lib/utils/validator";
 import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
-import { offsetPaginationSchema } from "@/middleware/pagination";
+import { orderPaginationSchema } from "@/middleware/pagination";
 import { cancelOrder, completeOrder, createOrder } from "./order.service";
 import { createOrderSchema, updateOrderSchema } from "./schema";
 
@@ -31,11 +30,7 @@ export const orderRoute = createRouter()
 				const user = c.get("user");
 				const payload = c.req.valid("json");
 
-				const result = await createOrder(
-					payload,
-					user?.id || null,
-					activeOrgId,
-				);
+				const result = await createOrder(payload, user, activeOrgId);
 
 				return c.json(result, 201);
 			} catch (error) {
@@ -49,24 +44,45 @@ export const orderRoute = createRouter()
 		"/orders",
 		authMiddleware,
 		hasOrgPermission("order:read"),
-		queryValidator(offsetPaginationSchema),
+		queryValidator(orderPaginationSchema),
 		async (c) => {
 			try {
 				const activeOrgId = validateOrgId(
 					c.get("session")?.activeOrganizationId as string,
 				);
 
-				const { limit, offset, orderBy, direction } = c.req.valid("query");
+				const { limit, offset, orderBy, direction, status } =
+					c.req.valid("query");
 
-				const { data: orders, total } = await withPaginationAndTotal({
-					db,
-					query: db.select().from(order),
-					table: order,
-					params: { limit, offset, orderBy, direction },
-					orgId: activeOrgId,
+				const whereConditions = [
+					eq(order.organizationId, activeOrgId),
+					isNull(order.deletedAt),
+				];
+				if (status) {
+					whereConditions.push(eq(order.status, status));
+				}
+
+				const result = await db.query.order.findMany({
+					where: (o, { and }) => and(...whereConditions),
+					with: {
+						items: true,
+					},
+					limit,
+					offset,
+					orderBy: orderBy
+						? direction === "asc"
+							? asc(order[orderBy as keyof typeof order] as AnyColumn)
+							: desc(order[orderBy as keyof typeof order] as AnyColumn)
+						: desc(order.createdAt),
 				});
+				const totalResult = await db
+					.select({ count: count() })
+					.from(order)
+					.where(and(...whereConditions));
 
-				return c.json({ total, data: orders });
+				const total = Number(totalResult[0]?.count ?? 0);
+
+				return c.json({ total, data: result });
 			} catch (error) {
 				return handleRouteError(c, error, "fetch orders");
 			}
@@ -175,7 +191,6 @@ export const orderRoute = createRouter()
 	)
 
 	// CANCEL order (subtracts from bonusPending, decreases reservedQuantity)
-	// TODO CHECK IF USER CAN CANCEL
 	.patch(
 		"/orders/:id/cancel",
 		authMiddleware,

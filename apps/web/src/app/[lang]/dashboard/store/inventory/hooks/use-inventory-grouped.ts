@@ -46,7 +46,7 @@ type GroupedInventoryApiResponse =
 	| GroupedInventoryApiResponseError;
 
 export const useGroupedInventory = (locationId?: string) => {
-	return useQuery<ProductWithVariants[], Error>({
+	return useQuery({
 		queryKey: ["inventory-grouped", locationId],
 		queryFn: async () => {
 			const params = locationId ? { locationId } : {};

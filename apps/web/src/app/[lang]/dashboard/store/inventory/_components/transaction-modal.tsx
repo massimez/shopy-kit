@@ -34,7 +34,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { useSuppliers } from "../../suppliers/hooks";
-import { useCreateTransaction } from "../hooks";
+import { useCreateTransaction } from "../hooks/use-create-transaction";
 
 const transactionSchema = z.object({
 	quantityChange: z.number().int("Quantity must be a whole number"),
@@ -80,8 +80,8 @@ export const TransactionModal = ({
 			quantityChange: 0,
 			reason: "",
 			locationId:
-				locations && "data" in locations && locations.data.length > 0
-					? locations.data.find((location: any) => location.isDefault)?.id ||
+				locations?.data && locations.data.length > 0
+					? locations.data.find((location) => location.isDefault)?.id ||
 						locations.data[0]?.id
 					: "",
 			supplierId: undefined,
@@ -201,13 +201,11 @@ export const TransactionModal = ({
 											</SelectTrigger>
 										</FormControl>
 										<SelectContent>
-											{locations &&
-												"data" in locations &&
-												locations.data.map((location) => (
-													<SelectItem key={location.id} value={location.id}>
-														{location.name}
-													</SelectItem>
-												))}
+											{locations?.data?.map((location) => (
+												<SelectItem key={location.id} value={location.id}>
+													{location.name}
+												</SelectItem>
+											))}
 										</SelectContent>
 									</Select>
 									<FormMessage />
@@ -232,13 +230,11 @@ export const TransactionModal = ({
 										</FormControl>
 										<SelectContent>
 											<SelectItem value="__none__">None</SelectItem>
-											{suppliersQueryResult &&
-												"data" in suppliersQueryResult &&
-												suppliersQueryResult.data.map((supplier: any) => (
-													<SelectItem key={supplier.id} value={supplier.id}>
-														{supplier.name}
-													</SelectItem>
-												))}
+											{suppliersQueryResult?.data.map((supplier: any) => (
+												<SelectItem key={supplier.id} value={supplier.id}>
+													{supplier.name}
+												</SelectItem>
+											))}
 										</SelectContent>
 									</Select>
 									<FormMessage />

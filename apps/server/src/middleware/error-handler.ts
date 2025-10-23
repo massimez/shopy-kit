@@ -13,6 +13,7 @@ export type ErrorSchema = {
 			message?: string | undefined;
 		}[];
 	};
+	data?: null;
 	success: boolean;
 };
 
@@ -23,6 +24,7 @@ export function errorHandler(error: Error, c: Context): Response {
 	if (error instanceof HTTPException) {
 		const response: ErrorSchema = {
 			success: false,
+			data: null,
 			error: {
 				name: "HTTPException",
 				message: error.message,

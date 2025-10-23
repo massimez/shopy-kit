@@ -39,7 +39,7 @@ export default function createApp() {
 					? [env?.FRONTEND_URL || "http://localhost:3000"]
 					: ["http://localhost:3000", "http://127.0.0.1:3000"],
 			credentials: true,
-			allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+			allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 			allowHeaders: ["Content-Type", "Authorization", "X-Request-ID"],
 		}),
 	);
