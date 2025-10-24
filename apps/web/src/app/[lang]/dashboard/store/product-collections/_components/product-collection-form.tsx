@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useProductCategories } from "@/app/[lang]/dashboard/store/product-categories/hooks/use-product-categories";
 import { Button } from "@/components/ui/button";
 import {
 	Form,
@@ -22,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { debounce, getSlug } from "@/lib/helpers";
+import { useProductCollections } from "../hooks/use-product-collection";
 
 // Simplified schema - single translation
 const translationSchema = z.object({
@@ -33,27 +33,27 @@ const translationSchema = z.object({
 	metaDescription: z.string().optional(),
 });
 
-const productCategoryFormSchema = z.object({
+const productCollectionFormSchema = z.object({
 	parentId: z.string().nullable(),
 	translation: translationSchema,
 });
 
-export type ProductCategoryFormValues = z.infer<
-	typeof productCategoryFormSchema
+export type ProductCollectionFormValues = z.infer<
+	typeof productCollectionFormSchema
 >;
 
 // Component
-export function ProductCategoryForm({
+export function ProductCollectionForm({
 	initialValues,
 	onSubmit,
 	currentLanguage,
 }: {
-	initialValues?: ProductCategoryFormValues;
-	onSubmit: (values: ProductCategoryFormValues) => void;
+	initialValues?: ProductCollectionFormValues;
+	onSubmit: (values: ProductCollectionFormValues) => void;
 	currentLanguage: string;
 }) {
 	const form = useForm({
-		resolver: zodResolver(productCategoryFormSchema),
+		resolver: zodResolver(productCollectionFormSchema),
 		defaultValues: initialValues ?? {
 			parentId: null,
 			translation: {
@@ -67,7 +67,7 @@ export function ProductCategoryForm({
 		},
 	});
 
-	const { data: categories } = useProductCategories(currentLanguage);
+	const { data: collections } = useProductCollections(currentLanguage);
 
 	const handleNameChange = (value: string) => {
 		const slug = getSlug(value);
@@ -79,13 +79,13 @@ export function ProductCategoryForm({
 	return (
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-				{/* Parent Category */}
+				{/* Parent Collection */}
 				<FormField
 					control={form.control}
 					name="parentId"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>Parent Category</FormLabel>
+							<FormLabel>Parent Collection</FormLabel>
 							<Select
 								onValueChange={(val) =>
 									field.onChange(val === "none" ? null : val)
@@ -93,13 +93,13 @@ export function ProductCategoryForm({
 								value={field.value ?? "none"}
 							>
 								<SelectTrigger>
-									<SelectValue placeholder="Select parent category" />
+									<SelectValue placeholder="Select parent collection" />
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem value="none">Top Level</SelectItem>
-									{categories?.data?.map((cat) => (
-										<SelectItem key={cat.id} value={cat.id}>
-											{cat.name}
+									{collections?.data?.map((col) => (
+										<SelectItem key={col.id} value={col.id}>
+											{col.name}
 										</SelectItem>
 									))}
 								</SelectContent>
@@ -118,7 +118,7 @@ export function ProductCategoryForm({
 							<FormItem>
 								<FormLabel>Name</FormLabel>
 								<Input
-									placeholder="Enter category name"
+									placeholder="Enter collection name"
 									{...field}
 									onChange={(e) => {
 										field.onChange(e);
@@ -136,7 +136,7 @@ export function ProductCategoryForm({
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>Slug</FormLabel>
-								<Input placeholder="Enter category slug" {...field} />
+								<Input placeholder="Enter collection slug" {...field} />
 								<FormMessage />
 							</FormItem>
 						)}
@@ -148,7 +148,10 @@ export function ProductCategoryForm({
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>Description</FormLabel>
-								<Textarea placeholder="Enter category description" {...field} />
+								<Textarea
+									placeholder="Enter collection description"
+									{...field}
+								/>
 								<FormMessage />
 							</FormItem>
 						)}

@@ -20,15 +20,15 @@ import { brand } from "./supplier";
 
 /**
  * ---------------------------------------------------------------------------
- * PRODUCT CATEGORIES + TRANSLATIONS
+ * PRODUCT COLLECTIONS + TRANSLATIONS
  * ---------------------------------------------------------------------------
  */
-export const productCategory = pgTable("product_category", {
+export const productCollection = pgTable("product_collection", {
 	id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),
 	organizationId: text("organization_id")
 		.notNull()
 		.references(() => organization.id, { onDelete: "cascade" }),
-	parentId: uuid("parent_id").references((): PgColumn => productCategory.id, {
+	parentId: uuid("parent_id").references((): PgColumn => productCollection.id, {
 		onDelete: "set null",
 	}),
 	name: varchar("name", { length: 255 }).notNull(),
@@ -170,12 +170,12 @@ export const productVariantOption = pgTable("product_variant_option", {
 
 /**
  * ---------------------------------------------------------------------------
- * PRODUCT-CATEGORY ASSIGNMENTS & SUPPLIERS
+ * PRODUCT-COLLECTION ASSIGNMENTS & SUPPLIERS
  * ---------------------------------------------------------------------------
  */
 // TODO CRUD API
-export const productCategoryAssignment = pgTable(
-	"product_category_assignment",
+export const productCollectionAssignment = pgTable(
+	"product_collection_assignment",
 	{
 		id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),
 		organizationId: text("organization_id")
@@ -184,9 +184,9 @@ export const productCategoryAssignment = pgTable(
 		productId: uuid("product_id")
 			.notNull()
 			.references(() => product.id, { onDelete: "cascade" }),
-		categoryId: uuid("category_id")
+		collectionId: uuid("collection_id")
 			.notNull()
-			.references(() => productCategory.id, { onDelete: "cascade" }),
+			.references(() => productCollection.id, { onDelete: "cascade" }),
 		...softAudit,
 	},
 );

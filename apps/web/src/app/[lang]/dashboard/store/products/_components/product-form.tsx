@@ -2,17 +2,17 @@
 
 import { insertProductSchema } from "starter-plus-server/hc";
 import { z } from "zod";
-import {
-	type ProductCategory,
-	useProductCategories,
-} from "@/app/[lang]/dashboard/store/product-categories/hooks/use-product-categories";
 import { FormBuilder } from "@/components/form/form-builder";
 import type { FormTabConfig } from "@/components/form/form-builder/types";
+import {
+	type ProductCollection,
+	useProductCollections,
+} from "../../product-collections/hooks/use-product-collection";
 import { ProductImagesSlot } from "./product-images-slot";
 
 export type ProductFormValues = {
 	id?: string;
-	categoryId?: string;
+	collectionId?: string;
 	brandId?: string | null;
 	images?: Array<{
 		key: string;
@@ -62,7 +62,7 @@ const productFormSchema = insertProductSchema
 	})
 	.extend({
 		id: z.string().optional(),
-		categoryId: z.string().optional(),
+		collectionId: z.string().optional(),
 		brandId: z.string().nullable().optional(),
 		images: z
 			.array(
@@ -119,13 +119,13 @@ export const ProductForm = ({
 	selectedLanguage,
 	brands = [],
 }: ProductFormProps) => {
-	const { data: categoriesResponse, isLoading: isLoadingCategories } =
-		useProductCategories();
+	const { data: collectionsResponse, isLoading: isLoadingCollections } =
+		useProductCollections();
 
-	const categoryOptions =
-		categoriesResponse?.data?.map((category: ProductCategory) => ({
-			label: category.name,
-			value: category.id,
+	const collectionOptions =
+		collectionsResponse?.data?.map((collection: ProductCollection) => ({
+			label: collection.name,
+			value: collection.id,
 		})) || [];
 
 	const brandOptions = brands.map((brand) => ({
@@ -204,28 +204,28 @@ export const ProductForm = ({
 				},
 				{
 					itemType: "field",
-					name: "categoryId",
-					labelKey: "Category",
+					name: "collectionId",
+					labelKey: "Collection",
 					type: "select",
-					placeholderKey: "Select a category",
-					options: isLoadingCategories
+					placeholderKey: "Select a collection",
+					options: isLoadingCollections
 						? [
 								{
-									label: "Loading categories...",
+									label: "Loading collections...",
 									value: "--loading--",
 									disable: true,
 								},
 							]
 						: [
-								{ label: "No category", value: "--no-category--" },
-								...categoryOptions,
+								{ label: "No collection", value: "--no-collection--" },
+								...collectionOptions,
 							],
 					required: false,
 					gridCols: 6,
 					transformValue: {
-						toForm: (value) => value ?? "--no-category--",
+						toForm: (value) => value ?? "--no-collection--",
 						fromForm: (value) =>
-							value === "--no-category--" ? undefined : value,
+							value === "--no-collection--" ? undefined : value,
 					},
 				},
 			],

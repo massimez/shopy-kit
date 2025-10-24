@@ -6,7 +6,7 @@ import storageRoutes from "@/routes/storage";
 import { inventoryRoute } from "@/routes/store/inventory/route";
 import { orderRoute } from "@/routes/store/order/route";
 import { productRoute } from "@/routes/store/product/product";
-import { productCategoryRoute } from "@/routes/store/product/product-category";
+import { productCollectionRoute } from "@/routes/store/product/product-collection";
 import { productReviewRoute } from "@/routes/store/product/product-review";
 import { productVariantRoute } from "@/routes/store/product/product-variant";
 import { brandRoute } from "@/routes/store/supplier/brand";
@@ -22,7 +22,7 @@ const app = createApp()
 	.route("/storage", storageRoutes)
 	.route("/store", productRoute)
 	.route("/store", productVariantRoute)
-	.route("/store", productCategoryRoute)
+	.route("/store", productCollectionRoute)
 	.route("/store", productReviewRoute)
 	.route("/store", inventoryRoute)
 	.route("/store", supplierRoute)

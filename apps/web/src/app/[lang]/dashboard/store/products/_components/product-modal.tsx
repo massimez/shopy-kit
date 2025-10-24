@@ -63,7 +63,7 @@ export const ProductModal = ({
 			...product,
 			maxQuantity: product.maxQuantity ?? undefined,
 			translations: translationsRecord,
-			categoryId: product.categoryId || undefined,
+			collectionId: product.collectionId || undefined,
 		};
 	};
 

@@ -3,24 +3,24 @@
 import { useState } from "react";
 import { PageDashboardHeader } from "@/components/sections/page-dashboard-header";
 import { DEFAULT_LOCALE } from "@/constants/locales";
-import { ProductCategoriesList } from "./_components/product-categories-list";
-import { ProductCategoryModal } from "./_components/product-category-modal";
+import { ProductCollectionList } from "./_components/product-collection-list";
+import { ProductCollectionModal } from "./_components/product-collection-modal";
 
-export default function ProductCategoriesPage() {
+export default function ProductCollectionsPage() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [selectedLanguage, setSelectedLanguage] = useState(DEFAULT_LOCALE);
 
 	return (
 		<div className="space-y-4">
 			<PageDashboardHeader
-				title="Product Categories"
-				description="Manage your product categories"
+				title="Product Collections"
+				description="Manage your product collections"
 			/>
-			<ProductCategoriesList
+			<ProductCollectionList
 				selectedLanguage={selectedLanguage}
 				setSelectedLanguage={setSelectedLanguage}
 			/>
-			<ProductCategoryModal
+			<ProductCollectionModal
 				currentLanguage={selectedLanguage}
 				open={isModalOpen}
 				onOpenChange={setIsModalOpen}

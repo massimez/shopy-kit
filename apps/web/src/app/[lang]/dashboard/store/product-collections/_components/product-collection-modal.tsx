@@ -11,11 +11,11 @@ import {
 import { hc } from "@/lib/api-client";
 import { useActiveOrganization } from "@/lib/auth-client";
 import {
-	ProductCategoryForm,
-	type ProductCategoryFormValues,
-} from "./product-category-form";
+	ProductCollectionForm,
+	type ProductCollectionFormValues,
+} from "./product-collection-form";
 
-interface ProductCategory {
+interface ProductCollection {
 	id: string;
 	name: string;
 	slug: string;
@@ -35,32 +35,32 @@ interface ProductCategory {
 	updatedAt: string | null;
 }
 
-interface ProductCategoryModalProps {
-	category?: ProductCategory;
+interface ProductCollectionModalProps {
+	collection?: ProductCollection;
 	onOpenChange: (isOpen: boolean) => void;
 	open: boolean;
 	currentLanguage: string;
 }
 
-export const ProductCategoryModal = ({
-	category,
+export const ProductCollectionModal = ({
+	collection,
 	open,
 	onOpenChange,
 	currentLanguage,
-}: ProductCategoryModalProps) => {
+}: ProductCollectionModalProps) => {
 	const queryClient = useQueryClient();
 	const { data: activeOrganizationData } = useActiveOrganization();
 
-	const isEdit = !!category;
+	const isEdit = !!collection;
 
 	// Find the translation for the current language
-	const currentTranslation = category?.translations?.find(
+	const currentTranslation = collection?.translations?.find(
 		(t) => t.languageCode === currentLanguage,
 	);
 
-	const initialValues: ProductCategoryFormValues = category
+	const initialValues: ProductCollectionFormValues = collection
 		? {
-				parentId: category.parentId ?? null,
+				parentId: collection.parentId ?? null,
 				translation: currentTranslation ?? {
 					languageCode: currentLanguage,
 					name: "",
@@ -82,7 +82,7 @@ export const ProductCategoryModal = ({
 				},
 			};
 
-	const onSubmit = async (values: ProductCategoryFormValues) => {
+	const onSubmit = async (values: ProductCollectionFormValues) => {
 		if (!activeOrganizationData?.id) {
 			toast.error("Organization ID missing");
 			return;
@@ -91,7 +91,7 @@ export const ProductCategoryModal = ({
 		try {
 			if (isEdit) {
 				// Get existing translations
-				const existingTranslations = category.translations || [];
+				const existingTranslations = collection.translations || [];
 
 				// Find index of current language translation
 				const existingIndex = existingTranslations.findIndex(
@@ -99,7 +99,7 @@ export const ProductCategoryModal = ({
 				);
 
 				// Update or add the translation
-				let updatedTranslations: NonNullable<ProductCategory["translations"]>;
+				let updatedTranslations: NonNullable<ProductCollection["translations"]>;
 				if (existingIndex !== -1) {
 					// Update existing translation
 					updatedTranslations = [...existingTranslations];
@@ -109,17 +109,17 @@ export const ProductCategoryModal = ({
 					updatedTranslations = [...existingTranslations, values.translation];
 				}
 
-				await hc.api.store["product-categories"][":id"].$put({
-					param: { id: category.id },
+				await hc.api.store["product-collections"][":id"].$put({
+					param: { id: collection.id },
 					json: {
 						parentId: values.parentId,
 						translations: updatedTranslations,
 					},
 				});
-				toast.success("Category updated successfully!");
+				toast.success("Collection updated successfully!");
 			} else {
-				// Creating new category
-				await hc.api.store["product-categories"].$post({
+				// Creating new collection
+				await hc.api.store["product-collections"].$post({
 					json: {
 						parentId: values.parentId,
 						name: values.translation.name,
@@ -128,10 +128,10 @@ export const ProductCategoryModal = ({
 						translations: [values.translation],
 					},
 				});
-				toast.success("Category created successfully!");
+				toast.success("Collection created successfully!");
 			}
 
-			queryClient.invalidateQueries({ queryKey: ["product-categories"] });
+			queryClient.invalidateQueries({ queryKey: ["product-collections"] });
 			onOpenChange(false);
 		} catch (error) {
 			toast.error("An error occurred");
@@ -145,11 +145,11 @@ export const ProductCategoryModal = ({
 				<DialogHeader>
 					<DialogTitle>
 						{isEdit
-							? `Edit Category (${currentLanguage.toUpperCase()})`
-							: `Add Category (${currentLanguage.toUpperCase()})`}
+							? `Edit Collection (${currentLanguage.toUpperCase()})`
+							: `Add Collection (${currentLanguage.toUpperCase()})`}
 					</DialogTitle>
 				</DialogHeader>
-				<ProductCategoryForm
+				<ProductCollectionForm
 					onSubmit={onSubmit}
 					initialValues={initialValues}
 					currentLanguage={currentLanguage}

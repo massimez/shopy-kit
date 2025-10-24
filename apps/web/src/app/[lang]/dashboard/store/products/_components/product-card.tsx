@@ -152,11 +152,11 @@ export const ProductCard = ({
 					</div>
 				)}
 
-				{product.categoryId && (
+				{product.collectionId && (
 					<div className="flex items-center gap-2 text-muted-foreground">
 						<Tag className="h-4 w-4" />
 						<span className="truncate text-xs">
-							Category: {product.categoryId}
+							Collection: {product.collectionId}
 						</span>
 					</div>
 				)}

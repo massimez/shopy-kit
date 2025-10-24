@@ -46,8 +46,8 @@ const data = {
 				},
 
 				{
-					title: "Categories",
-					url: "/dashboard/store/product-categories",
+					title: "Collections",
+					url: "/dashboard/store/product-collections",
 				},
 				{
 					title: "Brands",

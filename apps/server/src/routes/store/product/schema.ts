@@ -1,8 +1,8 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import {
 	product,
-	productCategory,
-	productCategoryAssignment,
+	productCollection,
+	productCollectionAssignment,
 	productReview,
 	productSupplier,
 	productVariant,
@@ -89,8 +89,11 @@ export const updateProductSchema = baseUpdateProductSchema.extend({
 	translations: z.array(productTranslationEmbeddedSchema.partial()).optional(),
 });
 
-export const insertProductCategorySchema = createInsertSchema(productCategory);
-export const updateProductCategorySchema = createSelectSchema(productCategory)
+export const insertProductCollectionSchema =
+	createInsertSchema(productCollection);
+export const updateProductCollectionSchema = createSelectSchema(
+	productCollection,
+)
 	.omit(idAndAuditFields)
 	.partial();
 
@@ -122,11 +125,11 @@ export const updateProductVariantStockSchema = createSelectSchema(
 	.omit(idAndAuditFields)
 	.partial();
 
-export const insertProductCategoryAssignmentSchema = createInsertSchema(
-	productCategoryAssignment,
+export const insertProductCollectionAssignmentSchema = createInsertSchema(
+	productCollectionAssignment,
 );
-export const updateProductCategoryAssignmentSchema = createSelectSchema(
-	productCategoryAssignment,
+export const updateProductCollectionAssignmentSchema = createSelectSchema(
+	productCollectionAssignment,
 )
 	.omit(idAndAuditFields)
 	.partial();

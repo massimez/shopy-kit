@@ -2,11 +2,6 @@
 
 import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
-import { useDeleteProductCategory } from "@/app/[lang]/dashboard/store/product-categories/hooks/use-delete-product-category";
-import {
-	type ProductCategory,
-	useProductCategories,
-} from "@/app/[lang]/dashboard/store/product-categories/hooks/use-product-categories";
 import { Button } from "@/components/ui/button";
 import { DeleteDropdownMenuItem } from "@/components/ui/delete-confirmation-dialog";
 import {
@@ -30,17 +25,22 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { DEFAULT_LOCALE, LOCALES } from "@/constants/locales";
-import { ProductCategoryModal } from "./product-category-modal";
+import { LOCALES } from "@/constants/locales";
+import { useDeleteProductCollection } from "../hooks/use-delete-product-collection";
+import {
+	type ProductCollection,
+	useProductCollections,
+} from "../hooks/use-product-collection";
+import { ProductCollectionModal } from "./product-collection-modal";
 
 const getTranslation = (
-	category: ProductCategory,
+	collection: ProductCollection,
 	lang: string,
 	field: "name" | "description",
 ) =>
-	category.translations?.find((t) => t.languageCode === lang)?.[field] || "-";
+	collection.translations?.find((t) => t.languageCode === lang)?.[field] || "-";
 
-export function ProductCategoriesList({
+export function ProductCollectionList({
 	selectedLanguage,
 	setSelectedLanguage,
 }: {
@@ -49,16 +49,16 @@ export function ProductCategoriesList({
 }) {
 	const [modalState, setModalState] = useState<{
 		isOpen: boolean;
-		category?: ProductCategory;
+		collection?: ProductCollection;
 	}>({ isOpen: false });
 
-	const { data: categoriesData, isLoading } =
-		useProductCategories(selectedLanguage);
-	const { deleteCategory, isDeletingCategory } =
-		useDeleteProductCategory(selectedLanguage);
+	const { data: collectionsData, isLoading } =
+		useProductCollections(selectedLanguage);
+	const { deleteCollection, isDeletingCollection } =
+		useDeleteProductCollection(selectedLanguage);
 
-	const openModal = (category?: ProductCategory) =>
-		setModalState({ isOpen: true, category });
+	const openModal = (collection?: ProductCollection) =>
+		setModalState({ isOpen: true, collection });
 
 	const closeModal = () => setModalState({ isOpen: false });
 
@@ -77,7 +77,7 @@ export function ProductCategoriesList({
 						))}
 					</SelectContent>
 				</Select>
-				<Button onClick={() => openModal()}>Add Category</Button>
+				<Button onClick={() => openModal()}>Add Collection</Button>
 			</div>
 
 			<Table>
@@ -97,16 +97,16 @@ export function ProductCategoriesList({
 							</TableCell>
 						</TableRow>
 					) : (
-						categoriesData?.data?.map((category) => (
-							<TableRow key={category.id}>
+						collectionsData?.data?.map((collection) => (
+							<TableRow key={collection.id}>
 								<TableCell>
-									{getTranslation(category, selectedLanguage, "name")}
+									{getTranslation(collection, selectedLanguage, "name")}
 								</TableCell>
 								<TableCell>
-									{getTranslation(category, selectedLanguage, "description")}
+									{getTranslation(collection, selectedLanguage, "description")}
 								</TableCell>
 								<TableCell>
-									{new Date(category.createdAt).toLocaleDateString()}
+									{new Date(collection.createdAt).toLocaleDateString()}
 								</TableCell>
 								<TableCell>
 									<DropdownMenu>
@@ -117,13 +117,13 @@ export function ProductCategoriesList({
 											</Button>
 										</DropdownMenuTrigger>
 										<DropdownMenuContent align="end">
-											<DropdownMenuItem onClick={() => openModal(category)}>
+											<DropdownMenuItem onClick={() => openModal(collection)}>
 												Edit
 											</DropdownMenuItem>
 											<DeleteDropdownMenuItem
-												onConfirm={() => deleteCategory(category.id)}
-												disabled={isDeletingCategory}
-												description="This action cannot be undone. This will permanently delete the product category."
+												onConfirm={() => deleteCollection(collection.id)}
+												disabled={isDeletingCollection}
+												description="This action cannot be undone. This will permanently delete the product collection."
 											/>
 										</DropdownMenuContent>
 									</DropdownMenu>
@@ -134,10 +134,10 @@ export function ProductCategoriesList({
 				</TableBody>
 			</Table>
 
-			<ProductCategoryModal
+			<ProductCollectionModal
 				open={modalState.isOpen}
 				onOpenChange={closeModal}
-				category={modalState.category}
+				collection={modalState.collection}
 				currentLanguage={selectedLanguage}
 			/>
 		</div>

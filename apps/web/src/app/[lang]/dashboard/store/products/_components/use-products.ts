@@ -22,7 +22,7 @@ export type Product = {
 	minQuantity: number;
 	maxQuantity: number | null;
 	type?: string;
-	categoryId?: string | null;
+	collectionId?: string | null;
 	translations:
 		| {
 				languageCode: string;

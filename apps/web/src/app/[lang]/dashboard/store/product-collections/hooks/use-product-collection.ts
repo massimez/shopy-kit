@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { hc } from "@/lib/api-client";
 
-export interface ProductCategory {
+export interface ProductCollection {
 	id: string;
 	name: string;
 	slug: string;
@@ -21,32 +21,32 @@ export interface ProductCategory {
 	updatedAt: string | null;
 }
 
-export function useProductCategories(languageCode?: string) {
+export function useProductCollections(languageCode?: string) {
 	return useQuery({
-		queryKey: ["product-categories", languageCode],
+		queryKey: ["product-collections", languageCode],
 		queryFn: async () => {
-			const res = await hc.api.store["product-categories"].$get({
+			const res = await hc.api.store["product-collections"].$get({
 				query: {
 					lang: languageCode,
 				},
 			});
 			if (!res.ok) {
-				console.error("Failed to fetch categories: Network response not ok");
+				console.error("Failed to fetch collections: Network response not ok");
 				return { data: [] };
 			}
 			const result = await res.json();
 			if ("error" in result && result.error) {
 				console.error(
-					"Failed to fetch categories: API returned an error",
+					"Failed to fetch collections: API returned an error",
 					result.error,
 				);
 				return { data: [] };
 			}
 			if ("data" in result && Array.isArray(result.data)) {
-				return { data: result.data as ProductCategory[] };
+				return { data: result.data as ProductCollection[] };
 			}
 			console.error(
-				"Failed to fetch categories: Unexpected API response format",
+				"Failed to fetch collections: Unexpected API response format",
 				result,
 			);
 			return { data: [] };
