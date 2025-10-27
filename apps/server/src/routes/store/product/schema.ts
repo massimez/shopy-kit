@@ -22,6 +22,7 @@ export const productTranslationEmbeddedSchema = z.object({
 	seoTitle: z.string().optional(),
 	seoDescription: z.string().optional(),
 	tags: z.string().optional(),
+	specifications: z.record(z.string(), z.any()).optional(),
 });
 
 // Product Variant Translation Schema for embedding
@@ -29,8 +30,6 @@ export const productVariantTranslationEmbeddedSchema = z.object({
 	languageCode: z.string().min(1, "languageCode is required"),
 	name: z.string().optional(), // e.g. "Red / L"
 	attributes: z.record(z.string(), z.string()).optional(), // optional localized attrs
-	features: z.record(z.string(), z.string()).optional(),
-	specifications: z.record(z.string(), z.string()).optional(),
 });
 
 // Base product schemas

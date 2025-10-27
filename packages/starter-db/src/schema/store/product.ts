@@ -96,6 +96,7 @@ export const product = pgTable("product", {
 				seoTitle?: string;
 				seoDescription?: string;
 				tags?: string;
+				specifications?: Record<string, any>;
 			}[]
 		>(),
 
@@ -125,10 +126,6 @@ export const productVariant = pgTable("product_variant", {
 	weightKg: numeric("weight_kg", { precision: 8, scale: 3 }),
 	dimensionsCm: jsonb("dimensions_cm"), // {length, width, height}
 
-	// Free-form details (localized via translations if needed)
-	features: jsonb("features"), // ["feature 1", "feature 2"]
-	specifications: jsonb("specifications"),
-
 	// Stock management
 	reorderPoint: integer("reorder_point").default(10).notNull(),
 	maxStock: integer("max_stock"),
@@ -145,8 +142,6 @@ export const productVariant = pgTable("product_variant", {
 				languageCode: string;
 				name?: string; // e.g. "Red / L"
 				attributes?: Record<string, string>;
-				features?: Record<string, string>;
-				specifications?: Record<string, string>;
 			}[]
 		>(),
 	...softAudit,

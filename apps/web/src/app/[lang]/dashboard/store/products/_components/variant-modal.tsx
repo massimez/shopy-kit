@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 
 export interface ProductVariant {
 	id: string;
@@ -24,8 +23,6 @@ export interface ProductVariant {
 	barcodeType?: string;
 	weightKg?: number;
 	dimensionsCm?: { length?: number; width?: number; height?: number };
-	features?: string[];
-	specifications?: Record<string, string>;
 	reorderPoint: number;
 	maxStock?: number;
 	reorderQuantity: number;
@@ -38,8 +35,6 @@ export interface ProductVariant {
 		languageCode: string;
 		name?: string;
 		attributes?: Record<string, string>;
-		features?: Record<string, string>;
-		specifications?: Record<string, string>;
 	}[];
 }
 
@@ -71,14 +66,8 @@ export const VariantModal = ({
 		reorderQuantity: 50,
 		isActive: true,
 		translations: [],
-		features: [],
-		specifications: {},
 		dimensionsCm: {},
 	});
-
-	const [featuresText, setFeaturesText] = useState("");
-	const [specificationsText, setSpecificationsText] = useState("{}");
-	const [jsonError, setJsonError] = useState<string | null>(null);
 
 	useEffect(() => {
 		if (variant) {
@@ -88,10 +77,6 @@ export const VariantModal = ({
 					{ languageCode: selectedLanguage, name: "" },
 				],
 			});
-			setFeaturesText((variant.features || []).join("\n"));
-			setSpecificationsText(
-				JSON.stringify(variant.specifications || {}, null, 2),
-			);
 		} else {
 			setFormData({
 				sku: "",
@@ -102,14 +87,9 @@ export const VariantModal = ({
 				reorderQuantity: 50,
 				isActive: true,
 				translations: [{ languageCode: selectedLanguage, name: "" }],
-				features: [],
-				specifications: {},
 				dimensionsCm: {},
 			});
-			setFeaturesText("");
-			setSpecificationsText("{}");
 		}
-		setJsonError(null);
 	}, [variant, selectedLanguage, open]);
 
 	const updateTranslation = (field: string, value: string) => {
@@ -141,29 +121,7 @@ export const VariantModal = ({
 		return (translation?.[field as keyof typeof translation] as string) || "";
 	};
 
-	const handleFeaturesChange = (value: string) => {
-		setFeaturesText(value);
-		setFormData({
-			...formData,
-			features: value.split("\n").filter((f) => f.trim()),
-		});
-	};
-
-	const handleSpecificationsChange = (value: string) => {
-		setSpecificationsText(value);
-		try {
-			const parsed = JSON.parse(value);
-			setFormData({ ...formData, specifications: parsed });
-			setJsonError(null);
-		} catch (err) {
-			setJsonError("Invalid JSON format");
-		}
-	};
-
 	const handleSubmit = async () => {
-		if (jsonError) {
-			return;
-		}
 		await onSubmit(formData);
 		onOpenChange(false);
 	};
@@ -182,11 +140,10 @@ export const VariantModal = ({
 				</DialogHeader>
 
 				<Tabs defaultValue="general" className="w-full">
-					<TabsList className="grid w-full grid-cols-4">
+					<TabsList className="grid w-full grid-cols-3">
 						<TabsTrigger value="general">General</TabsTrigger>
 						<TabsTrigger value="pricing">Pricing</TabsTrigger>
 						<TabsTrigger value="inventory">Inventory</TabsTrigger>
-						<TabsTrigger value="details">Details</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="general" className="mt-4 space-y-4">
@@ -444,47 +401,13 @@ export const VariantModal = ({
 							</div>
 						</div>
 					</TabsContent>
-
-					<TabsContent value="details" className="mt-4 space-y-4">
-						<div className="grid gap-4">
-							<div className="grid gap-2">
-								<Label htmlFor="variant-features">
-									Features (one per line)
-								</Label>
-								<Textarea
-									id="variant-features"
-									placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
-									rows={4}
-									value={featuresText}
-									onChange={(e) => handleFeaturesChange(e.target.value)}
-								/>
-							</div>
-							<div className="grid gap-2">
-								<Label htmlFor="variant-specs">Specifications (JSON)</Label>
-								<Textarea
-									id="variant-specs"
-									placeholder='{"Material": "Cotton", "Color": "Red"}'
-									rows={4}
-									value={specificationsText}
-									onChange={(e) => handleSpecificationsChange(e.target.value)}
-									className={jsonError ? "border-destructive" : ""}
-								/>
-								{jsonError && (
-									<p className="text-destructive text-xs">{jsonError}</p>
-								)}
-								<p className="text-muted-foreground text-xs">
-									Enter valid JSON format for specifications
-								</p>
-							</div>
-						</div>
-					</TabsContent>
 				</Tabs>
 
 				<DialogFooter>
 					<Button variant="outline" onClick={() => onOpenChange(false)}>
 						Cancel
 					</Button>
-					<Button onClick={handleSubmit} disabled={!isFormValid || !!jsonError}>
+					<Button onClick={handleSubmit} disabled={!isFormValid}>
 						{isEdit ? "Update" : "Add"} Variant
 					</Button>
 				</DialogFooter>

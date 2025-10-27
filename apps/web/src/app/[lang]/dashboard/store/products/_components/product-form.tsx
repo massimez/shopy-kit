@@ -39,6 +39,7 @@ export type ProductFormValues = {
 			seoTitle?: string;
 			seoDescription?: string;
 			tags?: string;
+			specifications?: Record<string, any>;
 		}
 	>;
 	type: string;
@@ -102,6 +103,7 @@ const productFormSchema = insertProductSchema
 					.max(160, "SEO description should be under 160 characters")
 					.optional(),
 				tags: z.string().optional(),
+				specifications: z.record(z.string(), z.any()).optional(),
 			}),
 		),
 	});
@@ -332,6 +334,17 @@ export const ProductForm = ({
 					type: "switch",
 					gridCols: 6,
 					helperText: "Product is visible and purchasable",
+				},
+				{
+					itemType: "field",
+					name: `translations.${selectedLanguage}.specifications` as any,
+					labelKey: "Specifications (JSON)",
+					type: "textarea",
+					placeholderKey:
+						'{"Material": "Cotton", "Color": "Red", "Size": "S,M,L"}',
+					required: false,
+					gridCols: 12,
+					helperText: "Enter product specifications as JSON (key-value pairs)",
 				},
 			],
 		},
