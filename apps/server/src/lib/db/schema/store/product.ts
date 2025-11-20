@@ -96,6 +96,7 @@ export const product = pgTable("product", {
 				seoTitle?: string;
 				seoDescription?: string;
 				tags?: string;
+				// biome-ignore lint/suspicious/noExplicitAny: <>
 				specifications?: Record<string, any>;
 			}[]
 		>(),
