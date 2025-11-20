@@ -183,6 +183,7 @@ export const getTimeZones = (): { label: string; value: string }[] => {
 				label: `(${formattedOffset}) ${timezone.replace(/_/g, " ")}`,
 				numericOffset: Number.parseInt(
 					formattedOffset.replace("GMT", "").replace("+", "") || "0",
+					10,
 				),
 			};
 		})

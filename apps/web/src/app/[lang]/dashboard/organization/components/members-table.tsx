@@ -23,13 +23,14 @@ import {
 	useResendInvitation,
 } from "../queries";
 
+// biome-ignore lint/suspicious/noExplicitAny: <>
 function MemberRow({ member }: { member: any }) {
 	const t = useTranslations("common");
 	return (
 		<TableRow key={member.id}>
 			<TableCell className="">
 				<div className="flex items-center gap-2">
-					<Avatar className="h-8 w-8 flex-shrink-0">
+					<Avatar className="h-8 w-8 shrink-0">
 						<AvatarImage src={member.user?.image ?? ""} />
 						<AvatarFallback>{member.user?.name?.[0] ?? "?"}</AvatarFallback>
 					</Avatar>
@@ -51,6 +52,7 @@ function MemberRow({ member }: { member: any }) {
 	);
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: <>
 function InvitationRow({ invitation }: { invitation: any }) {
 	const t = useTranslations("common");
 	const { activeOrganization } = useActiveOrganization();

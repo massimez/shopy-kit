@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noExplicitAny: <> */
 "use client";
 
 import { Button } from "@workspace/ui/components/button";
@@ -198,19 +199,16 @@ export const TabbedForm = <T extends FieldValues>({
 		[handleSubmit, navigateToFirstErrorTab],
 	);
 
-	const renderTabContent = useCallback(
-		(tab: FormTabConfig<T>) => (
-			<TabContent
-				key={`content-${tab.key}`}
-				tab={tab}
-				control={form.control}
-				config={config}
-				formValues={formValues}
-				setValue={form.setValue}
-				t={t}
-			/>
-		),
-		[form.control, config, formValues, t],
+	const renderTabContent = (tab: FormTabConfig<T>) => (
+		<TabContent
+			key={`content-${tab.key}`}
+			tab={tab}
+			control={form.control}
+			config={config}
+			formValues={formValues}
+			setValue={form.setValue}
+			t={t}
+		/>
 	);
 
 	if (tabs.length === 0) {

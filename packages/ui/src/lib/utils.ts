@@ -21,8 +21,10 @@ export function cn(...inputs: ClassValue[]): string {
 export function getProperty<T, K extends string>(
 	obj: T,
 	key: K,
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 ): K extends keyof T ? T[K] : any {
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	return key?.split(".").reduce((o, i) => (o ? o[i] : undefined), obj as any);
 }
 
@@ -36,6 +38,7 @@ export async function extractErrorMessage(res: Response): Promise<string> {
 	}
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: <>
 export const removeNulls = (obj: any): any => {
 	if (Array.isArray(obj)) {
 		return obj
@@ -53,6 +56,7 @@ export const removeNulls = (obj: any): any => {
 				}
 				return acc;
 			},
+			// biome-ignore lint/suspicious/noExplicitAny: <>
 			{} as Record<string, any>,
 		);
 	}

@@ -43,6 +43,7 @@ const storageRoutes = createRouter()
 		jsonValidator(presignSchema),
 		async (c) => {
 			try {
+				// biome-ignore lint/style/noNonNullAssertion: <>
 				const user = c.get("user")!;
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
 				const tenantId = activeOrgId || user?.id;
@@ -97,6 +98,7 @@ const storageRoutes = createRouter()
 		hasOrgPermission("storage:write"),
 		async (c) => {
 			try {
+				// biome-ignore lint/style/noNonNullAssertion: <>
 				const user = c.get("user")!;
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
 				const { key } = c.req.param();

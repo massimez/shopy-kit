@@ -8,6 +8,7 @@ import { useSuppliers } from "./hooks";
 
 const SuppliersPage = () => {
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	const [editingSupplier, setEditingSupplier] = useState<any>(null);
 
 	const { data: suppliersQueryResult, isLoading, error } = useSuppliers();

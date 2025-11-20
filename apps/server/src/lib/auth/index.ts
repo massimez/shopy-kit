@@ -10,6 +10,11 @@ import type { GoogleProfile } from "better-auth/social-providers";
 import { db } from "../db";
 import * as schema from "../db/schema";
 export const auth = betterAuth({
+	trustedOrigins: [
+		"http://localhost:3000",
+		"http://127.0.0.1:3000",
+		"http://localhost:3002",
+	],
 	telemetry: {
 		enabled: false,
 	},

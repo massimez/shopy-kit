@@ -84,7 +84,7 @@ const OrdersPage = () => {
 	if (!ordersQueryResult || "error" in ordersQueryResult)
 		return <div>Error loading orders</div>;
 
-	const orders = (ordersQueryResult.data || []).map((order: any) => ({
+	const orders = (ordersQueryResult.data || []).map((order) => ({
 		...order,
 		userId: order.userId ?? undefined,
 	}));
@@ -115,7 +115,8 @@ const OrdersPage = () => {
 				</div>
 			</div>
 			<OrderList
-				orders={orders}
+				// biome-ignore lint/suspicious/noExplicitAny: <>
+				orders={orders as any}
 				total={ordersQueryResult?.total || 0}
 				onEditOrder={handleEditOrder}
 				onDeleteOrder={handleDeleteOrder}

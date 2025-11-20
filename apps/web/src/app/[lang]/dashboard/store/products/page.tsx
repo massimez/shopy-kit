@@ -9,7 +9,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@workspace/ui/components/select";
-import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { PageDashboardHeader } from "@/components/sections/page-dashboard-header";
 import { DEFAULT_LOCALE, LOCALES } from "@/constants/locales";
@@ -20,7 +19,6 @@ import { ProductModal } from "./_components/product-modal";
 import { useProducts } from "./_components/use-products";
 
 const ProductsPage = () => {
-	const t = useTranslations("common");
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const queryClient = useQueryClient();
 	const activeOrg = authClient.useActiveOrganization();
@@ -59,6 +57,7 @@ const ProductsPage = () => {
 				</div>
 			</div>
 			<ProductList
+				// biome-ignore lint/suspicious/noExplicitAny: <>
 				products={(productsQueryResult?.data as any) || []}
 				selectedLanguage={selectedLanguage}
 				onDeleteProduct={async (productId) => {

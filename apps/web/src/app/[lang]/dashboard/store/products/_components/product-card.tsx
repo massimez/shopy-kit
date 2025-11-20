@@ -46,6 +46,7 @@ export const ProductCard = ({
 	);
 	const displayName = translation?.name || product.name || "Untitled Product";
 	const shortDescription = translation?.shortDescription;
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	const variants = (product as any).variants || [];
 
 	const getVariantTranslation = (variant: ProductVariant) => {
@@ -95,7 +96,7 @@ export const ProductCard = ({
 							</p>
 						)}
 					</div>
-					<div className="flex flex-shrink-0 gap-1">
+					<div className="flex shrink-0 gap-1">
 						<Button
 							variant="ghost"
 							size="icon"

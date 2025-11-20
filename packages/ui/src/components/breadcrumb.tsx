@@ -83,7 +83,6 @@ function BreadcrumbEllipsis({
 	className,
 	...props
 }: React.ComponentProps<"span">) {
-
 	return (
 		<span
 			data-slot="breadcrumb-ellipsis"

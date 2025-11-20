@@ -10,9 +10,13 @@ export const useOtpVerification = ({
 	toast,
 	router,
 }: {
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	openModal: any;
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	authClient: any;
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	toast: any;
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	router: any;
 }) => {
 	const verifyOtp = async (email: string, otp: string, password?: string) => {
@@ -58,7 +62,10 @@ export const useOtpVerification = ({
 			const success = await verifyOtp(email, otp, password);
 
 			if (success) {
-				onVerificationSuccess?.();
+				if (onVerificationSuccess) {
+					onVerificationSuccess();
+					return;
+				}
 				router.push("/dashboard");
 			}
 		};

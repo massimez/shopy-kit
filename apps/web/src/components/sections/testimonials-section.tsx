@@ -1,6 +1,5 @@
-import { useTranslations } from "next-intl";
-
 import { TestimonialCard } from "@workspace/ui/components/cards/testimonial-card";
+import { useTranslations } from "next-intl";
 
 export function TestimonialsSection() {
 	const t = useTranslations("Testimonials");

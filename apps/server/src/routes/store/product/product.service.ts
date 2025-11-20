@@ -1,4 +1,5 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+/** biome-ignore-all lint/style/noNonNullAssertion: <> */
+import { and, eq, inArray } from "drizzle-orm";
 import type { z } from "zod";
 import { withPaginationAndTotal } from "@/helpers/pagination";
 import { db } from "@/lib/db";

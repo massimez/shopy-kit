@@ -217,7 +217,6 @@ function BadgeButton({
 	VariantProps<typeof badgeButtonVariants> & { asChild?: boolean }) {
 	const Comp = asChild ? SlotPrimitive.Slot : "span";
 	return (
-		// biome-ignore lint/a11y/useSemanticElements: <>
 		<Comp
 			data-slot="badge-button"
 			className={cn(badgeButtonVariants({ variant, className }))}

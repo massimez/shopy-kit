@@ -8,6 +8,7 @@ import { useBrands } from "./hooks";
 
 const BrandsPage = () => {
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	const [editingBrand, setEditingBrand] = useState<any>(null);
 
 	const { data: brandsQueryResult, isLoading, error } = useBrands();

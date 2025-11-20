@@ -51,6 +51,7 @@ export const SlotRenderer = React.memo(
 
 			// String reference to global slots registry
 			if (typeof slot.component === "string" && globalSlots?.[slot.component]) {
+				// biome-ignore lint/style/noNonNullAssertion: <>
 				const Component = globalSlots[slot.component]!;
 				return (
 					<Component

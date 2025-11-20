@@ -67,7 +67,7 @@ export const orderRoute = createRouter()
 				}
 
 				const result = await db.query.order.findMany({
-					where: (o, { and }) => and(...whereConditions),
+					where: (_o, { and }) => and(...whereConditions),
 					with: {
 						items: true,
 					},

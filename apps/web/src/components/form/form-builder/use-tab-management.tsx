@@ -13,6 +13,7 @@ import { focusFirstError, hasFieldErrors } from "./utils";
 
 export const useTabManagement = <T extends FieldValues>(
 	tabs: FormTabConfig<T>[],
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	form: any,
 	config: FormBuilderConfig<T>,
 ) => {
@@ -45,7 +46,7 @@ export const useTabManagement = <T extends FieldValues>(
 		if (!currentTab) return true;
 
 		const fieldNames = getFieldNamesFromTab(currentTab);
-		return await form.trigger(fieldNames as any);
+		return await form.trigger(fieldNames);
 	}, [tabs, activeTab, config.validateOnTab, form, getFieldNamesFromTab]);
 
 	const getTabErrorStatus = useCallback(

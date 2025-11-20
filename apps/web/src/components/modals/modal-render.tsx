@@ -21,7 +21,8 @@ const useAuthHandlers = (
 		typeof useOtpVerification
 	>["handleVerification"],
 	router: ReturnType<typeof useRouter>,
-	openModal: (modalKey: any, params: any) => void,
+	// biome-ignore lint/suspicious/noExplicitAny: <>
+	openModal: (modalKey: keyof ModalMap, params: any) => void,
 	closeModal: () => void,
 ) => {
 	const onSignInClick = React.useCallback(
@@ -73,6 +74,7 @@ const useAuthHandlers = (
 	}, []);
 
 	const onClickCreateAccount = React.useCallback(
+		// biome-ignore lint/suspicious/noExplicitAny: <>
 		async (signUpData: any) => {
 			try {
 				await signUp.email(

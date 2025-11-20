@@ -230,7 +230,7 @@ export const TransactionModal = ({
 										</FormControl>
 										<SelectContent>
 											<SelectItem value="__none__">None</SelectItem>
-											{suppliersQueryResult?.data.map((supplier: any) => (
+											{suppliersQueryResult?.data.map((supplier) => (
 												<SelectItem key={supplier.id} value={supplier.id}>
 													{supplier.name}
 												</SelectItem>

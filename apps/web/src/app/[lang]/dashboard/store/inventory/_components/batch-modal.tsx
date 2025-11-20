@@ -57,24 +57,6 @@ interface BatchModalProps {
 }
 
 // -------------------------------
-// 🧱 Types for inventory data
-// -------------------------------
-interface Product {
-	id: string;
-	name: string;
-}
-
-interface Variant {
-	id: string;
-	sku: string;
-}
-
-interface InventoryItem {
-	product: Product;
-	variants: Variant[];
-}
-
-// -------------------------------
 // 🎯 Component
 // -------------------------------
 export const BatchModal = ({
@@ -83,7 +65,7 @@ export const BatchModal = ({
 	onClose,
 	selectedVariantId,
 }: BatchModalProps) => {
-	const { data: inventoryResult, isLoading: inventoryLoading } = useInventory();
+	const { data: inventoryResult } = useInventory();
 	const createBatch = useCreateBatch();
 	const activeOrg = authClient.useActiveOrganization();
 	const organizationId = activeOrg.data?.id || "";
@@ -126,12 +108,13 @@ export const BatchModal = ({
 			{
 				...data,
 				expiryDate: data.expiryDate ? new Date(data.expiryDate) : undefined,
-			} as any,
+			},
 			{
 				onSuccess: () => {
 					toast.success("Batch created successfully");
 					handleClose();
 				},
+				// biome-ignore lint/suspicious/noExplicitAny: <>
 				onError: (err: any) => {
 					toast.error(err?.message || "Failed to create batch");
 				},
@@ -251,7 +234,7 @@ export const BatchModal = ({
 													Loading locations...
 												</SelectItem>
 											) : locations && "data" in locations && locations.data ? (
-												locations.data.map((location: any) => (
+												locations.data.map((location) => (
 													<SelectItem key={location.id} value={location.id}>
 														{location.name}{" "}
 														<span className="text-muted-foreground text-xs">

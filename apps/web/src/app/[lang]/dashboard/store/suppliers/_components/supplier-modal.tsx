@@ -44,6 +44,7 @@ const supplierSchema = z.object({
 interface SupplierModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	editingSupplier?: any;
 	onClose: () => void;
 }

@@ -18,8 +18,10 @@ export const getErrorMessage = (error: unknown): string => {
 		typeof error === "object" &&
 		error !== null &&
 		"message" in error &&
+		// biome-ignore lint/suspicious/noExplicitAny: <>
 		typeof (error as Record<string, any>).message === "string"
 	) {
+		// biome-ignore lint/suspicious/noExplicitAny: <>
 		return (error as Record<string, any>).message;
 	}
 	return "An unexpected error occurred.";
@@ -36,6 +38,7 @@ interface BackendError {
 
 export const showError = (
 	error: unknown,
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	toast: any,
 	customMessage?: string,
 ): void => {

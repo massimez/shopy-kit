@@ -41,9 +41,11 @@ export const ProductModal = ({
 		if (!product) return undefined;
 
 		// Convert translations array to record format
+		// biome-ignore lint/suspicious/noExplicitAny: <>
 		const translationsRecord: Record<string, any> = {};
 
 		if (product.translations && Array.isArray(product.translations)) {
+			// biome-ignore lint/suspicious/noExplicitAny: <>
 			product.translations.forEach((translation: any) => {
 				translationsRecord[translation.languageCode] = {
 					name: translation.name || "",
@@ -113,13 +115,14 @@ export const ProductModal = ({
 			} else {
 				// For new product, upload images first if any are present
 				console.log("Creating new product with images:", values.images);
+				// biome-ignore lint/suspicious/noExplicitAny: <>
 				let images: any[] = [];
 
 				if (values.images && values.images.length > 0) {
 					console.log("Processing images for upload...");
 					console.log("All images:", values.images);
 
-					const imageFilesToUpload = values.images.filter((img: any) => {
+					const imageFilesToUpload = values.images.filter((img) => {
 						const isTemp = img.key?.startsWith("temp-");
 						const noUrl = img.url === "";
 
@@ -131,12 +134,14 @@ export const ProductModal = ({
 						const { uploadPublic } = await import("@/lib/storage");
 
 						// Upload each temp image individually and collect results
+						// biome-ignore lint/suspicious/noExplicitAny: <>
 						const uploadResults: any[] = [];
 
 						for (let i = 0; i < imageFilesToUpload.length; i++) {
 							const img = imageFilesToUpload[i];
 							if (!img) continue;
 
+							// biome-ignore lint/suspicious/noExplicitAny: <>
 							const file = (img as any).file;
 
 							console.log(`Processing ${img.name}:`, {
@@ -179,7 +184,7 @@ export const ProductModal = ({
 
 						// Replace temporary images with uploaded ones in the original array
 						let uploadIndex = 0;
-						images = values.images.map((img: any) => {
+						images = values.images.map((img) => {
 							if (img.key?.startsWith("temp-") && img.url === "") {
 								const result = uploadResults[uploadIndex++];
 								console.log(`Replacing temp image ${img.name} with:`, result);

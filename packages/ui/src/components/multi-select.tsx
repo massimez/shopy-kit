@@ -273,6 +273,7 @@ const MultipleSelector = React.forwardRef<
 			[handleUnselect, selected],
 		);
 
+		// biome-ignore lint/correctness/useExhaustiveDependencies: <>
 		useEffect(() => {
 			if (open) {
 				document.addEventListener("mousedown", handleClickOutside);
@@ -294,6 +295,7 @@ const MultipleSelector = React.forwardRef<
 			}
 		}, [value]);
 
+		// biome-ignore lint/correctness/useExhaustiveDependencies: <>
 		useEffect(() => {
 			/** If `onSearch` is provided, do not trigger options updated. */
 			if (!arrayOptions || onSearch) {
@@ -305,6 +307,7 @@ const MultipleSelector = React.forwardRef<
 			}
 		}, [arrayDefaultOptions, arrayOptions, groupBy, onSearch, options]);
 
+		// biome-ignore lint/correctness/useExhaustiveDependencies: <>
 		useEffect(() => {
 			/** sync search */
 
@@ -329,6 +332,7 @@ const MultipleSelector = React.forwardRef<
 			// eslint-disable-next-line react-hooks/exhaustive-deps
 		}, [debouncedSearchTerm, groupBy, open, triggerSearchOnFocus]);
 
+		// biome-ignore lint/correctness/useExhaustiveDependencies: <>
 		useEffect(() => {
 			/** async search */
 
@@ -415,7 +419,7 @@ const MultipleSelector = React.forwardRef<
 			return <CommandEmpty>{emptyIndicator}</CommandEmpty>;
 		}, [creatable, emptyIndicator, onSearch, options]);
 
-		const selectables = React.useMemo<GroupOption>(
+		const selectable = React.useMemo<GroupOption>(
 			() => removePickedOption(options, selected),
 			[options, selected],
 		);
@@ -456,7 +460,7 @@ const MultipleSelector = React.forwardRef<
 			>
 				<button
 					className={cn(
-						"flex w-fit items-center justify-between gap-2 whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[size=default]:h-9 data-[size=sm]:h-8 data-[placeholder]:text-muted-foreground dark:bg-input/30 dark:aria-invalid:ring-destructive/40 dark:hover:bg-input/50 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0",
+						"flex w-fit items-center justify-between gap-2 whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[size=default]:h-9 data-[size=sm]:h-8 data-placeholder:text-muted-foreground dark:bg-input/30 dark:aria-invalid:ring-destructive/40 dark:hover:bg-input/50 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0",
 						{
 							"cursor-text": !disabled && selected.length !== 0,
 						},
@@ -480,8 +484,8 @@ const MultipleSelector = React.forwardRef<
 								<Badge
 									key={option.value}
 									className={cn(
-										"data-[disabled]:bg-muted-foreground data-[disabled]:text-muted data-[disabled]:hover:bg-muted-foreground",
-										"data-[fixed]:bg-muted-foreground data-[fixed]:text-muted data-[fixed]:hover:bg-muted-foreground",
+										"data-disabled:bg-muted-foreground data-disabled:text-muted data-disabled:hover:bg-muted-foreground",
+										"data-fixed:bg-muted-foreground data-fixed:text-muted data-fixed:hover:bg-muted-foreground",
 										badgeClassName,
 									)}
 									data-fixed={option.fixed}
@@ -596,7 +600,7 @@ const MultipleSelector = React.forwardRef<
 									{!selectFirstItem && (
 										<CommandItem value="-" className="hidden" />
 									)}
-									{Object.entries(selectables).map(([key, dropdowns]) => (
+									{Object.entries(selectable).map(([key, dropdowns]) => (
 										<CommandGroup
 											key={key}
 											heading={key}

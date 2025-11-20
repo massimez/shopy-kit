@@ -39,6 +39,7 @@ const brandSchema = z.object({
 interface BrandModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	editingBrand?: any;
 	onClose: () => void;
 }

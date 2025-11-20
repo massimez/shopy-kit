@@ -6,13 +6,10 @@ import {
 	TabsList,
 	TabsTrigger,
 } from "@workspace/ui/components/tabs";
-import { getTranslations } from "next-intl/server";
 import { InviteMemberForm } from "./components/invite-member-form";
 import { MembersTable } from "./components/members-table";
 
 export default async function OrganizationMembersTab() {
-	const t = await getTranslations("common");
-
 	return (
 		<div className="space-y-6">
 			<Tabs defaultValue="members" className="space-y-4 overflow-x-auto">

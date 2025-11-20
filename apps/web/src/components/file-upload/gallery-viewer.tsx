@@ -16,7 +16,7 @@ import {
 	StarIcon,
 	XIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { FileMetadata, useFileUpload } from "@/hooks/use-file-upload";
 
 type GalleryViewerProps = {
@@ -48,7 +48,17 @@ export function GalleryViewer({
 	const imageFiles = files.filter(
 		(file) => file.file.type.startsWith("image/") && file.preview,
 	);
+	const navigateNext = useCallback(() => {
+		setSelectedImageIndex((prev) =>
+			prev === null || prev === imageFiles.length - 1 ? 0 : prev + 1,
+		);
+	}, [imageFiles.length]);
 
+	const navigatePrevious = useCallback(() => {
+		setSelectedImageIndex((prev) =>
+			prev === null || prev === 0 ? imageFiles.length - 1 : prev - 1,
+		);
+	}, [imageFiles.length]);
 	useEffect(() => {
 		if (selectedImageIndex === null) return;
 
@@ -64,21 +74,7 @@ export function GalleryViewer({
 
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [selectedImageIndex, imageFiles.length]);
-
-	const navigatePrevious = () => {
-		if (selectedImageIndex === null) return;
-		setSelectedImageIndex((prev) =>
-			prev === null || prev === 0 ? imageFiles.length - 1 : prev - 1,
-		);
-	};
-
-	const navigateNext = () => {
-		if (selectedImageIndex === null) return;
-		setSelectedImageIndex((prev) =>
-			prev === null || prev === imageFiles.length - 1 ? 0 : prev + 1,
-		);
-	};
+	}, [selectedImageIndex, navigateNext, navigatePrevious]);
 
 	const onTouchStart = (e: React.TouchEvent) => {
 		if (e.targetTouches && e.targetTouches.length > 0) {
@@ -207,7 +203,7 @@ export function GalleryViewer({
 													/>
 												</div>
 											)}
-											<div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity sm:group-hover:opacity-100" />
+											<div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity sm:group-hover:opacity-100" />
 										</>
 									) : file.preview ? (
 										<div className="flex h-full flex-col items-center justify-center gap-2 p-3 text-muted-foreground sm:p-4">
@@ -265,7 +261,7 @@ export function GalleryViewer({
 									variant="secondary"
 									size="icon"
 									type="button"
-									className="absolute bottom-[4.5rem] left-1.5 z-20 h-6 w-6 shadow-lg transition-all active:scale-90 sm:bottom-20 sm:left-2 sm:opacity-0 sm:group-hover:opacity-100 sm:hover:scale-110"
+									className="absolute bottom-18 left-1.5 z-20 h-6 w-6 shadow-lg transition-all active:scale-90 sm:bottom-20 sm:left-2 sm:opacity-0 sm:group-hover:opacity-100 sm:hover:scale-110"
 									onClick={(e) => {
 										e.stopPropagation();
 										onSetThumbnail(file.file as FileMetadata);

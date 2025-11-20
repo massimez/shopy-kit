@@ -46,6 +46,7 @@ export function useEntityImageUpload({
 	const toFileMetadata = useCallback(
 		(item: FileWithPreview): FileMetadata => ({
 			key: item.id,
+			// biome-ignore lint/style/noNonNullAssertion: <>
 			url: item.preview!,
 			name: item.file.name,
 			size: item.file.size,
@@ -83,97 +84,96 @@ export function useEntityImageUpload({
 	);
 
 	// Upload a single file
-	const uploadSingleFile = useCallback(
-		async (fileItem: FileWithPreview): Promise<UploadResult> => {
-			if (!(fileItem.file instanceof File)) {
-				clearProgress(fileItem.id);
-				return { success: false };
+	const uploadSingleFile = async (
+		fileItem: FileWithPreview,
+	): Promise<UploadResult> => {
+		if (!(fileItem.file instanceof File)) {
+			clearProgress(fileItem.id);
+			return { success: false };
+		}
+
+		try {
+			fileItem.isUploading = true;
+			updateProgress(fileItem.id, 25);
+
+			const { key, publicUrl } = await uploadPublic(fileItem.file);
+			updateProgress(fileItem.id, 75);
+
+			// Clean up old preview URL
+			if (fileItem.preview) {
+				URL.revokeObjectURL(fileItem.preview);
 			}
 
-			try {
-				fileItem.isUploading = true;
-				updateProgress(fileItem.id, 25);
+			// Update file item with upload results
+			fileItem.preview = publicUrl;
+			fileItem.id = key;
+			fileItem.isUploading = false;
+			fileItem.isUploaded = true;
 
-				const { key, publicUrl } = await uploadPublic(fileItem.file);
-				updateProgress(fileItem.id, 75);
+			updateProgress(fileItem.id, 100);
+			clearProgress(fileItem.id);
 
-				// Clean up old preview URL
-				if (fileItem.preview) {
-					URL.revokeObjectURL(fileItem.preview);
-				}
+			return { success: true, file: fileItem };
+		} catch (error) {
+			fileItem.isUploading = false;
+			clearProgress(fileItem.id);
 
-				// Update file item with upload results
-				fileItem.preview = publicUrl;
-				fileItem.id = key;
-				fileItem.isUploading = false;
-				fileItem.isUploaded = true;
+			const errorMessage =
+				error instanceof Error
+					? error.message
+					: t(keys.failedUpload, { fileName: fileItem.file.name });
 
-				updateProgress(fileItem.id, 100);
-				clearProgress(fileItem.id);
+			toast.error(errorMessage);
+			console.error("Upload error:", errorMessage);
 
-				return { success: true, file: fileItem };
-			} catch (error) {
-				fileItem.isUploading = false;
-				clearProgress(fileItem.id);
-
-				const errorMessage =
-					error instanceof Error
-						? error.message
-						: t(keys.failedUpload, { fileName: fileItem.file.name });
-
-				toast.error(errorMessage);
-				console.error("Upload error:", errorMessage);
-
-				return { success: false };
-			}
-		},
-		[clearProgress, updateProgress, t, keys],
-	);
+			return { success: false };
+		}
+	};
 
 	// Handle multiple files being added
-	const handleFilesAdded = useCallback(
-		async (addedFiles: FileWithPreview[], currentFiles: FileWithPreview[]) => {
-			const uploadTasks = addedFiles.map((file) => uploadSingleFile(file));
-			const results = await Promise.allSettled(uploadTasks);
+	const handleFilesAdded = async (
+		addedFiles: FileWithPreview[],
+		currentFiles: FileWithPreview[],
+	) => {
+		const uploadTasks = addedFiles.map((file) => uploadSingleFile(file));
+		const results = await Promise.allSettled(uploadTasks);
 
-			// Filter successful uploads
-			const successfulUploads = results
-				.filter(
-					(result): result is PromiseFulfilledResult<UploadResult> =>
-						result.status === "fulfilled" && result.value.success,
-				)
-				.map((result) => result.value.file!)
-				.filter((file) => file.preview); // Ensure preview exists
+		// Filter successful uploads
+		const successfulUploads = results
+			.filter(
+				(result): result is PromiseFulfilledResult<UploadResult> =>
+					result.status === "fulfilled" && result.value.success,
+			)
+			// biome-ignore lint/style/noNonNullAssertion: <>
+			.map((result) => result.value.file!)
+			.filter((file) => file.preview); // Ensure preview exists
 
-			// Remove failed uploads from state
-			const failedIds = results
-				.map((result, index) => ({
-					result,
-					id: addedFiles[index]!.id,
-				}))
-				.filter(
-					({ result }) =>
-						result.status === "fulfilled" && !result.value.success,
-				)
-				.map(({ id }) => id);
+		// Remove failed uploads from state
+		const failedIds = results
+			.map((result, index) => ({
+				result,
+				id: addedFiles[index]?.id,
+			}))
+			.filter(
+				({ result }) => result.status === "fulfilled" && !result.value.success,
+			)
+			.map(({ id }) => id);
 
-			// Report errors for failed uploads
-			if (failedIds.length > 0) {
-				const errorMessages = failedIds.map(
-					(id) => `Failed to upload file: ${id}`,
-				);
-				actions.triggerError(errorMessages);
-				failedIds.forEach((id) => actions.removeFile(id));
-			}
+		// Report errors for failed uploads
+		if (failedIds.length > 0) {
+			const errorMessages = failedIds.map(
+				(id) => `Failed to upload file: ${id}`,
+			);
+			actions.triggerError(errorMessages);
+			failedIds.map((id) => actions.removeFile(id as string));
+		}
 
-			// Notify parent of successful uploads
-			if (successfulUploads.length > 0) {
-				const updatedFiles = [...currentFiles, ...successfulUploads];
-				await notifyImageUpdate(updatedFiles);
-			}
-		},
-		[uploadSingleFile, notifyImageUpdate],
-	);
+		// Notify parent of successful uploads
+		if (successfulUploads.length > 0) {
+			const updatedFiles = [...currentFiles, ...successfulUploads];
+			await notifyImageUpdate(updatedFiles);
+		}
+	};
 
 	// Initialize file upload hook
 	const [stateImages, actions] = useFileUpload({
@@ -199,32 +199,29 @@ export function useEntityImageUpload({
 	);
 
 	// Handle file removal
-	const handleRemove = useCallback(
-		async (key: string) => {
-			if (!key) {
-				toast.error(t(keys.idMissing));
-				return;
-			}
+	const handleRemove = async (key: string) => {
+		if (!key) {
+			toast.error(t(keys.idMissing));
+			return;
+		}
 
-			try {
-				await deleteFile(key);
-				actions.removeFile(key);
+		try {
+			await deleteFile(key);
+			actions.removeFile(key);
 
-				// Update parent with remaining files
-				const remainingFiles = stateImages.files.filter((f) => f.id !== key);
-				await notifyImageUpdate(remainingFiles);
+			// Update parent with remaining files
+			const remainingFiles = stateImages.files.filter((f) => f.id !== key);
+			await notifyImageUpdate(remainingFiles);
 
-				toast.success(t(keys.deleteSuccess));
-			} catch (error) {
-				const errorMessage =
-					error instanceof Error ? error.message : t(keys.failedDelete);
+			toast.success(t(keys.deleteSuccess));
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : t(keys.failedDelete);
 
-				console.error("Delete failed:", errorMessage);
-				toast.error(errorMessage);
-			}
-		},
-		[actions, stateImages.files, notifyImageUpdate, t, keys],
-	);
+			console.error("Delete failed:", errorMessage);
+			toast.error(errorMessage);
+		}
+	};
 
 	return {
 		stateImages,

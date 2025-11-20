@@ -16,6 +16,7 @@ export const SwitchFormField = ({
 	labelKey,
 	descriptionKey,
 }: {
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	control: any;
 	name: string;
 	labelKey: string;

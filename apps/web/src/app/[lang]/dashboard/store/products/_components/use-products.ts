@@ -39,11 +39,6 @@ export type Product = {
 		| null;
 };
 
-type ProductsResponse = {
-	total: number;
-	data: Product[];
-};
-
 type ProductsParams = {
 	limit?: string;
 	offset?: string;

@@ -95,7 +95,7 @@ export const VariantModal = ({
 				dimensionsCm: {},
 			});
 		}
-	}, [variant, selectedLanguage, open]);
+	}, [variant, selectedLanguage]);
 
 	const updateTranslation = (field: string, value: string) => {
 		const translations = formData.translations || [];
@@ -113,7 +113,7 @@ export const VariantModal = ({
 			translations.push({
 				languageCode: selectedLanguage,
 				[field]: value,
-			} as any);
+			});
 		}
 
 		setFormData({ ...formData, translations });
@@ -293,7 +293,7 @@ export const VariantModal = ({
 										onChange={(e) =>
 											setFormData({
 												...formData,
-												reorderPoint: Number.parseInt(e.target.value) || 10,
+												reorderPoint: Number.parseInt(e.target.value, 10) || 10,
 											})
 										}
 									/>
@@ -309,7 +309,8 @@ export const VariantModal = ({
 										onChange={(e) =>
 											setFormData({
 												...formData,
-												reorderQuantity: Number.parseInt(e.target.value) || 50,
+												reorderQuantity:
+													Number.parseInt(e.target.value, 10) || 50,
 											})
 										}
 									/>
@@ -323,7 +324,8 @@ export const VariantModal = ({
 										onChange={(e) =>
 											setFormData({
 												...formData,
-												maxStock: Number.parseInt(e.target.value) || undefined,
+												maxStock:
+													Number.parseInt(e.target.value, 10) || undefined,
 											})
 										}
 									/>

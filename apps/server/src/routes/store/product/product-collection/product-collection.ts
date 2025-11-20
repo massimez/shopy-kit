@@ -1,4 +1,3 @@
-import z from "zod";
 import { createRouter } from "@/lib/create-hono-app";
 import {
 	createErrorResponse,
@@ -9,7 +8,6 @@ import {
 	idParamSchema,
 	jsonValidator,
 	paramValidator,
-	validateOrgId,
 } from "@/lib/utils/validator";
 import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
@@ -24,10 +22,6 @@ import {
 	getProductCollections,
 	updateProductCollection,
 } from "./product-collection.service";
-
-const getProductCollectionsQuerySchema = z.object({
-	lang: z.string().length(2).optional(),
-});
 
 export const productCollectionRoute = createRouter()
 	.post(

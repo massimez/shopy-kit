@@ -102,7 +102,7 @@ export const TransactionsList = ({
 								</TableCell>
 								<TableCell>{transaction.location.name || "N/A"}</TableCell>
 								<TableCell>
-									{Number.parseInt(transaction.unitCost || "0").toFixed(2)}
+									{Number.parseInt(transaction.unitCost || "0", 10).toFixed(2)}
 								</TableCell>
 								<TableCell>{transaction.referenceId || "-"}</TableCell>
 								<TableCell>

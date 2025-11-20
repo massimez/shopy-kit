@@ -35,6 +35,7 @@ export const FieldRenderer = React.memo(
 			return null;
 		}
 
+		// biome-ignore lint/suspicious/noExplicitAny: <>
 		const renderInput = (fieldProps: any) => {
 			switch (field.type) {
 				case "textarea":

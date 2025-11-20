@@ -20,7 +20,9 @@ import type { FormFieldConfig } from "./types";
 // ============================================================================
 
 export const TextInput: React.FC<{
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	field: FormFieldConfig<any>;
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	fieldProps: any;
 	t: (key: string) => string;
 }> = ({ field, fieldProps, t }) => (
@@ -48,6 +50,7 @@ export const TextInput: React.FC<{
 // TEXTAREA INPUT COMPONENT
 // ============================================================================
 
+// biome-ignore lint/suspicious/noExplicitAny: <>
 export const TextareaInput: React.FC<{ fieldProps: any }> = ({
 	fieldProps,
 }) => <Textarea {...fieldProps} />;
@@ -57,7 +60,9 @@ export const TextareaInput: React.FC<{ fieldProps: any }> = ({
 // ============================================================================
 
 export const SelectInput: React.FC<{
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	field: FormFieldConfig<any>;
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	fieldProps: any;
 	t: (key: string) => string;
 }> = ({ field, fieldProps, t }) => (
@@ -85,7 +90,9 @@ export const SelectInput: React.FC<{
 // ============================================================================
 
 export const MultiSelectInput: React.FC<{
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	field: FormFieldConfig<any>;
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	fieldProps: any;
 	t: (key: string) => string;
 }> = ({ field, fieldProps, t }) => {
@@ -128,6 +135,7 @@ export const MultiSelectInput: React.FC<{
 // SWITCH INPUT COMPONENT
 // ============================================================================
 
+// biome-ignore lint/suspicious/noExplicitAny: <>
 export const SwitchInput: React.FC<{ fieldProps: any }> = ({ fieldProps }) => (
 	<Switch
 		checked={fieldProps.value || false}
@@ -139,6 +147,7 @@ export const SwitchInput: React.FC<{ fieldProps: any }> = ({ fieldProps }) => (
 // JSON INPUT COMPONENT
 // ============================================================================
 
+// biome-ignore lint/suspicious/noExplicitAny: <>
 export const JsonInput: React.FC<{ fieldProps: any }> = ({ fieldProps }) => (
 	<Textarea
 		{...fieldProps}

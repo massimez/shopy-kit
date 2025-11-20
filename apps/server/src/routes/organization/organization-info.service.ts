@@ -1,12 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import type z from "zod";
 import { db } from "@/lib/db";
-import {
-	address,
-	location,
-	organization,
-	organizationInfo,
-} from "@/lib/db/schema";
+import { address, location, organizationInfo } from "@/lib/db/schema";
 import type {
 	insertOrganizationInfoSchema,
 	updateOrganizationInfoSchema,

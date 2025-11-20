@@ -11,7 +11,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@workspace/ui/components/select";
-import { ChevronDown, ChevronRight, Package, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, Package } from "lucide-react";
 import { useState } from "react";
 
 import { StockDataRow } from "./stock-data-row";

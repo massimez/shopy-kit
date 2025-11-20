@@ -81,6 +81,7 @@ export interface Order {
 	locationId: string;
 	notes?: string;
 	tags?: string[];
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	metadata?: Record<string, any>;
 	createdAt: string;
 	updatedAt: string;

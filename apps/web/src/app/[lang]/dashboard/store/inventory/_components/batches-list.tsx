@@ -10,7 +10,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@workspace/ui/components/table";
-import { Package, Search } from "lucide-react";
+import { Package } from "lucide-react";
 import { useState } from "react";
 import { useBatches } from "../hooks/use-batches";
 

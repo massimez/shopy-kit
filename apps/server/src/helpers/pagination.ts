@@ -23,10 +23,12 @@ interface BaseTable extends PgTable {
 }
 
 interface PaginationParams<T extends BaseTable> {
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	db: any;
 	table: T;
 	orgId: string;
 	params: OffsetPaginationParams;
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	query?: any;
 	baseFilters?: SQL;
 }

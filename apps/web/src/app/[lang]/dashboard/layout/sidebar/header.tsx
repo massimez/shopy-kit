@@ -58,8 +58,8 @@ const routeConfig: Record<string, BreadcrumbConfig> = {
 // Function to format route segments into readable labels
 const formatLabel = (
 	segment: string,
-	index?: number,
-	allSegments?: string[],
+	_index?: number,
+	_allSegments?: string[],
 ): string => {
 	const config = routeConfig[segment];
 
@@ -132,7 +132,7 @@ const DynamicBreadcrumb = () => {
 	const breadcrumbItems: BreadcrumbItemData[] = visibleSegments.map(
 		(segment, index) => {
 			// Calculate the actual path index for href generation
-			const actualIndex = relevantSegments.findIndex((s, i) => {
+			const actualIndex = relevantSegments.findIndex((_s, i) => {
 				const visibleCount = relevantSegments
 					.slice(0, i + 1)
 					.filter((seg) => !routeConfig[seg]?.hideFromBreadcrumb).length;

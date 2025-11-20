@@ -92,10 +92,12 @@ export const getFieldNamesFromItems = <T extends FieldValues>(
 };
 
 export const hasFieldErrors = (
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	errors: Record<string, any>,
 	fieldPath: string,
 ): boolean => {
 	const pathArray = fieldPath.split(".");
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	return pathArray.reduce((obj: any, key) => obj?.[key], errors) !== undefined;
 };
 

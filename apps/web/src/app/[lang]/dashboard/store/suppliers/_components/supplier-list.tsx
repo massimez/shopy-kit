@@ -18,7 +18,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@workspace/ui/components/table";
-import { MoreHorizontal, Search, Truck } from "lucide-react";
+import { MoreHorizontal, Truck } from "lucide-react";
 import { useState } from "react";
 import { useDeleteSupplier } from "../hooks";
 

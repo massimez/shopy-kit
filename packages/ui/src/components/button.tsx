@@ -17,7 +17,7 @@ const buttonVariants = cva(
 				secondary:
 					"bg-secondary text-secondary-foreground hover:bg-secondary/90 data-[state=open]:bg-secondary/90",
 				outline:
-					"border border-input bg-background text-accent hover:bg-accent hover:text-accent-foreground data-[state=open]:bg-accent",
+					"border border-input bg-background text-accent hover:bg-accent hover:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground",
 				dashed:
 					"border border-input border-dashed bg-background text-accent-foreground hover:bg-accent hover:text-accent-foreground data-[state=open]:text-accent-foreground",
 				ghost:
@@ -111,7 +111,7 @@ const buttonVariants = cva(
 				variant: "outline",
 				mode: "icon",
 				className:
-					"[&_svg:not([role=img]):not([class*=text-]):not([class*=opacity-])]:opacity-60",
+					"[&_svg:not([role=img]):not([class*=text-]):not([class*=opacity-])]:opacity-60 data-[state=open]:[&_svg:not([role=img]):not([class*=text-]):not([class*=opacity-])]:opacity-100",
 			},
 
 			// Auto height
