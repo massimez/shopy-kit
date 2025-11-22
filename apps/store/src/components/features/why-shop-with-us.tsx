@@ -1,6 +1,4 @@
-import {
-	Card,
-} from "@workspace/ui/components/card";
+import { Card } from "@workspace/ui/components/card";
 import {
 	CreditCard,
 	Headphones,
