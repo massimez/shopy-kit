@@ -9,19 +9,16 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@workspace/ui/components/select";
+import Link from "next/link";
 import { useState } from "react";
 import { PageDashboardHeader } from "@/components/sections/page-dashboard-header";
 import { DEFAULT_LOCALE, LOCALES } from "@/constants/locales";
 import { hc } from "@/lib/api-client";
-import { authClient } from "@/lib/auth-client";
 import { ProductList } from "./_components/product-list";
-import { ProductModal } from "./_components/product-modal";
 import { useProducts } from "./_components/use-products";
 
 const ProductsPage = () => {
-	const [isModalOpen, setIsModalOpen] = useState(false);
 	const queryClient = useQueryClient();
-	const activeOrg = authClient.useActiveOrganization();
 
 	const [selectedLanguage, setSelectedLanguage] = useState(DEFAULT_LOCALE);
 	const {
@@ -53,7 +50,9 @@ const ProductsPage = () => {
 							))}
 						</SelectContent>
 					</Select>
-					<Button onClick={() => setIsModalOpen(true)}>Add Product</Button>
+					<Link href={`/${selectedLanguage}/dashboard/store/products/new`}>
+						<Button>Add Product</Button>
+					</Link>
 				</div>
 			</div>
 			<ProductList
@@ -66,87 +65,6 @@ const ProductsPage = () => {
 					});
 					queryClient.invalidateQueries({ queryKey: ["products"] });
 				}}
-				onAddVariant={async (productId, variant) => {
-					if (!activeOrg.data?.id) {
-						console.error("Active organization ID is not available.");
-						return;
-					}
-					await hc.api.store["product-variants"].$post({
-						json: {
-							...variant,
-							productId,
-							sku: variant.sku || "", // Ensure sku is a string
-							price:
-								variant?.price !== undefined && variant?.price !== null
-									? String(variant?.price)
-									: "0", // Ensure price is a string or undefined
-							weightKg:
-								variant.weightKg !== undefined && variant.weightKg !== null
-									? String(variant.weightKg)
-									: variant.weightKg, // Ensure weightKg is a string or undefined
-							compareAtPrice:
-								variant.compareAtPrice !== undefined &&
-								variant.compareAtPrice !== null
-									? String(variant.compareAtPrice)
-									: variant.compareAtPrice, // Ensure compareAtPrice is a string or undefined
-							cost:
-								variant.cost !== undefined && variant.cost !== null
-									? String(variant.cost)
-									: variant.cost, // Ensure cost is a string or undefined
-							translations: variant.translations || [], // Ensure translations is an array
-							organizationId: activeOrg.data.id,
-						},
-					});
-					queryClient.invalidateQueries({ queryKey: ["products"] });
-				}}
-				onUpdateVariant={async (variantId, variant) => {
-					const updatedVariant = {
-						...variant,
-						weightKg:
-							variant.weightKg !== undefined && variant.weightKg !== null
-								? String(variant.weightKg)
-								: variant.weightKg,
-						price:
-							variant?.price !== undefined && variant?.price !== null
-								? String(variant?.price)
-								: variant?.price,
-						compareAtPrice:
-							variant.compareAtPrice !== undefined &&
-							variant.compareAtPrice !== null
-								? String(variant.compareAtPrice)
-								: variant.compareAtPrice,
-						cost:
-							variant.cost !== undefined && variant.cost !== null
-								? String(variant.cost)
-								: variant.cost,
-						sku:
-							variant.sku !== undefined && variant.sku !== null
-								? String(variant.sku)
-								: undefined,
-						dimensionsCm: {
-							length: variant.dimensionsCm?.length ?? null,
-							width: variant.dimensionsCm?.width ?? null,
-							height: variant.dimensionsCm?.height ?? null,
-						},
-					};
-					await hc.api.store["product-variants"][":id"].$put({
-						param: { id: variantId },
-						json: updatedVariant,
-					});
-					queryClient.invalidateQueries({ queryKey: ["products"] });
-				}}
-				onDeleteVariant={async (variantId) => {
-					await hc.api.store["product-variants"][":id"].$delete({
-						param: { id: variantId },
-					});
-					queryClient.invalidateQueries({ queryKey: ["products"] });
-				}}
-			/>
-
-			<ProductModal
-				open={isModalOpen}
-				onOpenChange={setIsModalOpen}
-				selectedLanguage={selectedLanguage}
 			/>
 		</div>
 	);

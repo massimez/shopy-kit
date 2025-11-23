@@ -15,21 +15,16 @@ import {
 	Eye,
 	EyeOff,
 	Layers,
-	Plus,
 	Tag,
 	Trash2,
 } from "lucide-react";
-import type { Product } from "./use-products";
-import type { ProductVariant } from "./variant-modal";
+import type { Product, ProductVariant } from "./use-products";
 
 interface ProductCardProps {
 	product: Product;
 	selectedLanguage: string;
 	onEdit: (product: Product) => void;
 	onDelete: (productId: string) => void;
-	onAddVariant: (product: Product) => void;
-	onEditVariant: (product: Product, variant: ProductVariant) => void;
-	onDeleteVariant: (variantId: string) => void;
 }
 
 export const ProductCard = ({
@@ -37,9 +32,6 @@ export const ProductCard = ({
 	selectedLanguage,
 	onEdit,
 	onDelete,
-	onAddVariant,
-	onEditVariant,
-	onDeleteVariant,
 }: ProductCardProps) => {
 	const translation = product.translations?.find(
 		(t) => t.languageCode === selectedLanguage,
@@ -163,73 +155,43 @@ export const ProductCard = ({
 				)}
 
 				{/* Variants Section */}
-				{
-					<div className="space-y-2 border-t pt-2">
-						<div className="flex items-center justify-between">
-							<div className="flex items-center gap-2">
-								<Layers className="h-4 w-4 text-muted-foreground" />
-								<span className="font-medium text-xs">
-									Variants ({variants.length})
-								</span>
-							</div>
-							<Button
-								variant="ghost"
-								size="sm"
-								className="h-6 px-2 text-xs"
-								onClick={() => onAddVariant(product)}
-							>
-								<Plus className="mr-1 h-3 w-3" />
-								Add
-							</Button>
-						</div>
-						{variants.length > 0 && (
-							<div className="max-h-24 space-y-1 overflow-y-auto">
-								{variants.map((variant: ProductVariant) => {
-									const variantTranslation = getVariantTranslation(variant);
-									return (
-										<div
-											key={variant.id}
-											className="group flex items-center justify-between rounded bg-muted/50 px-2 py-1.5 text-xs"
-										>
-											<div className="min-w-0 flex-1">
-												<div className="truncate font-medium">
-													{variantTranslation?.name || variant.sku}
-												</div>
-												<div className="text-muted-foreground text-xs">
-													SKU: {variant.sku}
-												</div>
+				{/* Variants Section */}
+				<div className="space-y-2 border-t pt-2">
+					<div className="flex items-center gap-2">
+						<Layers className="h-4 w-4 text-muted-foreground" />
+						<span className="font-medium text-xs">
+							Variants ({variants.length})
+						</span>
+					</div>
+					{variants.length > 0 && (
+						<div className="max-h-24 space-y-1 overflow-y-auto">
+							{variants.map((variant: ProductVariant) => {
+								const variantTranslation = getVariantTranslation(variant);
+								return (
+									<div
+										key={variant.id}
+										className="group flex items-center justify-between rounded bg-muted/50 px-2 py-1.5 text-xs"
+									>
+										<div className="min-w-0 flex-1">
+											<div className="truncate font-medium">
+												{variantTranslation?.name || variant.sku}
 											</div>
-											<div className="flex items-center gap-2">
-												<span className="font-medium text-muted-foreground">
-													{product.currency || "$"}{" "}
-													{Number(variant?.price).toFixed(2)}
-												</span>
-												<div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-													<Button
-														variant="ghost"
-														size="icon"
-														className="h-6 w-6"
-														onClick={() => onEditVariant(product, variant)}
-													>
-														<Edit className="h-3 w-3" />
-													</Button>
-													<Button
-														variant="ghost"
-														size="icon"
-														className="h-6 w-6 text-destructive"
-														onClick={() => onDeleteVariant(variant.id)}
-													>
-														<Trash2 className="h-3 w-3" />
-													</Button>
-												</div>
+											<div className="text-muted-foreground text-xs">
+												SKU: {variant.sku}
 											</div>
 										</div>
-									);
-								})}
-							</div>
-						)}
-					</div>
-				}
+										<div className="flex items-center gap-2">
+											<span className="font-medium text-muted-foreground">
+												{product.currency || "$"}{" "}
+												{Number(variant?.price).toFixed(2)}
+											</span>
+										</div>
+									</div>
+								);
+							})}
+						</div>
+					)}
+				</div>
 
 				<div className="grid grid-cols-2 gap-2 border-t pt-2 text-xs">
 					{product.trackStock && (

@@ -86,7 +86,20 @@ export async function getProduct(productId: string, orgId: string) {
 			),
 		)
 		.limit(1);
-	return foundProduct;
+
+	if (!foundProduct) return undefined;
+
+	const variants = await db
+		.select()
+		.from(productVariant)
+		.where(
+			and(
+				eq(productVariant.productId, productId),
+				eq(productVariant.organizationId, orgId),
+			),
+		);
+
+	return { ...foundProduct, variants };
 }
 
 /**

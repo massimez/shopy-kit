@@ -3,6 +3,22 @@
 import { useQuery } from "@tanstack/react-query";
 import { hc } from "@/lib/api-client";
 
+export type ProductVariant = {
+	id: string;
+	sku: string;
+	price: string | number;
+	weightKg?: string | number | null;
+	compareAtPrice?: string | number | null;
+	cost?: string | number | null;
+	maxStock?: number;
+	isActive?: boolean;
+	translations?: {
+		languageCode: string;
+		name: string;
+		attributes?: Record<string, string>;
+	}[];
+};
+
 export type Product = {
 	id: string;
 	metadata: never;
@@ -23,6 +39,7 @@ export type Product = {
 	maxQuantity: number | null;
 	type?: string;
 	collectionId?: string | null;
+	brandId?: string | null;
 	translations:
 		| {
 				languageCode: string;
@@ -37,6 +54,7 @@ export type Product = {
 				tags?: string | null;
 		  }[]
 		| null;
+	variants?: ProductVariant[];
 };
 
 type ProductsParams = {
