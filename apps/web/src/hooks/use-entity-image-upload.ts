@@ -96,7 +96,8 @@ export function useEntityImageUpload({
 			fileItem.isUploading = true;
 			updateProgress(fileItem.id, 25);
 
-			const { key, publicUrl } = await uploadPublic(fileItem.file);
+			const originalFile = fileItem.file;
+			const { key, publicUrl } = await uploadPublic(originalFile);
 			updateProgress(fileItem.id, 75);
 
 			// Clean up old preview URL
@@ -104,7 +105,17 @@ export function useEntityImageUpload({
 				URL.revokeObjectURL(fileItem.preview);
 			}
 
+			// Convert File to FileMetadata after successful upload
+			const fileMetadata: FileMetadata = {
+				key,
+				url: publicUrl,
+				name: originalFile.name,
+				size: originalFile.size,
+				type: originalFile.type,
+			};
+
 			// Update file item with upload results
+			fileItem.file = fileMetadata;
 			fileItem.preview = publicUrl;
 			fileItem.id = key;
 			fileItem.isUploading = false;
