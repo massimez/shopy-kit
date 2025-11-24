@@ -93,11 +93,15 @@ async function validateOrderItems(
 			columns: {
 				allowBackorders: true,
 				name: true,
+				translations: true,
 			},
 		});
 
 		const allowBackorders = productInfo?.allowBackorders || false;
-		const productName = productInfo?.name || "Unknown Product";
+		const productName =
+			productInfo?.name ||
+			productInfo?.translations?.[0]?.name ||
+			"Unknown Product";
 		const unitPrice = Number(foundProductVariant.price || 0);
 		const totalPrice = unitPrice * Number(item.quantity || 0);
 		subtotal += totalPrice;

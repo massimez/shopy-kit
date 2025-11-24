@@ -45,3 +45,28 @@ export function useProduct(
 		enabled,
 	});
 }
+
+export function useOrders(
+	params: Parameters<typeof storefrontClient.getOrders>[0],
+	enabled = true,
+) {
+	return useQuery({
+		queryKey: ["orders", params],
+		queryFn: () => storefrontClient.getOrders(params),
+		enabled,
+	});
+}
+
+export function useOrder(
+	params: { organizationId: string; orderId: string; userId?: string },
+	enabled = true,
+) {
+	const { organizationId, orderId, userId } = params;
+
+	return useQuery({
+		queryKey: ["order", organizationId, orderId],
+		queryFn: () =>
+			storefrontClient.getOrder({ organizationId, orderId, userId }),
+		enabled: enabled && !!organizationId && !!orderId,
+	});
+}

@@ -8,7 +8,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { routing } from "@/i18n/routing";
 import { QueryProvider } from "@/providers/query-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
-import "@workspace/ui/styles/globals.css";
+import "@workspace/ui/globals.css";
 
 export default async function LocaleLayout({
 	children,

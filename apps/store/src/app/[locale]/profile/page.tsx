@@ -8,24 +8,48 @@ import {
 	CardTitle,
 } from "@workspace/ui/components/card";
 import { Separator } from "@workspace/ui/components/separator";
+import { useMounted } from "@workspace/ui/hooks/use-mounted";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useQueryState } from "nuqs";
 import { toast } from "sonner";
+import { OrderHistory } from "@/components/profile/order-history";
 import { ProfileSidebar } from "@/components/profile/profile-sidebar";
 import { useRouter } from "@/i18n/routing";
 import { signOut, useSession } from "@/lib/auth-client";
+import { useOrders, useOrganization } from "@/lib/hooks/use-storefront";
+
+// ...
 
 export default function ProfilePage() {
 	const t = useTranslations("Navigation");
 	const { data: session, isPending } = useSession();
 	const router = useRouter();
-	const [activeTab, setActiveTab] = useState("overview");
+	const [activeTab, setActiveTab] = useQueryState("tab", {
+		defaultValue: "overview",
+		parse: (value) => {
+			if (
+				typeof value === "string" &&
+				["overview", "orders", "settings"].includes(value)
+			) {
+				return value;
+			}
+			return "overview";
+		},
+	});
+	const isClient = useMounted();
 
-	useEffect(() => {
-		if (!isPending && !session) {
-			router.push("/");
-		}
-	}, [session, isPending, router]);
+	// Fetch organization
+	const { data: org } = useOrganization("yam");
+	const organizationId = org?.id;
+
+	// Fetch orders
+	const { data: orders, isLoading: isLoadingOrders } = useOrders(
+		{
+			organizationId: organizationId || "",
+			userId: session?.user?.id || "",
+		},
+		!!session?.user?.id && !!organizationId,
+	);
 
 	const handleLogout = async () => {
 		await signOut({
@@ -42,10 +66,10 @@ export default function ProfilePage() {
 		});
 	};
 
-	if (isPending) {
+	if (isPending || !isClient) {
 		return (
 			<div className="flex h-[50vh] items-center justify-center">
-				Loading...
+				<div className="h-8 w-8 animate-spin rounded-full border-primary border-t-2" />
 			</div>
 		);
 	}
@@ -55,9 +79,9 @@ export default function ProfilePage() {
 	}
 
 	return (
-		<div className="container mx-auto space-y-6 px-4 py-10 pb-16 md:block">
-			<div className="space-y-0.5">
-				<h2 className="font-bold text-2xl tracking-tight">{t("profile")}</h2>
+		<div className="container mx-auto space-y-8 px-4 py-10 pb-16 md:block">
+			<div className="space-y-1">
+				<h2 className="font-bold text-3xl tracking-tight">{t("profile")}</h2>
 				<p className="text-muted-foreground">
 					Manage your account settings and preferences.
 				</p>
@@ -97,19 +121,7 @@ export default function ProfilePage() {
 						</div>
 					)}
 					{activeTab === "orders" && (
-						<div className="space-y-6">
-							<Card>
-								<CardHeader>
-									<CardTitle>Order History</CardTitle>
-									<CardDescription>View your past orders.</CardDescription>
-								</CardHeader>
-								<CardContent>
-									<div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
-										<p>No orders found.</p>
-									</div>
-								</CardContent>
-							</Card>
-						</div>
+						<OrderHistory orders={orders} isLoadingOrders={isLoadingOrders} />
 					)}
 					{activeTab === "settings" && (
 						<div className="space-y-6">
