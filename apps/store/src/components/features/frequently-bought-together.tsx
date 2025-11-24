@@ -64,7 +64,9 @@ export function FrequentlyBoughtTogether({
 			title="Frequently Bought Together"
 			showWishlist
 			compact
-			className="py-8"
+			className="py-8 pb-24 lg:pb-8"
+			showArrows={false}
+			showDots={true}
 		/>
 	);
 }

@@ -4,7 +4,7 @@ import type { SlotComponent } from "@/components/form/form-builder/types";
 import { useEntityImageUpload } from "@/hooks/use-entity-image-upload";
 import type { FileMetadata } from "@/hooks/use-file-upload";
 import { useUpdateProduct } from "../hooks/use-update-product";
-import type { ProductFormValues } from "./product-form";
+import type { ProductFormValues } from "./product-schema";
 
 export const ProductImagesSlot: SlotComponent<ProductFormValues> = ({
 	formValues,

@@ -5,12 +5,10 @@ import { Button } from "@workspace/ui/components/button";
 import {
 	Card,
 	CardContent,
-	CardFooter,
 	CardHeader,
 	CardTitle,
 } from "@workspace/ui/components/card";
 import { Heart, ShoppingCart, Star } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Link } from "@/i18n/routing";
 import { useDefaultLocationId } from "@/lib/hooks/use-default-location";
@@ -28,6 +26,9 @@ export interface Product {
 	isNew?: boolean;
 	isOnSale?: boolean;
 	discountPercentage?: number;
+	productVariantId?: string; // The variant ID to add to cart
+	variantName?: string;
+	variantSku?: string;
 }
 
 interface ProductCardProps {
@@ -40,29 +41,37 @@ interface ProductCardProps {
 
 export function ProductCard({
 	product,
-	showAddToCart = true,
 	showWishlist = false,
 	compact = false,
 }: ProductCardProps) {
-	const t = useTranslations("Product");
 	const { addItem } = useCartStore();
 	const { locationId } = useDefaultLocationId();
 
-	const handleAddToCart = () => {
+	const _handleAddToCart = () => {
 		if (!locationId) {
 			toast.error("Unable to add to cart. Location not available.");
 			return;
 		}
 
+		// Validate that we have a variant ID
+		if (!product.productVariantId) {
+			toast.error(
+				"This product is currently unavailable. Please try another variant or check back later.",
+			);
+			return;
+		}
+
 		const cartItem = {
-			id: product.id,
+			id: product.productVariantId, // Use variant ID as unique identifier
 			name: product.name,
 			price: product.price,
 			quantity: 1,
 			description: product.description || `${product.category} product`,
 			image: product.image,
-			productVariantId: product.id, // Using product ID as variant ID for now
+			productVariantId: product.productVariantId,
 			locationId: locationId,
+			variantName: product.variantName,
+			variantSku: product.variantSku,
 		};
 
 		addItem(cartItem);
@@ -93,70 +102,72 @@ export function ProductCard({
 
 			<CardContent className="flex flex-1 flex-col p-2 pt-0 sm:p-4 sm:pt-0">
 				{/* Product Image */}
-				<div className="relative mb-3 aspect-square w-full overflow-hidden rounded-lg bg-muted/30">
-					{product.image ? (
-						// biome-ignore lint/performance/noImgElement: <TODO>
-						<img
-							src={product.image}
-							alt={product.name}
-							className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-						/>
-					) : (
-						<div className="flex h-full items-center justify-center bg-linear-to-br from-muted/20 to-muted/40">
-							<ShoppingCart className="h-12 w-12 text-muted-foreground/50" />
-						</div>
-					)}
-
-					{/* Product Badges */}
-					{product.isNew || product.isOnSale ? (
-						<div className="absolute right-2 bottom-2 z-10 flex flex-col gap-1">
-							{product.isNew && (
-								<div className="rounded backdrop-blur-sm">
-									<Badge variant="info" className="px-2 py-1">
-										New
-									</Badge>
-								</div>
-							)}
-							{product.isOnSale && product.discountPercentage && (
-								<div className="rounded backdrop-blur-sm">
-									<Badge variant="destructive" className="px-2 py-1">
-										-{product.discountPercentage}%
-									</Badge>
-								</div>
-							)}
-						</div>
-					) : null}
-
-					{/* Wishlist Button */}
-					{showWishlist && (
-						<Button
-							variant="ghost"
-							size="sm"
-							className="absolute top-2 right-2 z-10 h-9 w-9 p-0 backdrop-blur-sm hover:bg-black/80 sm:h-8 sm:w-8"
-							onClick={(e) => {
-								e.preventDefault();
-								toast.success(`Added ${product.name} to wishlist!`);
-							}}
-						>
-							<Heart className="size-4 text-white" />
-						</Button>
-					)}
-
-					{/* Rating - overlaid on image */}
-					{product.rating && (
-						<div className="absolute bottom-2 left-2 z-10 sm:left-3">
-							<div className="flex items-center gap-1 rounded bg-black/30 px-2 py-1 backdrop-blur-sm">
-								<Star className="h-3 w-3 text-yellow-400" />
-								<span className="font-medium text-white text-xs">
-									{product.rating.toFixed(1)}
-								</span>
-								<span className="hidden font-medium text-white/70 text-xs sm:inline">
-									({product.reviews || 0})
-								</span>
+				<Link href={`/product/${product.id}`}>
+					<div className="relative mb-3 aspect-square w-full overflow-hidden rounded-lg bg-muted/30">
+						{product.image ? (
+							// biome-ignore lint/performance/noImgElement: <TODO>
+							<img
+								src={product.image}
+								alt={product.name}
+								className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+							/>
+						) : (
+							<div className="flex h-full items-center justify-center bg-linear-to-br from-muted/20 to-muted/40">
+								<ShoppingCart className="h-12 w-12 text-muted-foreground/50" />
 							</div>
-						</div>
-					)}
-				</div>
+						)}
+
+						{/* Product Badges */}
+						{product.isNew || product.isOnSale ? (
+							<div className="absolute right-2 bottom-2 z-10 flex flex-col gap-1">
+								{product.isNew && (
+									<div className="rounded backdrop-blur-sm">
+										<Badge variant="info" className="px-2 py-1">
+											New
+										</Badge>
+									</div>
+								)}
+								{product.isOnSale && product.discountPercentage && (
+									<div className="rounded backdrop-blur-sm">
+										<Badge variant="destructive" className="px-2 py-1">
+											-{product.discountPercentage}%
+										</Badge>
+									</div>
+								)}
+							</div>
+						) : null}
+
+						{/* Wishlist Button */}
+						{showWishlist && (
+							<Button
+								variant="ghost"
+								size="sm"
+								className="absolute top-2 right-2 z-10 h-9 w-9 p-0 backdrop-blur-sm hover:bg-black/80 sm:h-8 sm:w-8"
+								onClick={(e) => {
+									e.preventDefault();
+									toast.success(`Added ${product.name} to wishlist!`);
+								}}
+							>
+								<Heart className="size-4 text-white" />
+							</Button>
+						)}
+
+						{/* Rating - overlaid on image */}
+						{product.rating && (
+							<div className="absolute bottom-2 left-2 z-10 sm:left-3">
+								<div className="flex items-center gap-1 rounded bg-black/30 px-2 py-1 backdrop-blur-sm">
+									<Star className="h-3 w-3 text-yellow-400" />
+									<span className="font-medium text-white text-xs">
+										{product.rating.toFixed(1)}
+									</span>
+									<span className="hidden font-medium text-white/70 text-xs sm:inline">
+										({product.reviews || 0})
+									</span>
+								</div>
+							</div>
+						)}
+					</div>
+				</Link>
 
 				{/* Product Description - Fixed height */}
 				{product.description && !compact && (
@@ -191,7 +202,7 @@ export function ProductCard({
 				</div>
 			</CardContent>
 
-			{!compact && (
+			{/* {!compact && (
 				<CardFooter className="flex flex-col gap-2 p-2 pt-0 sm:p-4 sm:pt-0">
 					{showAddToCart && (
 						<Button
@@ -203,7 +214,7 @@ export function ProductCard({
 						</Button>
 					)}
 				</CardFooter>
-			)}
+			)} */}
 		</Card>
 	);
 }

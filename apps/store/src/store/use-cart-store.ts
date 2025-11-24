@@ -10,6 +10,8 @@ interface CartItem {
 	description?: string;
 	productVariantId: string;
 	locationId: string;
+	variantName?: string;
+	variantSku?: string;
 }
 
 interface CartState {
@@ -28,11 +30,14 @@ export const useCartStore = create<CartState>()(
 			items: [],
 			addItem: (item) =>
 				set((state) => {
-					const existingItem = state.items.find((i) => i.id === item.id);
+					// Use productVariantId as the unique identifier to distinguish between different variants
+					const existingItem = state.items.find(
+						(i) => i.productVariantId === item.productVariantId,
+					);
 					if (existingItem) {
 						return {
 							items: state.items.map((i) =>
-								i.id === item.id
+								i.productVariantId === item.productVariantId
 									? { ...i, quantity: i.quantity + item.quantity }
 									: i,
 							),

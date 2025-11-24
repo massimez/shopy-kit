@@ -1,6 +1,11 @@
 "use client";
 
-import { Badge } from "@workspace/ui/components/badge";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+	Alert,
+	AlertDescription,
+	AlertTitle,
+} from "@workspace/ui/components/alert";
 import { Button } from "@workspace/ui/components/button";
 import {
 	Card,
@@ -9,15 +14,25 @@ import {
 	CardTitle,
 } from "@workspace/ui/components/card";
 import { Checkbox } from "@workspace/ui/components/checkbox";
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "@workspace/ui/components/form";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
 import { Separator } from "@workspace/ui/components/separator";
-import { AlertCircle, Check, CreditCard, Shield, Truck } from "lucide-react";
+import { AlertCircle, Check, CreditCard, Shield, Truck, X } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
+import { type Path, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 import { useRouter } from "@/i18n/routing";
 import { useSession } from "@/lib/auth-client";
-import { storefrontClient } from "@/lib/storefront";
+import { StorefrontError, storefrontClient } from "@/lib/storefront";
 import { useCartStore } from "@/store/use-cart-store";
 
 type CheckoutStep = "shipping" | "payment" | "review";
@@ -27,6 +42,48 @@ interface CheckoutFormProps {
 	locationId: string;
 	currency?: string;
 }
+
+// Validation schema - for step validation, we only validate filled fields
+// Full validation happens on submit
+const checkoutSchema = z.object({
+	shippingAddress: z.object({
+		street: z.string(),
+		city: z.string(),
+		state: z.string(),
+		country: z.string(),
+		postalCode: z.string(),
+	}),
+	billingAddress: z.object({
+		street: z.string().optional(),
+		city: z.string().optional(),
+		state: z.string().optional(),
+		country: z.string().optional(),
+		postalCode: z.string().optional(),
+	}),
+	customerInfo: z.object({
+		fullName: z.string(),
+		email: z.string().email("Invalid email address"),
+		phone: z.string(),
+	}),
+	useDifferentBilling: z.boolean().default(false),
+});
+
+// Step-specific validation schemas for partial validation
+const shippingAddressSchema = z.object({
+	street: z.string().min(1, "Street address is required"),
+	city: z.string().min(1, "City is required"),
+	state: z.string().min(1, "State/Province is required"),
+	country: z.string().min(1, "Country is required"),
+	postalCode: z.string().min(1, "Postal code is required"),
+});
+
+const customerInfoSchema = z.object({
+	fullName: z.string().min(1, "Full name is required"),
+	email: z.string().email("Invalid email address"),
+	phone: z.string().min(1, "Phone number is required"),
+});
+
+type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
 export function CheckoutForm({
 	organizationId,
@@ -38,32 +95,33 @@ export function CheckoutForm({
 	const router = useRouter();
 	const [currentStep, setCurrentStep] = useState<CheckoutStep>("shipping");
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [apiErrors, setApiErrors] = useState<Record<string, string>>({});
 
-	const [shippingAddress, setShippingAddress] = useState({
-		street: "",
-		city: "",
-		state: "",
-		country: "",
-		postalCode: "",
+	const form = useForm<CheckoutFormValues>({
+		resolver: zodResolver(checkoutSchema),
+		defaultValues: {
+			shippingAddress: {
+				street: "",
+				city: "",
+				state: "",
+				country: "",
+				postalCode: "",
+			},
+			billingAddress: {
+				street: "",
+				city: "",
+				state: "",
+				country: "",
+				postalCode: "",
+			},
+			customerInfo: {
+				fullName: session?.user?.name || "",
+				email: session?.user?.email || "",
+				phone: "",
+			},
+			useDifferentBilling: false,
+		},
 	});
-
-	const [billingAddress, setBillingAddress] = useState({
-		street: "",
-		city: "",
-		state: "",
-		country: "",
-		postalCode: "",
-	});
-
-	const [customerInfo, setCustomerInfo] = useState({
-		email: session?.user?.email || "",
-		phone: "",
-		fullName: session?.user?.name || "",
-	});
-
-	const [useDifferentBilling, setUseDifferentBilling] = useState(false);
-	const [couponCode, setCouponCode] = useState("");
-	const [paymentMethod, setPaymentMethod] = useState("card");
 
 	const steps = [
 		{ id: "shipping", title: "Shipping", icon: Truck },
@@ -71,9 +129,43 @@ export function CheckoutForm({
 		{ id: "review", title: "Review", icon: Check },
 	];
 
-	const nextStep = () => {
-		if (currentStep === "shipping") setCurrentStep("payment");
-		else if (currentStep === "payment") setCurrentStep("review");
+	const nextStep = async () => {
+		// Validate current step fields using step-specific schemas
+		if (currentStep === "shipping") {
+			const shippingAddressValues = form.getValues("shippingAddress");
+			const validationResult = shippingAddressSchema.safeParse(
+				shippingAddressValues,
+			);
+
+			if (validationResult.success) {
+				setCurrentStep("payment");
+			} else {
+				// Set field errors for display
+				validationResult.error.issues.forEach((issue) => {
+					const fieldPath = `shippingAddress.${String(issue.path[0])}`;
+					form.setError(fieldPath as Path<CheckoutFormValues>, {
+						type: "manual",
+						message: issue.message,
+					});
+				});
+			}
+		} else if (currentStep === "payment") {
+			const customerInfoValues = form.getValues("customerInfo");
+			const validationResult = customerInfoSchema.safeParse(customerInfoValues);
+
+			if (validationResult.success) {
+				setCurrentStep("review");
+			} else {
+				// Set field errors for display
+				validationResult.error.issues.forEach((issue) => {
+					const fieldPath = `customerInfo.${String(issue.path[0])}`;
+					form.setError(fieldPath as Path<CheckoutFormValues>, {
+						type: "manual",
+						message: issue.message,
+					});
+				});
+			}
+		}
 	};
 
 	const prevStep = () => {
@@ -81,9 +173,15 @@ export function CheckoutForm({
 		else if (currentStep === "review") setCurrentStep("payment");
 	};
 
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
+	const onSubmit = async (data: CheckoutFormValues) => {
+		// Only create order when on the review step
+		if (currentStep !== "review") {
+			return;
+		}
+
+		console.log("Proceeding with order creation");
 		setIsSubmitting(true);
+		setApiErrors({});
 
 		try {
 			// Validate that we have items
@@ -92,22 +190,51 @@ export function CheckoutForm({
 				return;
 			}
 
-			// Create order
-			const order = await storefrontClient.createOrder({
+			// Full validation happens here
+			const shippingValidation = shippingAddressSchema.safeParse(
+				data.shippingAddress,
+			);
+			const customerValidation = customerInfoSchema.safeParse(
+				data.customerInfo,
+			);
+
+			if (!shippingValidation.success || !customerValidation.success) {
+				const allErrors = [];
+				if (!shippingValidation.success) {
+					allErrors.push(...shippingValidation.error.issues);
+				}
+				if (!customerValidation.success) {
+					allErrors.push(...customerValidation.error.issues);
+				}
+
+				setCurrentStep("shipping");
+				toast.error("Please complete all required fields");
+				return;
+			}
+
+			const payload = {
 				organizationId,
 				locationId,
 				currency,
-				shippingAddress,
-				customerEmail: customerInfo.email,
-				customerPhone: customerInfo.phone,
-				customerFullName: customerInfo.fullName,
-				userId: session?.user?.id,
+				shippingAddress: data.shippingAddress,
+				customerEmail: data.customerInfo.email,
+				customerPhone: data.customerInfo.phone,
+				customerFullName: data.customerInfo.fullName,
+				userId: session?.user?.id || undefined,
 				items: items.map((item) => ({
 					productVariantId: item.productVariantId,
 					quantity: item.quantity,
 					locationId: item.locationId,
 				})),
-			});
+			};
+
+			console.log(
+				"Creating order with payload:",
+				JSON.stringify(payload, null, 2),
+			);
+
+			// Create order
+			const order = await storefrontClient.createOrder(payload);
 
 			// Clear cart on success
 			clearCart();
@@ -120,9 +247,71 @@ export function CheckoutForm({
 			router.push("/profile");
 		} catch (error) {
 			console.error("Error creating order:", error);
-			toast.error(
-				error instanceof Error ? error.message : "Failed to create order",
-			);
+			if (error instanceof StorefrontError && error.issues) {
+				// Log detailed validation issues for debugging
+				console.error(
+					"Validation issues:",
+					JSON.stringify(error.issues, null, 2),
+				);
+
+				// Check for stock errors first
+				const hasStockError = error.issues.some(
+					(issue) => issue.code === "INSUFFICIENT_STOCK",
+				);
+
+				if (hasStockError) {
+					// Display stock error message directly
+					const stockIssue = error.issues.find(
+						(issue) => issue.code === "INSUFFICIENT_STOCK",
+					);
+					toast.error(stockIssue?.message || error.message);
+					return;
+				}
+
+				// Handle API validation errors
+				const newErrors: Record<string, string> = {};
+				error.issues.forEach((issue) => {
+					const key = issue.path.join(".");
+					newErrors[key] = issue.message;
+				});
+				setApiErrors(newErrors);
+
+				// Show detailed error message
+				const errorCount = Object.keys(newErrors).length;
+				toast.error(
+					`Please fix ${errorCount} validation error${errorCount > 1 ? "s" : ""} in the form`,
+					{
+						description:
+							Object.entries(newErrors)
+								.slice(0, 3)
+								.map(([field, msg]) => `${field}: ${msg}`)
+								.join("\n") +
+							(errorCount > 3 ? `\n...and ${errorCount - 3} more` : ""),
+						duration: 5000,
+					},
+				);
+
+				// Navigate to the step with errors if needed
+				const hasShippingErrors = Object.keys(newErrors).some((k) =>
+					k.startsWith("shippingAddress"),
+				);
+				const hasBillingErrors = Object.keys(newErrors).some((k) =>
+					k.startsWith("billingAddress"),
+				);
+				const hasCustomerErrors = Object.keys(newErrors).some((k) =>
+					k.startsWith("customer"),
+				);
+
+				if (hasShippingErrors || hasBillingErrors) {
+					setCurrentStep("shipping");
+				} else if (hasCustomerErrors) {
+					setCurrentStep("payment");
+				}
+			} else {
+				toast.error(
+					error instanceof Error ? error.message : "Failed to create order",
+				);
+			}
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -136,8 +325,6 @@ export function CheckoutForm({
 					const isActive = step.id === currentStep;
 					const isCompleted =
 						steps.findIndex((s) => s.id === currentStep) > index;
-					const isUpcoming =
-						steps.findIndex((s) => s.id === currentStep) < index;
 
 					return (
 						<div key={step.id} className="flex flex-1 flex-col items-center">
@@ -200,187 +387,99 @@ export function CheckoutForm({
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-4">
-					<div>
-						<Label htmlFor="street">Street Address *</Label>
-						<Input
-							id="street"
-							required
-							placeholder="123 Main Street"
-							value={shippingAddress.street}
-							onChange={(e) =>
-								setShippingAddress({
-									...shippingAddress,
-									street: e.target.value,
-								})
-							}
+					<FormField
+						control={form.control}
+						name="shippingAddress.street"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Street Address *</FormLabel>
+								<FormControl>
+									<Input placeholder="123 Main Street" {...field} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+
+					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+						<FormField
+							control={form.control}
+							name="shippingAddress.city"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>City *</FormLabel>
+									<FormControl>
+										<Input placeholder="New York" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
 						/>
-					</div>
-					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-						<div>
-							<Label htmlFor="city">City *</Label>
-							<Input
-								id="city"
-								required
-								placeholder="New York"
-								value={shippingAddress.city}
-								onChange={(e) =>
-									setShippingAddress({
-										...shippingAddress,
-										city: e.target.value,
-									})
-								}
-							/>
-						</div>
-						<div>
-							<Label htmlFor="state">State/Province *</Label>
-							<Input
-								id="state"
-								required
-								placeholder="NY"
-								value={shippingAddress.state}
-								onChange={(e) =>
-									setShippingAddress({
-										...shippingAddress,
-										state: e.target.value,
-									})
-								}
-							/>
-						</div>
-					</div>
-					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-						<div>
-							<Label htmlFor="country">Country *</Label>
-							<Input
-								id="country"
-								required
-								placeholder="United States"
-								value={shippingAddress.country}
-								onChange={(e) =>
-									setShippingAddress({
-										...shippingAddress,
-										country: e.target.value,
-									})
-								}
-							/>
-						</div>
-						<div>
-							<Label htmlFor="postalCode">Postal Code *</Label>
-							<Input
-								id="postalCode"
-								required
-								placeholder="10001"
-								value={shippingAddress.postalCode}
-								onChange={(e) =>
-									setShippingAddress({
-										...shippingAddress,
-										postalCode: e.target.value,
-									})
-								}
-							/>
-						</div>
+
+						<FormField
+							control={form.control}
+							name="shippingAddress.state"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>State/Province *</FormLabel>
+									<FormControl>
+										<Input placeholder="NY" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
 					</div>
 
-					<div className="flex items-center space-x-2 pt-4">
-						<Checkbox
-							id="different-billing"
-							checked={useDifferentBilling}
-							onCheckedChange={(checked) => setUseDifferentBilling(!!checked)}
+					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+						<FormField
+							control={form.control}
+							name="shippingAddress.country"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Country *</FormLabel>
+									<FormControl>
+										<Input placeholder="United States" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
 						/>
-						<Label htmlFor="different-billing" className="font-normal text-sm">
-							Use different billing address
-						</Label>
+
+						<FormField
+							control={form.control}
+							name="shippingAddress.postalCode"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Postal Code *</FormLabel>
+									<FormControl>
+										<Input placeholder="10001" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
 					</div>
+
+					<FormField
+						control={form.control}
+						name="useDifferentBilling"
+						render={({ field }) => (
+							<FormItem className="flex items-center space-x-2 pt-4">
+								<FormControl>
+									<Checkbox
+										checked={field.value}
+										onCheckedChange={field.onChange}
+									/>
+								</FormControl>
+								<FormLabel className="font-normal text-sm">
+									Use different billing address
+								</FormLabel>
+							</FormItem>
+						)}
+					/>
 				</CardContent>
 			</Card>
-
-			{useDifferentBilling && (
-				<Card>
-					<CardHeader>
-						<CardTitle>Billing Address</CardTitle>
-					</CardHeader>
-					<CardContent className="space-y-4">
-						<div>
-							<Label htmlFor="billing-street">Street Address *</Label>
-							<Input
-								id="billing-street"
-								required
-								placeholder="123 Main Street"
-								value={billingAddress.street}
-								onChange={(e) =>
-									setBillingAddress({
-										...billingAddress,
-										street: e.target.value,
-									})
-								}
-							/>
-						</div>
-						<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-							<div>
-								<Label htmlFor="billing-city">City *</Label>
-								<Input
-									id="billing-city"
-									required
-									placeholder="New York"
-									value={billingAddress.city}
-									onChange={(e) =>
-										setBillingAddress({
-											...billingAddress,
-											city: e.target.value,
-										})
-									}
-								/>
-							</div>
-							<div>
-								<Label htmlFor="billing-state">State/Province *</Label>
-								<Input
-									id="billing-state"
-									required
-									placeholder="NY"
-									value={billingAddress.state}
-									onChange={(e) =>
-										setBillingAddress({
-											...billingAddress,
-											state: e.target.value,
-										})
-									}
-								/>
-							</div>
-						</div>
-						<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-							<div>
-								<Label htmlFor="billing-country">Country *</Label>
-								<Input
-									id="billing-country"
-									required
-									placeholder="United States"
-									value={billingAddress.country}
-									onChange={(e) =>
-										setBillingAddress({
-											...billingAddress,
-											country: e.target.value,
-										})
-									}
-								/>
-							</div>
-							<div>
-								<Label htmlFor="billing-postalCode">Postal Code *</Label>
-								<Input
-									id="billing-postalCode"
-									required
-									placeholder="10001"
-									value={billingAddress.postalCode}
-									onChange={(e) =>
-										setBillingAddress({
-											...billingAddress,
-											postalCode: e.target.value,
-										})
-									}
-								/>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
-			)}
 		</div>
 	);
 
@@ -415,175 +514,165 @@ export function CheckoutForm({
 					<CardTitle>Contact Information</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-4">
-					<div>
-						<Label htmlFor="fullName">Full Name *</Label>
-						<Input
-							id="fullName"
-							required
-							placeholder="John Doe"
-							value={customerInfo.fullName}
-							onChange={(e) =>
-								setCustomerInfo({ ...customerInfo, fullName: e.target.value })
-							}
-						/>
-					</div>
-					<div>
-						<Label htmlFor="email">Email Address *</Label>
-						<Input
-							id="email"
-							type="email"
-							required
-							placeholder="john@example.com"
-							value={customerInfo.email}
-							onChange={(e) =>
-								setCustomerInfo({ ...customerInfo, email: e.target.value })
-							}
-						/>
-					</div>
-					<div>
-						<Label htmlFor="phone">Phone Number *</Label>
-						<Input
-							id="phone"
-							type="tel"
-							required
-							placeholder="(555) 123-4567"
-							value={customerInfo.phone}
-							onChange={(e) =>
-								setCustomerInfo({ ...customerInfo, phone: e.target.value })
-							}
-						/>
-					</div>
+					<FormField
+						control={form.control}
+						name="customerInfo.fullName"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Full Name *</FormLabel>
+								<FormControl>
+									<Input placeholder="John Doe" {...field} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+
+					<FormField
+						control={form.control}
+						name="customerInfo.email"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Email Address *</FormLabel>
+								<FormControl>
+									<Input
+										type="email"
+										placeholder="john@example.com"
+										{...field}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+
+					<FormField
+						control={form.control}
+						name="customerInfo.phone"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Phone Number *</FormLabel>
+								<FormControl>
+									<Input type="tel" placeholder="(555) 123-4567" {...field} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
 				</CardContent>
 			</Card>
 		</div>
 	);
 
-	const renderReviewStep = () => (
-		<div className="space-y-6">
-			<Card>
-				<CardHeader>
-					<CardTitle>Order Review</CardTitle>
-				</CardHeader>
-				<CardContent className="space-y-6">
-					{/* Shipping Address Summary */}
-					<div>
-						<h3 className="mb-2 font-semibold">Shipping Address</h3>
-						<div className="rounded bg-muted p-3 text-muted-foreground text-sm">
-							<p>{customerInfo.fullName}</p>
-							<p>{shippingAddress.street}</p>
-							<p>
-								{shippingAddress.city}, {shippingAddress.state}{" "}
-								{shippingAddress.postalCode}
-							</p>
-							<p>{shippingAddress.country}</p>
-							<p className="mt-2">{customerInfo.email}</p>
-							{customerInfo.phone && <p>{customerInfo.phone}</p>}
-						</div>
-					</div>
-
-					{/* Payment Summary */}
-					<div>
-						<h3 className="mb-2 font-semibold">Payment Method</h3>
-						<div className="flex items-center gap-2 rounded bg-blue-50 p-3 text-sm dark:bg-blue-950/20">
-							<div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-white">
-								<span className="font-bold text-xs">$</span>
+	const renderReviewStep = () => {
+		const values = form.getValues();
+		return (
+			<div className="space-y-6">
+				<Card>
+					<CardHeader>
+						<CardTitle>Order Review</CardTitle>
+					</CardHeader>
+					<CardContent className="space-y-6">
+						{/* Shipping Address Summary */}
+						<div>
+							<h3 className="mb-2 font-semibold">Shipping Address</h3>
+							<div className="rounded bg-muted p-3 text-muted-foreground text-sm">
+								<p>{values.customerInfo.fullName}</p>
+								<p>{values.shippingAddress.street}</p>
+								<p>
+									{values.shippingAddress.city}, {values.shippingAddress.state}{" "}
+									{values.shippingAddress.postalCode}
+								</p>
+								<p>{values.shippingAddress.country}</p>
+								<p className="mt-2">{values.customerInfo.email}</p>
+								{values.customerInfo.phone && (
+									<p>{values.customerInfo.phone}</p>
+								)}
 							</div>
-							<span className="font-medium">Cash on Delivery</span>
 						</div>
-					</div>
 
-					{/* Order Items */}
-					<div>
-						<h3 className="mb-2 font-semibold">Order Items</h3>
-						<div className="space-y-3">
-							{items.map((item) => (
-								<div
-									key={item.id}
-									className="flex items-center justify-between border-b py-2"
-								>
-									<div className="flex items-center gap-3">
-										{item.image && (
-											<img
-												src={item.image}
-												alt={item.name}
-												className="h-12 w-12 rounded object-cover"
-											/>
-										)}
-										<div>
-											<p className="font-medium">{item.name}</p>
-											<p className="text-muted-foreground text-sm">
-												Qty: {item.quantity}
-											</p>
-										</div>
-									</div>
-									<p className="font-medium">
-										${(item.price * item.quantity).toFixed(2)}
-									</p>
+						{/* Payment Summary */}
+						<div>
+							<h3 className="mb-2 font-semibold">Payment Method</h3>
+							<div className="flex items-center gap-2 rounded bg-blue-50 p-3 text-sm dark:bg-blue-950/20">
+								<div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-white">
+									<span className="font-bold text-xs">$</span>
 								</div>
-							))}
+								<span className="font-medium">Cash on Delivery</span>
+							</div>
 						</div>
-					</div>
 
-					{/* Order Summary */}
-					<div className="border-t pt-4">
-						<div className="flex items-center justify-between font-bold text-lg">
-							<span>Total</span>
-							<span>${total().toFixed(2)}</span>
+						{/* Order Summary */}
+						<div className="border-t pt-4">
+							<div className="flex items-center justify-between font-bold text-lg">
+								<span>Total</span>
+								<span>${total().toFixed(2)}</span>
+							</div>
 						</div>
-					</div>
-				</CardContent>
-			</Card>
+					</CardContent>
+				</Card>
 
-			{/* Trust badges and security notice */}
-			<div className="rounded-lg bg-muted p-4">
-				<div className="flex items-center justify-center gap-6 text-muted-foreground text-sm">
-					<div className="flex items-center gap-1">
-						<Shield className="h-4 w-4 text-green-500" />
-						<span>Secure SSL Encryption</span>
-					</div>
-					<div className="flex items-center gap-1">
-						<Check className="h-4 w-4 text-green-500" />
-						<span>30-Day Returns</span>
-					</div>
-					<div className="flex items-center gap-1">
-						<Truck className="h-4 w-4 text-blue-500" />
-						<span>Free Shipping</span>
+				{/* Trust badges and security notice */}
+				<div className="rounded-lg bg-muted p-4">
+					<div className="flex items-center justify-center gap-6 text-muted-foreground text-sm">
+						<div className="flex items-center gap-1">
+							<Shield className="h-4 w-4 text-green-500" />
+							<span>Secure SSL Encryption</span>
+						</div>
+						<div className="flex items-center gap-1">
+							<Check className="h-4 w-4 text-green-500" />
+							<span>30-Day Returns</span>
+						</div>
+						<div className="flex items-center gap-1">
+							<Truck className="h-4 w-4 text-blue-500" />
+							<span>Free Shipping</span>
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>
-	);
+		);
+	};
 
-	const renderNavigationButtons = () => (
-		<div className="flex gap-4 pt-6">
-			{currentStep !== "shipping" && (
-				<Button
-					type="button"
-					variant="outline"
-					onClick={prevStep}
-					className="flex-1"
-				>
-					Back
-				</Button>
-			)}
-			{currentStep !== "review" ? (
-				<Button type="button" onClick={nextStep} className="flex-1">
-					Continue to{" "}
-					{steps[steps.findIndex((s) => s.id === currentStep) + 1]?.title}
-				</Button>
-			) : (
-				<Button
-					type="submit"
-					className="flex-1"
-					disabled={isSubmitting || items.length === 0}
-				>
-					{isSubmitting
-						? "Processing Order..."
-						: `Place Order - $${total().toFixed(2)}`}
-				</Button>
-			)}
-		</div>
-	);
+	const renderNavigationButtons = () => {
+		const shouldShowContinue = currentStep !== "review";
+		return (
+			<div className="flex gap-4 pt-6">
+				{currentStep !== "shipping" && (
+					<Button
+						type="button"
+						variant="outline"
+						onClick={prevStep}
+						className="flex-1"
+					>
+						Back
+					</Button>
+				)}
+				{shouldShowContinue ? (
+					<Button
+						type="button"
+						onClick={(e) => {
+							e.preventDefault();
+							nextStep();
+						}}
+						className="flex-1"
+					>
+						Continue to{" "}
+						{steps[steps.findIndex((s) => s.id === currentStep) + 1]?.title}
+					</Button>
+				) : (
+					<Button
+						type="submit"
+						className="flex-1"
+						disabled={isSubmitting || items.length === 0}
+					>
+						{isSubmitting
+							? "Processing Order..."
+							: `Place Order - $${total().toFixed(2)}`}
+					</Button>
+				)}
+			</div>
+		);
+	};
 
 	const renderSidebar = () => (
 		<div className="space-y-4 lg:w-80">
@@ -596,14 +685,23 @@ export function CheckoutForm({
 						{items.map((item) => (
 							<div key={item.id} className="flex gap-3">
 								{item.image && (
-									<img
+									<Image
 										src={item.image}
 										alt={item.name}
+										width={48}
+										height={48}
 										className="h-12 w-12 rounded object-cover"
 									/>
 								)}
 								<div className="flex-1">
 									<p className="font-medium text-sm">{item.name}</p>
+									{(item.variantName || item.variantSku) && (
+										<p className="text-muted-foreground text-xs">
+											{item.variantName && <span>{item.variantName}</span>}
+											{item.variantName && item.variantSku && <span> • </span>}
+											{item.variantSku && <span>SKU: {item.variantSku}</span>}
+										</p>
+									)}
 									<p className="text-muted-foreground text-xs">
 										Qty: {item.quantity}
 									</p>
@@ -634,24 +732,6 @@ export function CheckoutForm({
 							<span>${total().toFixed(2)}</span>
 						</div>
 					</div>
-					{/* Coupon code section */}
-					<div className="mt-4 space-y-2">
-						<Label htmlFor="coupon" className="text-sm">
-							Coupon Code
-						</Label>
-						<div className="flex gap-2">
-							<Input
-								id="coupon"
-								placeholder="Enter code"
-								value={couponCode}
-								onChange={(e) => setCouponCode(e.target.value)}
-								className="text-sm"
-							/>
-							<Button variant="outline" size="sm">
-								Apply
-							</Button>
-						</div>
-					</div>
 				</CardContent>
 			</Card>
 
@@ -676,13 +756,45 @@ export function CheckoutForm({
 				<div>
 					{renderProgressBar()}
 
-					<form onSubmit={handleSubmit} className="space-y-6">
-						{currentStep === "shipping" && renderShippingStep()}
-						{currentStep === "payment" && renderPaymentStep()}
-						{currentStep === "review" && renderReviewStep()}
+					{/* API Error Summary */}
+					{Object.keys(apiErrors).length > 0 && (
+						<Alert variant="destructive" className="mb-6">
+							<div className="flex items-start justify-between">
+								<div className="flex items-start gap-2">
+									<AlertCircle className="mt-0.5 h-4 w-4" />
+									<div className="flex-1">
+										<AlertTitle>Validation Errors</AlertTitle>
+										<AlertDescription className="mt-2 space-y-1">
+											{Object.entries(apiErrors).map(([field, message]) => (
+												<div key={field} className="text-sm">
+													<strong>{field}:</strong> {message}
+												</div>
+											))}
+										</AlertDescription>
+									</div>
+								</div>
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									onClick={() => setApiErrors({})}
+									className="h-6 w-6 p-0 hover:bg-transparent"
+								>
+									<X className="h-4 w-4" />
+								</Button>
+							</div>
+						</Alert>
+					)}
 
-						{renderNavigationButtons()}
-					</form>
+					<Form {...form}>
+						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+							{currentStep === "shipping" && renderShippingStep()}
+							{currentStep === "payment" && renderPaymentStep()}
+							{currentStep === "review" && renderReviewStep()}
+
+							{renderNavigationButtons()}
+						</form>
+					</Form>
 				</div>
 
 				{/* Sidebar */}

@@ -15,6 +15,8 @@ interface CartItem {
 	quantity: number;
 	image?: string;
 	description?: string;
+	variantName?: string;
+	variantSku?: string;
 }
 
 interface CartItemProps {
@@ -78,6 +80,13 @@ export function CartItem({ item }: CartItemProps) {
 						<div className="flex items-start justify-between gap-2">
 							<div className="min-w-0 flex-1">
 								<h4 className="truncate font-medium text-sm">{item.name}</h4>
+								{(item.variantName || item.variantSku) && (
+									<p className="mt-0.5 text-muted-foreground text-xs">
+										{item.variantName && <span>{item.variantName}</span>}
+										{item.variantName && item.variantSku && <span> • </span>}
+										{item.variantSku && <span>SKU: {item.variantSku}</span>}
+									</p>
+								)}
 								{item.description && (
 									<p className="mt-1 line-clamp-2 text-muted-foreground text-xs">
 										{item.description}

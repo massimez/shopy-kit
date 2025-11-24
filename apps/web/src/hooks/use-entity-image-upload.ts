@@ -213,7 +213,7 @@ export function useEntityImageUpload({
 			const remainingFiles = stateImages.files.filter((f) => f.id !== key);
 			await notifyImageUpdate(remainingFiles);
 
-			toast.success(t(keys.deleteSuccess));
+			toast.success("Image deleted successfully");
 		} catch (error) {
 			const errorMessage =
 				error instanceof Error ? error.message : t(keys.failedDelete);

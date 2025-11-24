@@ -136,7 +136,7 @@ export function OrderHistory({ orders, isLoadingOrders }: OrderHistoryProps) {
 															{/* Order Items */}
 															{orderDetails?.items &&
 															orderDetails.items.length > 0 ? (
-																orderDetails.items.map((item: any) => (
+																orderDetails.items.map((item) => (
 																	<div
 																		key={item.id}
 																		className="flex items-center justify-between rounded-lg border bg-background p-4"
@@ -193,31 +193,15 @@ export function OrderHistory({ orders, isLoadingOrders }: OrderHistoryProps) {
 																	</h5>
 																	<div className="text-muted-foreground text-sm">
 																		<p>
-																			{
-																				(orderDetails.shippingAddress as any)
-																					?.street
-																			}
+																			{orderDetails.shippingAddress?.street}
 																		</p>
 																		<p>
-																			{
-																				(orderDetails.shippingAddress as any)
-																					?.city
-																			}
-																			,{" "}
-																			{
-																				(orderDetails.shippingAddress as any)
-																					?.state
-																			}{" "}
-																			{
-																				(orderDetails.shippingAddress as any)
-																					?.postalCode
-																			}
+																			{orderDetails.shippingAddress?.city},{" "}
+																			{orderDetails.shippingAddress?.state}{" "}
+																			{orderDetails.shippingAddress?.zipCode}
 																		</p>
 																		<p>
-																			{
-																				(orderDetails.shippingAddress as any)
-																					?.country
-																			}
+																			{orderDetails.shippingAddress?.country}
 																		</p>
 																	</div>
 																</div>

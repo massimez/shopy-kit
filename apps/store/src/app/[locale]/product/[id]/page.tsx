@@ -1,9 +1,37 @@
 "use client";
 
-import { Badge } from "@workspace/ui/components/badge";
-import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent } from "@workspace/ui/components/card";
 import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from "@workspace/ui/components/accordion";
+import { Badge } from "@workspace/ui/components/badge";
+import {
+	Breadcrumb,
+	BreadcrumbItem,
+	BreadcrumbLink,
+	BreadcrumbList,
+	BreadcrumbPage,
+	BreadcrumbSeparator,
+} from "@workspace/ui/components/breadcrumb";
+import { Button } from "@workspace/ui/components/button";
+import {
+	Carousel,
+	CarouselContent,
+	CarouselItem,
+	CarouselNext,
+	CarouselPrevious,
+} from "@workspace/ui/components/carousel";
+import { Separator } from "@workspace/ui/components/separator";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@workspace/ui/components/tooltip";
+import {
+	Check,
 	Heart,
 	Minus,
 	Plus,
@@ -14,6 +42,7 @@ import {
 	Star,
 	Truck,
 } from "lucide-react";
+import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { use, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -23,6 +52,7 @@ import {
 	useOrganization,
 	useProduct,
 } from "@/lib/hooks/use-storefront";
+import type { ProductVariant } from "@/lib/storefront-types";
 import { useCartStore } from "@/store/use-cart-store";
 
 interface ProductPageProps {
@@ -43,18 +73,19 @@ export default function ProductPage({ params }: ProductPageProps) {
 	const organizationId = org?.id || "qGH0Uy2lnzoOfVeU6kcaLSuqfdKon8qe";
 
 	// Get default location
-	const { data: location, isLoading: isLoadingLocation } = useDefaultLocation(
+	const { data: location } = useDefaultLocation(
 		organizationId,
 		!!organizationId,
 	);
 
-	// Get product data
+	// Get product data with stock information
 	const { data: product, isLoading: isLoadingProduct } = useProduct(
 		{
 			organizationId,
 			productId: id,
+			locationId: location?.id,
 		},
-		!!organizationId,
+		!!organizationId && !!location?.id,
 	);
 
 	// Get the localized translation
@@ -66,20 +97,22 @@ export default function ProductPage({ params }: ProductPageProps) {
 	const productData = useMemo(() => {
 		if (!product) return null;
 
-		let selectedVariant: (typeof product.variants)[number] | null = null;
+		let selectedVariant: ProductVariant | null = null;
 		if (product?.variants && product.variants.length > 0) {
 			const found = product.variants.find((v) => v.id === selectedVariantId);
 			selectedVariant = (
-				selectedVariantId && found ? found! : product.variants[0]!
-			) as (typeof product.variants)[number] | null;
+				selectedVariantId && found ? found : product.variants[0]
+			) as ProductVariant | null;
 		}
 
 		return {
 			id: product.id,
 			name: translation?.name || product.name || "Unnamed Product",
-			price: selectedVariant ? Number.parseFloat(selectedVariant.price) : 0,
+			price: selectedVariant
+				? Number.parseFloat(String(selectedVariant.price))
+				: 0,
 			compareAtPrice: selectedVariant?.compareAtPrice
-				? Number.parseFloat(selectedVariant.compareAtPrice)
+				? Number.parseFloat(String(selectedVariant.compareAtPrice))
 				: undefined,
 			description: translation?.description || "",
 			shortDescription: translation?.shortDescription || "",
@@ -87,20 +120,30 @@ export default function ProductPage({ params }: ProductPageProps) {
 				product.thumbnailImage?.url ||
 				product.images?.[0]?.url ||
 				"/placeholder-product.jpg",
+			images: product.images?.length
+				? product.images.map((img) => img.url)
+				: [
+						product.thumbnailImage?.url ||
+							product.images?.[0]?.url ||
+							"/placeholder-product.jpg",
+					],
 			category: "General", // TODO: Get category from collections
 			rating: 4.5, // TODO: Get from reviews
 			reviewsCount: 0, // TODO: Get from reviews
-			inStock: true, // TODO: Implement stock checking
-			stockQuantity: 10, // TODO: Implement proper stock
+			inStock: selectedVariant?.stock
+				? selectedVariant.stock.availableQuantity > 0 || product.allowBackorders
+				: true,
+			stockQuantity: selectedVariant?.stock?.availableQuantity || 0,
+			allowBackorders: product.allowBackorders || false,
 			isOnSale: selectedVariant?.compareAtPrice
-				? Number.parseFloat(selectedVariant.compareAtPrice) >
-					Number.parseFloat(selectedVariant.price)
+				? Number.parseFloat(String(selectedVariant.compareAtPrice)) >
+					Number.parseFloat(String(selectedVariant.price))
 				: false,
 			discountPercentage: selectedVariant?.compareAtPrice
 				? Math.round(
 						(1 -
-							Number.parseFloat(selectedVariant.price) /
-								Number.parseFloat(selectedVariant.compareAtPrice)) *
+							Number.parseFloat(String(selectedVariant.price)) /
+								Number.parseFloat(String(selectedVariant.compareAtPrice))) *
 							100,
 					)
 				: 0,
@@ -123,25 +166,70 @@ export default function ProductPage({ params }: ProductPageProps) {
 	}
 
 	const handleAddToCart = () => {
+		// Validate that we have a selected variant
+		if (!productData?.selectedVariant?.id) {
+			toast.error("Please select a product variant");
+			return;
+		}
+
+		// Validate that we have a location
+		if (!location?.id) {
+			toast.error("Unable to add to cart. Location not available.");
+			return;
+		}
+
+		// Check stock availability
+		const availableStock = productData.stockQuantity;
+		const allowBackorders = productData.allowBackorders;
+
+		if (availableStock <= 0 && !allowBackorders) {
+			toast.error(
+				`${productData.name} is currently out of stock and backorders are not allowed.`,
+			);
+			return;
+		}
+
+		if (quantity > availableStock && !allowBackorders) {
+			toast.error(
+				`Only ${availableStock} units available. Backorders are not allowed.`,
+			);
+			return;
+		}
+
+		// Get variant translation for name
+		const variantTranslation =
+			productData.selectedVariant.translations?.find(
+				(t) => t.languageCode === locale,
+			) ||
+			productData.selectedVariant.translations?.find(
+				(t) => t.languageCode === "en",
+			);
+
 		const cartItem = {
-			id: productData!.id,
-			name: productData!.name,
-			price: productData!.price,
+			id: productData.selectedVariant.id, // Use variant ID as unique identifier
+			name: productData.name,
+			price: productData.price,
 			quantity,
-			description: productData!.description,
-			image: productData!.image,
-			productVariantId: productData!.selectedVariant?.id || "",
-			locationId: location?.id || "",
+			description: productData.description,
+			image: productData.image,
+			productVariantId: productData.selectedVariant.id,
+			locationId: location.id,
+			variantName: variantTranslation?.name,
+			variantSku: productData.selectedVariant.sku,
 		};
 
 		addItem(cartItem);
 		toast.success(
-			`${quantity}x ${productData!.name} has been added to your cart!`,
+			`${quantity}x ${productData.name} has been added to your cart!`,
 		);
 	};
 
 	const handleQuantityChange = (newQuantity: number) => {
-		if (newQuantity >= 1 && newQuantity <= productData!.stockQuantity) {
+		if (!productData || newQuantity < 1) return;
+		if (
+			productData.allowBackorders ||
+			newQuantity <= productData.stockQuantity
+		) {
 			setQuantity(newQuantity);
 		}
 	};
@@ -169,266 +257,360 @@ export default function ProductPage({ params }: ProductPageProps) {
 	}
 
 	return (
-		<div className="min-h-screen bg-linear-to-br from-background to-muted/20">
-			{/* Mobile-Optimized Container */}
-			<div className="container mx-auto max-w-6xl px-3 py-6 sm:px-4 md:py-12">
-				<div className="md:flex">
-					{/* Product Image - Mobile First */}
-					<div className="mb-6 md:mb-12 md:min-h-[400px] md:min-w-[400px]">
-						<div className="relative w-full overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-muted/10 to-muted/30 shadow-xl md:rounded-3xl md:shadow-2xl">
-							{productData.image ? (
-								// biome-ignore lint/performance/noImgElement: <TODO>
-								<img
-									src={productData.image}
-									alt={productData.name}
-									className="h-auto w-full object-cover md:object-contain"
-								/>
-							) : (
-								<div className="flex aspect-square w-full items-center justify-center md:aspect-video">
-									<ShoppingCart className="h-16 w-16 text-muted-foreground/40 sm:h-20 sm:w-20" />
-								</div>
+		<div className="min-h-screen bg-background">
+			{/* Breadcrumbs */}
+			<div className="hidden border-b bg-muted/10 md:block">
+				<div className="container mx-auto max-w-7xl px-4 py-4">
+					<Breadcrumb>
+						<BreadcrumbList>
+							<BreadcrumbItem>
+								<BreadcrumbLink href="/">Home</BreadcrumbLink>
+							</BreadcrumbItem>
+							<BreadcrumbSeparator />
+							<BreadcrumbItem>
+								<BreadcrumbLink href="/products">Products</BreadcrumbLink>
+							</BreadcrumbItem>
+							<BreadcrumbSeparator />
+							<BreadcrumbItem>
+								<BreadcrumbPage>{productData.name}</BreadcrumbPage>
+							</BreadcrumbItem>
+						</BreadcrumbList>
+					</Breadcrumb>
+				</div>
+			</div>
+
+			<div className="container mx-auto max-w-7xl px-4 py-8 pb-24 md:py-12 lg:pb-12">
+				<div className="grid gap-8 lg:grid-cols-2 lg:gap-16">
+					{/* Left Column: Images */}
+					<div className="space-y-6">
+						<div className="relative overflow-hidden rounded-3xl border bg-muted/5 shadow-sm">
+							<Carousel className="w-full">
+								<CarouselContent>
+									{productData.images.map((image, index) => (
+										<CarouselItem key={image}>
+											<div className="relative flex aspect-square items-center justify-center overflow-hidden bg-white p-2 md:aspect-4/3 md:p-8">
+												<Image
+													src={image}
+													alt={`${productData.name} - View ${index + 1}`}
+													fill
+													className="object-contain transition-transform duration-500 hover:scale-105"
+												/>
+											</div>
+										</CarouselItem>
+									))}
+								</CarouselContent>
+								{productData.images.length > 1 && (
+									<>
+										<CarouselPrevious className="left-4 hidden lg:flex" />
+										<CarouselNext className="right-4 hidden lg:flex" />
+									</>
+								)}
+							</Carousel>
+
+							{/* Sale Badge */}
+							{productData.isOnSale && (
+								<Badge className="absolute top-4 left-4 z-10 bg-red-500 px-3 py-1 font-medium text-base text-white shadow-lg hover:bg-red-600">
+									-{productData.discountPercentage}%
+								</Badge>
 							)}
 						</div>
 
-						{/* Sale Badge */}
-						{productData.isOnSale && (
-							<Badge className="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs shadow-lg md:top-4 md:right-4 md:text-sm">
-								-{productData.discountPercentage}%
-							</Badge>
-						)}
+						{/* Thumbnails (Optional - could be added here) */}
 					</div>
 
-					{/* Main Product Section */}
-					<div className="md:ml-8 lg:ml-12">
-						{/* Product Details */}
-						<div className="flex flex-col justify-center space-y-6 md:space-y-8">
-							{/* Title & Category */}
-							<div className="space-y-2">
-								<Badge variant="secondary" className="w-fit text-xs md:text-sm">
+					{/* Right Column: Product Details (Sticky) */}
+					<div className="flex flex-col space-y-8 lg:sticky lg:top-24 lg:h-fit">
+						{/* Header */}
+						<div className="space-y-4">
+							<div className="flex items-center gap-2">
+								<Badge variant="secondary" className="rounded-full px-3">
 									{productData.category}
 								</Badge>
-								<h1 className="font-bold text-xl leading-tight tracking-tight md:text-4xl lg:text-5xl">
-									{productData.name}
-								</h1>
+								{productData.stockQuantity < 5 &&
+									productData.stockQuantity > 0 && (
+										<span className="animate-pulse font-medium text-red-500 text-xs">
+											Only {productData.stockQuantity} left!
+										</span>
+									)}
 							</div>
 
-							{/* Rating */}
-							<div className="flex items-center space-x-3">
-								<div className="flex items-center">
-									{[...Array(5)].map((_, i) => (
+							<h1 className="font-bold text-2xl text-foreground tracking-tight md:text-4xl lg:text-5xl">
+								{productData.name}
+							</h1>
+
+							<div className="flex items-center gap-4">
+								<div className="flex items-center gap-1">
+									{[1, 2, 3, 4, 5].map((star) => (
 										<Star
-											// biome-ignore lint/suspicious/noArrayIndexKey: <>
-											key={`star-${i}`}
+											key={star}
 											className={`h-5 w-5 ${
-												i < Math.floor(productData.rating)
+												star <= Math.floor(productData.rating)
 													? "fill-yellow-400 text-yellow-400"
-													: "text-muted-foreground/50"
+													: "text-muted-foreground/30"
 											}`}
 										/>
 									))}
 								</div>
-								<span className="font-medium">{productData.rating}</span>
-								<span className="text-muted-foreground">
-									({productData.reviewsCount} reviews)
+								<span className="text-muted-foreground text-sm">
+									{productData.rating} ({productData.reviewsCount} reviews)
 								</span>
 							</div>
+						</div>
 
-							{/* Pricing */}
-							<div className="space-y-3">
-								<div className="flex items-baseline space-x-3">
-									<span className="font-bold text-3xl text-primary md:text-4xl">
-										${productData.price.toFixed(2)}
+						<Separator />
+
+						{/* Price */}
+						<div className="flex items-baseline gap-3">
+							<span className="font-bold text-3xl text-foreground md:text-4xl">
+								${productData.price.toFixed(2)}
+							</span>
+							{productData.isOnSale && productData.compareAtPrice && (
+								<>
+									<span className="text-muted-foreground text-xl line-through decoration-red-500/50">
+										${productData.compareAtPrice.toFixed(2)}
 									</span>
-									{productData.isOnSale && productData.compareAtPrice && (
-										<span className="text-lg text-muted-foreground line-through md:text-xl">
-											${productData.compareAtPrice.toFixed(2)}
-										</span>
-									)}
-								</div>
-								{productData.isOnSale && productData.compareAtPrice && (
 									<Badge
 										variant="outline"
-										className="border-green-200 text-green-600"
+										className="border-green-500 bg-green-50 text-green-600"
 									>
 										Save $
 										{(productData.compareAtPrice - productData.price).toFixed(
 											2,
 										)}
 									</Badge>
-								)}
-							</div>
-
-							{/* Description */}
-							<p className="text-base text-muted-foreground leading-relaxed md:text-lg">
-								{productData.shortDescription}
-							</p>
-
-							{/* Stock Status */}
-							<div className="flex items-center space-x-2 text-sm">
-								<div className="h-2 w-2 rounded-full bg-green-500" />
-								<span className="font-medium text-green-600">
-									In Stock ({productData.stockQuantity} available)
-								</span>
-							</div>
-
-							{/* Variants Selector - Show only if more than 2 variants */}
-							{productData.variants.length > 2 && (
-								<div className="space-y-3">
-									<span className="font-medium">Options</span>
-									<div className="grid grid-cols-3 gap-2">
-										{productData.variants.map((variant) => {
-											const variantTranslation =
-												variant.translations?.find(
-													(t) => t.languageCode === locale,
-												) ||
-												variant.translations?.find(
-													(t) => t.languageCode === "en",
-												);
-
-											return (
-												<Button
-													key={variant.id}
-													variant={
-														selectedVariantId === variant.id
-															? "primary"
-															: "outline"
-													}
-													onClick={() => setSelectedVariantId(variant.id)}
-													className="w-full"
-												>
-													{variantTranslation?.name || variant.sku}
-												</Button>
-											);
-										})}
-									</div>
-								</div>
+								</>
 							)}
+						</div>
 
-							{/* Quantity & Actions */}
-							<div className="space-y-6">
-								{/* Quantity Selector */}
-								<div className="flex items-center space-x-4">
-									<span className="font-medium">Quantity</span>
-									<div className="flex items-center rounded-full border bg-background shadow-sm">
-										<Button
-											variant="ghost"
-											size="sm"
-											onClick={() => handleQuantityChange(quantity - 1)}
-											disabled={quantity <= 1}
-											className="h-10 w-10 rounded-full hover:bg-muted"
-										>
-											<Minus className="h-4 w-4" />
-										</Button>
-										<span className="px-4 py-2 font-medium">{quantity}</span>
-										<Button
-											variant="ghost"
-											size="sm"
-											onClick={() => handleQuantityChange(quantity + 1)}
-											disabled={quantity >= productData.stockQuantity}
-											className="h-10 w-10 rounded-full hover:bg-muted"
-										>
-											<Plus className="h-4 w-4" />
-										</Button>
-									</div>
-								</div>
+						{/* Short Description */}
+						<p className="text-base text-muted-foreground leading-relaxed md:text-lg">
+							{productData.shortDescription}
+						</p>
 
-								{/* Action Buttons - Mobile Optimized */}
-								<div className="space-y-3">
-									<Button
-										size="lg"
-										onClick={handleAddToCart}
-										className="h-12 w-full rounded-full text-sm shadow-lg"
-									>
-										<ShoppingCart className="mr-2 h-5 w-5" />
-										{t("addToCart")}
-									</Button>
+						{/* Variants */}
+						{productData.variants.length > 0 && (
+							<div className="space-y-4">
+								<span className="font-medium text-foreground text-sm">
+									Select Option
+								</span>
+								<div className="flex flex-wrap gap-3">
+									{productData.variants.map((variant) => {
+										const variantTranslation =
+											variant.translations?.find(
+												(t) => t.languageCode === locale,
+											) ||
+											variant.translations?.find(
+												(t) => t.languageCode === "en",
+											);
+										const isSelected = selectedVariantId === variant.id;
 
-									{/* Secondary Actions Row */}
-									<div className="grid grid-cols-3 gap-3">
-										<Button
-											variant="outline"
-											size="md"
-											onClick={() => setIsWishlisted(!isWishlisted)}
-											className={`flex h-12 flex-col items-center justify-center space-y-1 rounded-full border-muted-foreground/20 text-xs ${
-												isWishlisted
-													? "border-red-200 bg-red-50 text-red-600"
-													: "hover:bg-muted"
-											}`}
-										>
-											<Heart
-												className={`h-4 w-4 ${isWishlisted ? "fill-current" : ""}`}
-											/>
-											<span className="hidden sm:inline">Wishlist</span>
-										</Button>
-										<Button
-											variant="outline"
-											size="md"
-											onClick={handleShare}
-											className="flex h-12 flex-col items-center justify-center space-y-1 rounded-full border-muted-foreground/20 text-xs hover:bg-muted"
-										>
-											<Share2 className="h-4 w-4" />
-											<span className="hidden sm:inline">Share</span>
-										</Button>
-										<Button
-											variant="outline"
-											size="md"
-											className="flex h-12 flex-col items-center justify-center space-y-1 rounded-full border-muted-foreground/20 text-xs hover:bg-muted"
-										>
-											<Shield className="h-4 w-4" />
-											<span className="hidden sm:inline">Support</span>
-										</Button>
-									</div>
+										return (
+											<button
+												key={variant.id}
+												type="button"
+												onClick={() => setSelectedVariantId(variant.id)}
+												className={`relative min-w-16 rounded-xl border-2 px-4 py-2 font-medium text-sm transition-all ${
+													isSelected
+														? "border-primary bg-primary/5 text-primary"
+														: "border-muted bg-transparent hover:border-muted-foreground/50"
+												}`}
+											>
+												{variantTranslation?.name || variant.sku}
+												{isSelected && (
+													<div className="-top-2 -right-2 absolute rounded-full bg-primary p-0.5 text-white shadow-sm">
+														<Check className="h-3 w-3" />
+													</div>
+												)}
+											</button>
+										);
+									})}
 								</div>
 							</div>
+						)}
 
-							{/* Trust Indicators - Mobile Optimized */}
-							<div className="grid grid-cols-3 gap-4 pt-6 text-center md:pt-8">
-								<div className="flex flex-col items-center space-y-2">
-									<div className="rounded-full bg-muted/50 p-2">
-										<Shield className="h-5 w-5" />
-									</div>
-									<span className="font-medium text-muted-foreground text-xs md:text-sm">
-										Secure Purchase
+						{/* Actions */}
+						<div className="space-y-6 pt-4">
+							<div className="flex flex-col gap-4 sm:flex-row">
+								{/* Quantity */}
+								<div className="flex w-fit items-center rounded-full border bg-background p-1 shadow-sm">
+									<Button
+										variant="ghost"
+										size="icon"
+										onClick={() => handleQuantityChange(quantity - 1)}
+										disabled={quantity <= 1}
+										className="h-10 w-10 rounded-full hover:bg-muted"
+									>
+										<Minus className="h-4 w-4" />
+									</Button>
+									<span className="w-12 text-center font-medium">
+										{quantity}
 									</span>
+									<Button
+										variant="ghost"
+										size="icon"
+										onClick={() => handleQuantityChange(quantity + 1)}
+										disabled={
+											!productData.allowBackorders &&
+											quantity >= productData.stockQuantity
+										}
+										className="h-10 w-10 rounded-full hover:bg-muted"
+									>
+										<Plus className="h-4 w-4" />
+									</Button>
 								</div>
-								<div className="flex flex-col items-center space-y-2">
-									<div className="rounded-full bg-muted/50 p-2">
-										<Truck className="h-5 w-5" />
-									</div>
-									<span className="font-medium text-muted-foreground text-xs md:text-sm">
-										Free Shipping
-									</span>
-								</div>
-								<div className="flex flex-col items-center space-y-2">
-									<div className="rounded-full bg-muted/50 p-2">
-										<RotateCcw className="h-5 w-5" />
-									</div>
-									<span className="font-medium text-muted-foreground text-xs md:text-sm">
-										Easy Returns
-									</span>
+
+								{/* Add to Cart */}
+								<Button
+									size="lg"
+									onClick={handleAddToCart}
+									disabled={
+										!productData.inStock ||
+										(productData.stockQuantity <= 0 &&
+											!productData.allowBackorders)
+									}
+									className="hover:-translate-y-0.5 h-12 flex-1 rounded-full py-2 text-base shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40 disabled:cursor-not-allowed disabled:opacity-50"
+								>
+									<ShoppingCart className="mr-2 size-5" />
+									{productData.stockQuantity <= 0 &&
+									!productData.allowBackorders
+										? "Out of Stock"
+										: t("addToCart")}
+								</Button>
+
+								{/* Wishlist & Share */}
+								<div className="flex gap-2">
+									<TooltipProvider>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Button
+													variant="outline"
+													size="icon"
+													onClick={() => setIsWishlisted(!isWishlisted)}
+													className={`h-12 w-12 rounded-full border-2 ${
+														isWishlisted
+															? "border-red-200 bg-red-50 text-red-500"
+															: "hover:bg-muted"
+													}`}
+												>
+													<Heart
+														className={`h-5 w-5 ${isWishlisted ? "fill-current" : ""}`}
+													/>
+												</Button>
+											</TooltipTrigger>
+											<TooltipContent>
+												<p>
+													{isWishlisted
+														? "Remove from Wishlist"
+														: "Add to Wishlist"}
+												</p>
+											</TooltipContent>
+										</Tooltip>
+									</TooltipProvider>
+
+									<TooltipProvider>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Button
+													variant="outline"
+													size="icon"
+													onClick={handleShare}
+													className="h-12 w-12 rounded-full border-2 hover:bg-muted"
+												>
+													<Share2 className="h-5 w-5" />
+												</Button>
+											</TooltipTrigger>
+											<TooltipContent>
+												<p>Share Product</p>
+											</TooltipContent>
+										</Tooltip>
+									</TooltipProvider>
 								</div>
 							</div>
 						</div>
+
+						<Separator />
+
+						{/* Accordion Info */}
+						<Accordion type="single" collapsible className="w-full">
+							<AccordionItem value="description">
+								<AccordionTrigger className="font-semibold text-base">
+									Description
+								</AccordionTrigger>
+								<AccordionContent>
+									<div className="prose prose-sm max-w-none text-muted-foreground">
+										<p>{productData.description}</p>
+									</div>
+								</AccordionContent>
+							</AccordionItem>
+							<AccordionItem value="shipping">
+								<AccordionTrigger className="font-semibold text-base">
+									Shipping & Returns
+								</AccordionTrigger>
+								<AccordionContent>
+									<div className="space-y-4 text-muted-foreground text-sm">
+										<div className="flex items-start gap-3">
+											<Truck className="h-5 w-5 shrink-0 text-primary" />
+											<div>
+												<p className="font-medium text-foreground">
+													Free Shipping
+												</p>
+												<p>
+													On all orders over $50. Arrives in 3-5 business days.
+												</p>
+											</div>
+										</div>
+										<div className="flex items-start gap-3">
+											<RotateCcw className="h-5 w-5 shrink-0 text-primary" />
+											<div>
+												<p className="font-medium text-foreground">
+													Easy Returns
+												</p>
+												<p>30-day return policy. No questions asked.</p>
+											</div>
+										</div>
+										<div className="flex items-start gap-3">
+											<Shield className="h-5 w-5 shrink-0 text-primary" />
+											<div>
+												<p className="font-medium text-foreground">
+													Secure Checkout
+												</p>
+												<p>SSL encrypted checkout for your peace of mind.</p>
+											</div>
+										</div>
+									</div>
+								</AccordionContent>
+							</AccordionItem>
+						</Accordion>
 					</div>
 				</div>
+			</div>
 
-				{/* Description - Mobile Optimized */}
-				<div className="mt-12 md:mt-16">
-					<Card className="border-border/50 shadow-sm">
-						<CardContent className="p-4 md:p-8">
-							<h2 className="mb-4 font-semibold text-xl md:mb-6 md:text-2xl">
-								Description
-							</h2>
-							<div className="text-base text-muted-foreground leading-relaxed md:text-lg">
-								{productData.description}
-							</div>
-						</CardContent>
-					</Card>
-				</div>
+			{/* Frequently Bought Together */}
+			<FrequentlyBoughtTogether currentProductId={id} />
 
-				{/* Frequently Bought Together - Mobile Optimized */}
-				<div className="mt-12 md:mt-16">
-					<FrequentlyBoughtTogether currentProductId={id} />
+			{/* Mobile Sticky Add to Cart */}
+			<div className="fixed right-0 bottom-0 left-0 z-50 border-t bg-background/95 p-4 pb-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] backdrop-blur-md lg:hidden">
+				<div className="flex items-center gap-4">
+					<div className="flex flex-col">
+						<span className="text-muted-foreground text-xs">Total</span>
+						<span className="font-bold text-xl">
+							${(productData.price * quantity).toFixed(2)}
+						</span>
+					</div>
+					<Button
+						size="lg"
+						onClick={handleAddToCart}
+						disabled={
+							!productData.inStock ||
+							(productData.stockQuantity <= 0 && !productData.allowBackorders)
+						}
+						className="flex-1 rounded-full shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+					>
+						<ShoppingCart className="mr-2 h-4 w-4" />
+						{productData.stockQuantity <= 0 && !productData.allowBackorders
+							? "Out of Stock"
+							: t("addToCart")}
+					</Button>
 				</div>
 			</div>
 		</div>

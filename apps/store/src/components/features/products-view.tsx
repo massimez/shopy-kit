@@ -18,6 +18,7 @@ import { type Product, ProductCard } from "@/components/features/product-card";
 import { ProductFilters } from "@/components/features/product-filters";
 import {
 	useCollections,
+	useDefaultLocation,
 	useOrganization,
 	useProducts,
 } from "@/lib/hooks/use-storefront";
@@ -60,6 +61,12 @@ export function ProductsView() {
 	// Fetch organization and products from API
 	const { data: org } = useOrganization("yam");
 	const organizationId = org?.id || "qGH0Uy2lnzoOfVeU6kcaLSuqfdKon8qe";
+
+	// Get default location for stock information
+	const { data: location } = useDefaultLocation(
+		organizationId,
+		!!organizationId,
+	);
 
 	// Fetch collections
 	const { data: collections = [] } = useCollections(
@@ -105,31 +112,48 @@ export function ProductsView() {
 			sort: apiSort,
 			limit: 100, // Get more products for filtering
 			...(collectionId ? { collectionId } : {}),
+			...(location?.id ? { locationId: location.id } : {}),
 		},
 		!!organizationId,
 	);
 
 	// Map API products to component format
-	const allProducts: ExtendedProduct[] = products.map((p) => ({
-		id: p.id,
-		name: p.translations?.find((t) => t.languageCode === "en")?.name || "",
-		price: p.minPrice || 0,
-		category: "General", // Keep for compatibility with ProductCard
-		description:
-			(Array.isArray(p.translations)
-				? p.translations.find(
-						(t: { languageCode: string; description?: string }) =>
-							t.languageCode === "en",
-					)?.description
-				: "") ||
-			p.name ||
-			"",
-		image: p.thumbnailImage?.url,
-		rating: 4.5, // Placeholder - add rating system later
-		reviews: 0,
-		isNew:
-			new Date(p.createdAt).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000,
-	}));
+	const allProducts: ExtendedProduct[] = products.map((p) => {
+		// Use first variant - TypeScript doesn't know about variants property from API
+		const firstVariant = p.variants?.[0];
+
+		// Get variant translation
+		const variantTranslation =
+			firstVariant?.translations?.find(
+				(t: { languageCode: string }) => t.languageCode === "en",
+			) || firstVariant?.translations?.[0];
+
+		return {
+			id: p.id,
+			name: p.translations?.find((t) => t.languageCode === "en")?.name || "",
+			price: firstVariant
+				? Number.parseFloat(firstVariant.price)
+				: p.minPrice || 0,
+			category: "General", // Keep for compatibility with ProductCard
+			description:
+				(Array.isArray(p.translations)
+					? p.translations.find(
+							(t: { languageCode: string; description?: string }) =>
+								t.languageCode === "en",
+						)?.description
+					: "") ||
+				p.name ||
+				"",
+			image: p.thumbnailImage?.url,
+			rating: 4.5, // Placeholder - add rating system later
+			reviews: 0,
+			isNew:
+				new Date(p.createdAt).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000,
+			productVariantId: firstVariant?.id,
+			variantName: variantTranslation?.name,
+			variantSku: firstVariant?.sku,
+		};
+	});
 
 	const filteredProducts = allProducts.filter((p) => {
 		// Collection filtering is now handled by API
