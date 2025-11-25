@@ -17,7 +17,7 @@ import {
 } from "@workspace/ui/components/sidebar";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { useMounted } from "@workspace/ui/hooks/use-mounted";
-import { Building2, ChevronsUpDown, Plus, Settings } from "lucide-react";
+import { Building2, ChevronsUpDown, Plus } from "lucide-react";
 import Image from "next/image";
 import * as React from "react";
 import { useModal } from "@/components/modals/modal-context";
@@ -55,7 +55,7 @@ export function TeamSwitcher() {
 	};
 	const { openModal } = useModal();
 	const loading = orgsLoading || activeOrgLoading || isSwitching;
-	console.log("Loading:", {
+	console.log("SideBarLoaded:", {
 		orgsLoading,
 		activeOrgLoading,
 		isSwitching,
@@ -80,7 +80,7 @@ export function TeamSwitcher() {
 				<SidebarMenuItem>
 					<SidebarMenuButton
 						size="lg"
-						className="!p-0 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+						className="p-0! data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 						disabled={true}
 					>
 						<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
@@ -104,7 +104,7 @@ export function TeamSwitcher() {
 					<DropdownMenuTrigger asChild>
 						<SidebarMenuButton
 							size="lg"
-							className="!p-0 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+							className="p-0! data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 							disabled={!!loading}
 						>
 							<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
@@ -195,16 +195,7 @@ export function TeamSwitcher() {
 									</DropdownMenuItem>
 								))}
 						<DropdownMenuSeparator />
-						<DropdownMenuItem asChild className="gap-2 p-2">
-							<a href="/dashboard/organization">
-								<div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
-									<Settings className="size-4" />
-								</div>
-								<div className="font-medium text-muted-foreground">
-									Settings
-								</div>
-							</a>
-						</DropdownMenuItem>
+
 						<DropdownMenuItem
 							onClick={() => {
 								openModal("createOrg", null);

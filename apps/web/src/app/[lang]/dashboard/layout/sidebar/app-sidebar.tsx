@@ -93,18 +93,6 @@ const data = {
 					title: "General",
 					url: "/dashboard/organization/",
 				},
-				{
-					title: "Team",
-					url: "#",
-				},
-				{
-					title: "Billing",
-					url: "#",
-				},
-				{
-					title: "Limits",
-					url: "#",
-				},
 			],
 		},
 	],
