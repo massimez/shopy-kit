@@ -3,6 +3,11 @@ import type { z } from "zod";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 import type { TransactionDb } from "@/types/db";
+import {
+	decrementClientUncompletedOrders,
+	incrementClientUncompletedOrders,
+	updateClientStatsOnOrderCompletion,
+} from "../client/client.service";
 import type { createOrderSchema } from "./schema";
 
 type CreateOrderInput = z.infer<typeof createOrderSchema>;
@@ -275,6 +280,11 @@ export async function createOrder(
 			await addPendingBonus(userId, activeOrgId, subtotal, tx);
 		}
 
+		// Update client statistics for pending order
+		if (userId) {
+			await incrementClientUncompletedOrders(userId, activeOrgId, tx);
+		}
+
 		return { ...newOrder, items: createdOrderItems };
 	});
 }
@@ -407,6 +417,16 @@ export async function completeOrder(orderId: string, activeOrgId: string) {
 			);
 		}
 
+		// Update client statistics on order completion
+		if (ord?.userId) {
+			await updateClientStatsOnOrderCompletion(
+				ord.userId,
+				ord.organizationId,
+				ord.totalAmount || "0",
+				tx,
+			);
+		}
+
 		return [ord];
 	});
 
@@ -521,6 +541,15 @@ export async function cancelOrder(orderId: string, activeOrgId: string) {
 				ord.userId,
 				ord.organizationId,
 				ord.totalAmount || "0",
+				tx,
+			);
+		}
+
+		// Update client statistics on order cancellation
+		if (ord?.userId) {
+			await decrementClientUncompletedOrders(
+				ord.userId,
+				ord.organizationId,
 				tx,
 			);
 		}

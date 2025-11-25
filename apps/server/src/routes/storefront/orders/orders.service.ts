@@ -2,6 +2,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 import { order, orderItem } from "@/lib/db/schema/store/order";
+import { incrementClientUncompletedOrders } from "@/routes/admin-organization/store/client/client.service";
 import type { TransactionDb } from "@/types/db";
 
 // Types
@@ -278,6 +279,15 @@ export async function createStorefrontOrder(payload: CreateOrderInput) {
 		// Add pending bonus
 		if (userId) {
 			await addPendingBonus(userId, payload.organizationId, subtotal, tx);
+		}
+
+		// Update client statistics for pending order
+		if (userId) {
+			await incrementClientUncompletedOrders(
+				userId,
+				payload.organizationId,
+				tx,
+			);
 		}
 
 		return { ...newOrder, items: createdOrderItems };

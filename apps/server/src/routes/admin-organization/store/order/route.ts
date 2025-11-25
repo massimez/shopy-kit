@@ -55,7 +55,7 @@ export const orderRoute = createRouter()
 					c.get("session")?.activeOrganizationId as string,
 				);
 
-				const { limit, offset, orderBy, direction, status } =
+				const { limit, offset, orderBy, direction, status, userId } =
 					c.req.valid("query");
 
 				const whereConditions = [
@@ -64,6 +64,9 @@ export const orderRoute = createRouter()
 				];
 				if (status) {
 					whereConditions.push(eq(order.status, status));
+				}
+				if (userId) {
+					whereConditions.push(eq(order.userId, userId));
 				}
 
 				const result = await db.query.order.findMany({

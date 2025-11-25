@@ -399,3 +399,96 @@ export async function findOrCreateClientFromUser(
 
 	return newClient;
 }
+
+/**
+ * Update client statistics when order is created (pending)
+ */
+export async function incrementClientUncompletedOrders(
+	userId: string,
+	organizationId: string,
+	tx: typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0],
+) {
+	const [clientRecord] = await tx
+		.select()
+		.from(client)
+		.where(
+			and(eq(client.userId, userId), eq(client.organizationId, organizationId)),
+		);
+
+	if (clientRecord) {
+		await tx
+			.update(client)
+			.set({
+				totalUncompletedOrders: (clientRecord.totalUncompletedOrders || 0) + 1,
+			})
+			.where(eq(client.id, clientRecord.id));
+	}
+}
+
+/**
+ * Update client statistics when order is completed
+ */
+export async function updateClientStatsOnOrderCompletion(
+	userId: string,
+	organizationId: string,
+	orderAmount: string,
+	tx: typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0],
+) {
+	const [clientRecord] = await tx
+		.select()
+		.from(client)
+		.where(
+			and(eq(client.userId, userId), eq(client.organizationId, organizationId)),
+		);
+
+	if (clientRecord) {
+		const newTotalOrders = (clientRecord.totalOrders || 0) + 1;
+		const newTotalSpent =
+			Number(clientRecord.totalSpent || 0) + Number(orderAmount);
+		const newUncompletedOrders = Math.max(
+			0,
+			(clientRecord.totalUncompletedOrders || 0) - 1,
+		);
+
+		await tx
+			.update(client)
+			.set({
+				totalOrders: newTotalOrders,
+				totalUncompletedOrders: newUncompletedOrders,
+				totalSpent: newTotalSpent.toString(),
+				lastPurchaseDate: new Date(),
+				firstPurchaseDate: clientRecord.firstPurchaseDate || new Date(),
+			})
+			.where(eq(client.id, clientRecord.id));
+	}
+}
+
+/**
+ * Update client statistics when order is cancelled
+ */
+export async function decrementClientUncompletedOrders(
+	userId: string,
+	organizationId: string,
+	tx: typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0],
+) {
+	const [clientRecord] = await tx
+		.select()
+		.from(client)
+		.where(
+			and(eq(client.userId, userId), eq(client.organizationId, organizationId)),
+		);
+
+	if (clientRecord) {
+		const newUncompletedOrders = Math.max(
+			0,
+			(clientRecord.totalUncompletedOrders || 0) - 1,
+		);
+
+		await tx
+			.update(client)
+			.set({
+				totalUncompletedOrders: newUncompletedOrders,
+			})
+			.where(eq(client.id, clientRecord.id));
+	}
+}
