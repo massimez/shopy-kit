@@ -58,7 +58,7 @@ const getTranslation = (
 	collection.translations?.find((t) => t.languageCode === lang)?.[field] || "-";
 
 function LoadingSkeleton() {
-	return <></>;
+	return <>Loading...</>;
 }
 
 function EmptyState({ onCreateNew }: { onCreateNew: () => void }) {

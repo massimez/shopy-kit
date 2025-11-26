@@ -86,12 +86,14 @@ export const useShippingMethodZones = (methodId: string) => {
 export const useCreateShippingMethodZone = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: async (json: any) => {
+		mutationFn: async (
+			json: ShippingMethodZone & { organizationId: string },
+		) => {
 			const res = await hc.api.store["shipping-method-zones"].$post({
 				json,
 			});
 			const data = await res.json();
-			if ("error" in data) {
+			if ("error" in data && data.error) {
 				throw new Error(
 					data.error?.message || "Failed to create shipping method zone",
 				);
@@ -107,13 +109,19 @@ export const useCreateShippingMethodZone = () => {
 export const useUpdateShippingMethodZone = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: async ({ id, json }: { id: string; json: any }) => {
+		mutationFn: async ({
+			id,
+			json,
+		}: {
+			id: string;
+			json: ShippingMethodZone;
+		}) => {
 			const res = await hc.api.store["shipping-method-zones"][":id"].$put({
 				param: { id },
 				json,
 			});
 			const data = await res.json();
-			if ("error" in data) {
+			if ("error" in data && data.error) {
 				throw new Error(
 					data.error?.message || "Failed to update shipping method zone",
 				);
@@ -134,7 +142,7 @@ export const useDeleteShippingMethodZone = () => {
 				param: { id },
 			});
 			const data = await res.json();
-			if ("error" in data) {
+			if ("error" in data && data.error) {
 				throw new Error(
 					data.error?.message || "Failed to delete shipping method zone",
 				);
