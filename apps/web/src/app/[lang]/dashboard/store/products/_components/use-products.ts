@@ -38,7 +38,7 @@ export type Product = {
 	minQuantity: number;
 	maxQuantity: number | null;
 	type?: string;
-	collectionId?: string | null;
+	collectionIds?: string[];
 	brandId?: string | null;
 	translations:
 		| {

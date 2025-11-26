@@ -20,8 +20,30 @@ export interface ProductCollection {
 				metaDescription?: string;
 		  }[]
 		| null;
+	children?: ProductCollection[];
 	createdAt: string;
 	updatedAt: string | null;
+}
+
+/**
+ * Flatten nested collections into a single array
+ */
+export function flattenCollections(
+	collections: ProductCollection[],
+): ProductCollection[] {
+	const result: ProductCollection[] = [];
+
+	function flatten(items: ProductCollection[]) {
+		for (const item of items) {
+			result.push(item);
+			if (item.children && item.children.length > 0) {
+				flatten(item.children);
+			}
+		}
+	}
+
+	flatten(collections);
+	return result;
 }
 
 export function useProductCollections(languageCode?: string) {
@@ -35,7 +57,7 @@ export function useProductCollections(languageCode?: string) {
 			});
 			if (!res.ok) {
 				console.error("Failed to fetch collections: Network response not ok");
-				return { data: [] };
+				return { data: [], flat: [] };
 			}
 			const result = await res.json();
 			if (result.error) {
@@ -43,16 +65,20 @@ export function useProductCollections(languageCode?: string) {
 					"Failed to fetch collections: API returned an error",
 					result.error,
 				);
-				return { data: [] };
+				return { data: [], flat: [] };
 			}
 			if (result.data && Array.isArray(result.data)) {
-				return { data: result.data as ProductCollection[] };
+				const nestedData = result.data as ProductCollection[];
+				return {
+					data: nestedData,
+					flat: flattenCollections(nestedData),
+				};
 			}
 			console.error(
 				"Failed to fetch collections: Unexpected API response format",
 				result,
 			);
-			return { data: [] };
+			return { data: [], flat: [] };
 		},
 	});
 }

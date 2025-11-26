@@ -22,7 +22,12 @@ export function useProducts(
 export function useCollections(organizationId: string, enabled = true) {
 	return useQuery({
 		queryKey: ["collections", organizationId],
-		queryFn: () => storefrontClient.getCollections({ organizationId }),
+		queryFn: async () => {
+			const collections = await storefrontClient.getCollections({
+				organizationId,
+			});
+			return collections;
+		},
 		enabled,
 	});
 }

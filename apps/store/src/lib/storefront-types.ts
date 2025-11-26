@@ -1,3 +1,46 @@
+export interface Collection {
+	id: string;
+	name: string;
+	slug: string;
+	description?: string | null;
+	parentId?: string | null;
+	image?: string | null;
+	isActive: boolean;
+	isVisible: boolean;
+	translations?:
+		| {
+				languageCode: string;
+				name: string;
+				slug: string;
+				description?: string;
+				metaTitle?: string;
+				metaDescription?: string;
+		  }[]
+		| null;
+	children?: Collection[];
+	createdAt: string;
+	updatedAt: string | null;
+}
+
+/**
+ * Flatten nested collections into a single array
+ */
+export function flattenCollections(collections: Collection[]): Collection[] {
+	const result: Collection[] = [];
+
+	function flatten(items: Collection[]) {
+		for (const item of items) {
+			result.push(item);
+			if (item.children && item.children.length > 0) {
+				flatten(item.children);
+			}
+		}
+	}
+
+	flatten(collections);
+	return result;
+}
+
 // Storefront-specific types that extend or override the server-generated types
 // These match what the storefront API actually returns
 
@@ -50,7 +93,7 @@ export interface Product {
 	minQuantity: number;
 	maxQuantity: number | null;
 	type?: string;
-	collectionId?: string | null;
+	collectionIds?: string[];
 	brandId?: string | null;
 	translations:
 		| {

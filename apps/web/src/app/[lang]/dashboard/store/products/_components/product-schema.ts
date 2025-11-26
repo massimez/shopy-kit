@@ -19,7 +19,7 @@ export type ProductVariantFormValues = {
 
 export type ProductFormValues = {
 	id?: string;
-	collectionId?: string;
+	collectionIds?: string[];
 	brandId?: string | null;
 	images?: Array<{
 		key: string;
@@ -73,7 +73,7 @@ export const productFormSchema = insertProductSchema
 	})
 	.extend({
 		id: z.string().optional(),
-		collectionId: z.string().optional(),
+		collectionIds: z.array(z.string()).optional(),
 		brandId: z.string().nullable().optional(),
 		images: z
 			.array(

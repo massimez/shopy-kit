@@ -19,6 +19,9 @@ import {
 	FormMessage,
 } from "@workspace/ui/components/form";
 import { Input } from "@workspace/ui/components/input";
+import MultipleSelector, {
+	type Option,
+} from "@workspace/ui/components/multi-select";
 import {
 	Select,
 	SelectContent,
@@ -63,7 +66,15 @@ export function ProductEditForm({
 	isSubmitting = false,
 }: ProductEditFormProps) {
 	const { data: collectionsResponse, isLoading: isLoadingCollections } =
-		useProductCollections();
+		useProductCollections(selectedLanguage);
+
+	console.log("ProductEditForm debug:", {
+		selectedLanguage,
+		collectionsResponse,
+		isLoadingCollections,
+		flatLength: collectionsResponse?.flat?.length,
+	});
+
 	const [deletedVariantIds, setDeletedVariantIds] = useState<string[]>([]);
 	const [editingLanguage, setEditingLanguage] = useState(selectedLanguage);
 
@@ -86,15 +97,17 @@ export function ProductEditForm({
 			});
 		}
 	};
-
 	const collectionOptions =
-		collectionsResponse?.data?.map(
-			(collection: { name: string; id: string }) => ({
-				label: collection.name,
+		collectionsResponse?.flat?.map((collection) => {
+			const translation = collection.translations?.find(
+				(t) => t.languageCode === selectedLanguage,
+			);
+			return {
+				label: translation?.name || collection.name || "Untitled Collection",
 				value: collection.id,
-			}),
-		) || [];
-
+			};
+		}) || [];
+	console.log(collectionOptions, "collectionOptions");
 	const form = useForm<ProductFormValues>({
 		// biome-ignore lint/suspicious/noExplicitAny: zodResolver type inference issue with complex schema
 		resolver: zodResolver(productFormSchema) as any,
@@ -562,7 +575,7 @@ export function ProductEditForm({
 												defaultValue={field.value || "no-brand"}
 											>
 												<FormControl>
-													<SelectTrigger>
+													<SelectTrigger className="w-60">
 														<SelectValue placeholder="Select brand" />
 													</SelectTrigger>
 												</FormControl>
@@ -581,42 +594,43 @@ export function ProductEditForm({
 								/>
 								<FormField
 									control={form.control}
-									name="collectionId"
+									name="collectionIds"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>Collection</FormLabel>
-											<Select
-												onValueChange={(val) =>
-													field.onChange(
-														val === "no-collection" ? undefined : val,
-													)
-												}
-												defaultValue={field.value || "no-collection"}
-											>
-												<FormControl>
-													<SelectTrigger>
-														<SelectValue placeholder="Select collection" />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													<SelectItem value="no-collection">
-														No Collection
-													</SelectItem>
-													{isLoadingCollections ? (
-														<SelectItem value="loading" disabled>
-															Loading...
-														</SelectItem>
-													) : (
-														collectionOptions.map(
-															(c: { label: string; value: string }) => (
-																<SelectItem key={c.value} value={c.value}>
-																	{c.label}
-																</SelectItem>
-															),
-														)
-													)}
-												</SelectContent>
-											</Select>
+											<FormLabel>Collections</FormLabel>
+											<FormControl>
+												<MultipleSelector
+													value={
+														field.value?.map((id) => {
+															const collection = collectionOptions.find(
+																(c: { value: string; label: string }) =>
+																	c.value === id,
+															);
+															return {
+																value: id,
+																label: collection?.label || id,
+															};
+														}) || []
+													}
+													onChange={(selected: Option[]) => {
+														field.onChange(selected.map((s) => s.value));
+													}}
+													options={collectionOptions}
+													placeholder="Select collections..."
+													emptyIndicator={
+														<p className="text-center text-gray-600 text-sm leading-10 dark:text-gray-400">
+															{isLoadingCollections
+																? "Loading collections..."
+																: "No collections found."}
+														</p>
+													}
+													disabled={isLoadingCollections}
+													className="w-fit overflow-hidden"
+												/>
+											</FormControl>
+											<FormDescription>
+												Assign this product to one or more collections
+											</FormDescription>
 											<FormMessage />
 										</FormItem>
 									)}

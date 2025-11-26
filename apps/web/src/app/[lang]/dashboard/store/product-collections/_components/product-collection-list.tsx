@@ -19,7 +19,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@workspace/ui/components/select";
-import { Skeleton } from "@workspace/ui/components/skeleton";
 import { Switch } from "@workspace/ui/components/switch";
 import {
 	Table,
@@ -145,11 +144,11 @@ export function ProductCollectionList({
 
 	// Filter collections based on search query
 	const filteredCollections = useMemo(() => {
-		if (!collectionsData?.data) return [];
-		if (!searchQuery) return collectionsData.data;
+		if (!collectionsData?.flat) return [];
+		if (!searchQuery) return collectionsData.flat;
 
 		const query = searchQuery.toLowerCase();
-		return collectionsData.data.filter((collection) => {
+		return collectionsData.flat.filter((collection) => {
 			const name = getTranslation(collection, selectedLanguage, "name");
 			const description = getTranslation(
 				collection,
@@ -161,7 +160,7 @@ export function ProductCollectionList({
 				description.toLowerCase().includes(query)
 			);
 		});
-	}, [collectionsData?.data, searchQuery, selectedLanguage]);
+	}, [collectionsData?.flat, searchQuery, selectedLanguage]);
 
 	const handleToggleActive = async (
 		collectionId: string,
@@ -199,7 +198,7 @@ export function ProductCollectionList({
 
 	const getParentName = (parentId: string | null | undefined) => {
 		if (!parentId) return null;
-		const parent = collectionsData?.data?.find((c) => c.id === parentId);
+		const parent = collectionsData?.flat?.find((c) => c.id === parentId);
 		return parent ? getTranslation(parent, selectedLanguage, "name") : null;
 	};
 
@@ -220,7 +219,7 @@ export function ProductCollectionList({
 							))}
 						</SelectContent>
 					</Select>
-					{collectionsData?.data && (
+					{collectionsData?.flat && (
 						<Badge variant="outline" className="ml-2">
 							{filteredCollections.length} collection
 							{filteredCollections.length !== 1 ? "s" : ""}

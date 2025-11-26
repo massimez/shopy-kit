@@ -34,7 +34,6 @@ import { debounce, getSlug } from "@/lib/helpers";
 import { useProductCollections } from "../hooks/use-product-collection";
 
 import { CollectionImageSlot } from "./collection-image-slot";
-import { SeoPreview } from "./seo-preview";
 
 // Simplified schema - single translation
 const translationSchema = z.object({
@@ -100,8 +99,6 @@ export function ProductCollectionForm({
 			form.setValue("translation.slug", slug);
 		}, 300)();
 	};
-
-	const watchedTranslation = form.watch("translation");
 
 	return (
 		<Form {...form}>
@@ -281,7 +278,7 @@ export function ProductCollectionForm({
 												</FormControl>
 												<SelectContent>
 													<SelectItem value="none">Top Level</SelectItem>
-													{collections?.data?.map((col) => (
+													{collections?.flat?.map((col) => (
 														<SelectItem key={col.id} value={col.id}>
 															{col.name}
 														</SelectItem>

@@ -6,6 +6,10 @@ import { db } from "@/lib/db";
 import { product, productVariant, type TProductStatus } from "@/lib/db/schema";
 import { validateOrgId } from "@/lib/utils/validator";
 import type { offsetPaginationSchema } from "@/middleware/pagination";
+import {
+	assignProductToCollections,
+	updateProductCollections,
+} from "./product-collection/product-collection-assignment.service";
 import type { insertProductSchema, updateProductSchema } from "./schema";
 
 type OffsetPaginationParams = z.infer<typeof offsetPaginationSchema>;
@@ -16,8 +20,14 @@ type UpdateProduct = z.infer<typeof updateProductSchema>;
  * Create a new product
  */
 export async function createProduct(productData: InsertProduct, orgId: string) {
-	const { translations, images, thumbnailImage, status, ...restData } =
-		productData;
+	const {
+		translations,
+		images,
+		thumbnailImage,
+		status,
+		collectionIds,
+		...restData
+	} = productData;
 	const [newProduct] = await db
 		.insert(product)
 		.values({
@@ -29,6 +39,12 @@ export async function createProduct(productData: InsertProduct, orgId: string) {
 			translations,
 		})
 		.returning();
+
+	// Assign product to collections if provided
+	if (collectionIds && collectionIds.length > 0) {
+		await assignProductToCollections(newProduct.id, collectionIds, orgId);
+	}
+
 	return newProduct;
 }
 
@@ -51,6 +67,8 @@ export async function getProducts(
 	const productIds = result.data.map((p) => p.id);
 
 	let variants: (typeof productVariant.$inferSelect)[] = [];
+	let collectionAssignments: { productId: string; collectionId: string }[] = [];
+
 	if (productIds.length > 0) {
 		const variantWhereConditions = [
 			inArray(productVariant.productId, productIds),
@@ -61,12 +79,30 @@ export async function getProducts(
 			.select()
 			.from(productVariant)
 			.where(and(...variantWhereConditions));
+
+		// Fetch collection assignments
+		const { productCollectionAssignment } = await import("@/lib/db/schema");
+		collectionAssignments = await db
+			.select({
+				productId: productCollectionAssignment.productId,
+				collectionId: productCollectionAssignment.collectionId,
+			})
+			.from(productCollectionAssignment)
+			.where(
+				and(
+					inArray(productCollectionAssignment.productId, productIds),
+					eq(productCollectionAssignment.organizationId, orgId),
+				),
+			);
 	}
 
-	// Map variants to their respective products
+	// Map variants and collections to their respective products
 	const productsWithVariants = result.data.map((p) => ({
 		...p,
 		variants: variants.filter((v) => v.productId === p.id),
+		collectionIds: collectionAssignments
+			.filter((a) => a.productId === p.id)
+			.map((a) => a.collectionId),
 	}));
 
 	return { total: result.total, data: productsWithVariants };
@@ -99,7 +135,14 @@ export async function getProduct(productId: string, orgId: string) {
 			),
 		);
 
-	return { ...foundProduct, variants };
+	// Get collection assignments
+	const { getProductCollections } = await import(
+		"./product-collection/product-collection-assignment.service"
+	);
+	const collectionAssignments = await getProductCollections(productId, orgId);
+	const collectionIds = collectionAssignments.map((a) => a.collectionId);
+
+	return { ...foundProduct, variants, collectionIds };
 }
 
 /**
@@ -110,7 +153,7 @@ export async function updateProduct(
 	productData: UpdateProduct,
 	orgId: string,
 ) {
-	const { translations, ...restData } = productData;
+	const { translations, collectionIds, ...restData } = productData;
 
 	const validTranslations = translations
 		?.filter((t) => t.languageCode && t.name && t.slug)
@@ -142,6 +185,12 @@ export async function updateProduct(
 			),
 		)
 		.returning();
+
+	// Update collection assignments if provided
+	if (collectionIds !== undefined) {
+		await updateProductCollections(productId, collectionIds, orgId);
+	}
+
 	return updatedProduct;
 }
 

@@ -61,6 +61,7 @@ export const insertProductSchema = baseInsertProductSchema.extend({
 	translations: z
 		.array(productTranslationEmbeddedSchema)
 		.min(1, "At least one translation is required"),
+	collectionIds: z.array(z.string()).optional(),
 });
 
 // Combined Product Update Schema
@@ -86,6 +87,7 @@ export const updateProductSchema = baseUpdateProductSchema.extend({
 		})
 		.optional(),
 	translations: z.array(productTranslationEmbeddedSchema.partial()).optional(),
+	collectionIds: z.array(z.string()).optional(),
 });
 
 export const insertProductCollectionSchema =

@@ -112,7 +112,7 @@ export default function EditProductPage({
 			translations: translationsRecord,
 			images: formattedImages,
 			thumbnailImage: undefined, // TODO: Handle thumbnail image
-			collectionId: product.collectionId || undefined,
+			collectionIds: product.collectionIds || [],
 			brandId: product.brandId || undefined,
 			variants: product.variants?.map((variant) => ({
 				id: variant.id,

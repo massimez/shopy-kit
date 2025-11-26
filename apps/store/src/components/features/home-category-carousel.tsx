@@ -18,6 +18,8 @@ import {
 	Utensils,
 } from "lucide-react";
 import { Link } from "@/i18n/routing";
+import type { Collection } from "@/lib/storefront-types";
+import { flattenCollections } from "@/lib/storefront-types";
 import { cn } from "@/lib/utils";
 
 interface CategoryItem {
@@ -69,18 +71,16 @@ const categories: CategoryItem[] = [
 	},
 ];
 
-interface Collection {
-	name: string;
-	slug: string;
-}
-
 export function HomeCategoryCarousel({
 	collections,
 }: {
 	collections?: Collection[];
 }) {
-	const items = collections?.length
-		? collections.map((c) => ({
+	// Flatten nested collections for display
+	const flatCollections = collections ? flattenCollections(collections) : [];
+
+	const items = flatCollections.length
+		? flatCollections.map((c) => ({
 				name: c.name,
 				slug: c.slug,
 				icon: <ShoppingBag className="h-8 w-8" />,
