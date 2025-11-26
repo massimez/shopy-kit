@@ -15,7 +15,6 @@ import {
 	TableHeader,
 	TableRow,
 } from "@workspace/ui/components/table";
-import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
 	useActiveOrganization,
@@ -25,7 +24,7 @@ import {
 
 // biome-ignore lint/suspicious/noExplicitAny: <>
 function MemberRow({ member }: { member: any }) {
-	const t = useTranslations("common");
+	// const t = useTranslations("common"); // removed
 	return (
 		<TableRow key={member.id}>
 			<TableCell className="">
@@ -34,7 +33,7 @@ function MemberRow({ member }: { member: any }) {
 						<AvatarImage src={member.user?.image ?? ""} />
 						<AvatarFallback>{member.user?.name?.[0] ?? "?"}</AvatarFallback>
 					</Avatar>
-					<span className="truncate">{member.user?.name ?? t("unknown")}</span>
+					<span className="truncate">{member.user?.name ?? "Unknown"}</span>
 				</div>
 			</TableCell>
 			<TableCell className="">
@@ -45,7 +44,7 @@ function MemberRow({ member }: { member: any }) {
 			</TableCell>
 			<TableCell className="text-right">
 				<Button variant="ghost" size="sm">
-					{t("edit")}
+					Edit
 				</Button>
 			</TableCell>
 		</TableRow>
@@ -54,14 +53,14 @@ function MemberRow({ member }: { member: any }) {
 
 // biome-ignore lint/suspicious/noExplicitAny: <>
 function InvitationRow({ invitation }: { invitation: any }) {
-	const t = useTranslations("common");
+	// const t = useTranslations("common"); // removed
 	const { activeOrganization } = useActiveOrganization();
 	const { mutate: resendInvitation, isPending } = useResendInvitation();
 
 	const handleResend = () => {
 		if (!activeOrganization?.id) {
-			toast.error(t("error"), {
-				description: t("organization_not_found"),
+			toast.error("Error", {
+				description: "Organization not found",
 			});
 			return;
 		}
@@ -74,13 +73,13 @@ function InvitationRow({ invitation }: { invitation: any }) {
 			},
 			{
 				onSuccess: () => {
-					toast.success(t("success"), {
-						description: t("invitation_resent_successfully"),
+					toast.success("Success", {
+						description: "Invitation resent successfully",
 					});
 				},
 				onError: (error) => {
-					toast.error(t("error"), {
-						description: error.message || t("failed_to_resend_invitation"),
+					toast.error("Error", {
+						description: error.message || "Failed to resend invitation",
 					});
 				},
 			},
@@ -110,7 +109,7 @@ function InvitationRow({ invitation }: { invitation: any }) {
 					onClick={handleResend}
 					disabled={isPending}
 				>
-					{isPending ? t("resending") : t("resend")}
+					{isPending ? "Resending" : "Resend"}
 				</Button>
 			</TableCell>
 		</TableRow>
@@ -118,7 +117,7 @@ function InvitationRow({ invitation }: { invitation: any }) {
 }
 
 export function MembersTable({ mode }: { mode: "members" | "invitations" }) {
-	const t = useTranslations("common");
+	// const t = useTranslations("common"); // removed
 	const { data: activeOrganization } = useGetFullOrganization();
 
 	const members = activeOrganization?.members ?? [];
@@ -127,14 +126,13 @@ export function MembersTable({ mode }: { mode: "members" | "invitations" }) {
 	if (mode === "members") {
 		return (
 			<Table className="">
-				{" "}
 				{/* Ensure minimum width */}
 				<TableHeader>
 					<TableRow>
-						<TableHead className="">{t("name")}</TableHead>
-						<TableHead className="">{t("email")}</TableHead>
-						<TableHead className="">{t("role")}</TableHead>
-						<TableHead className="text-right">{t("actions")}</TableHead>
+						<TableHead className="">{"Name"}</TableHead>
+						<TableHead className="">{"Email"}</TableHead>
+						<TableHead className="">{"Role"}</TableHead>
+						<TableHead className="text-right">{"Actions"}</TableHead>
 					</TableRow>
 				</TableHeader>
 				<TableBody>
@@ -146,7 +144,7 @@ export function MembersTable({ mode }: { mode: "members" | "invitations" }) {
 								colSpan={4}
 								className="text-center text-muted-foreground"
 							>
-								{t("no_members")}
+								{"No members"}
 							</TableCell>
 						</TableRow>
 					)}
@@ -157,15 +155,14 @@ export function MembersTable({ mode }: { mode: "members" | "invitations" }) {
 
 	return (
 		<Table className="">
-			{" "}
 			{/* Ensure minimum width for invitations table */}
 			<TableHeader>
 				<TableRow>
-					<TableHead className="">{t("email")}</TableHead>
-					<TableHead className="">{t("role")}</TableHead>
-					<TableHead className="">{t("status")}</TableHead>
-					<TableHead className="">{t("expires_at")}</TableHead>
-					<TableHead className="text-right">{t("actions")}</TableHead>
+					<TableHead className="">{"Email"}</TableHead>
+					<TableHead className="">{"Role"}</TableHead>
+					<TableHead className="">{"Status"}</TableHead>
+					<TableHead className="">{"Expires At"}</TableHead>
+					<TableHead className="text-right">{"Actions"}</TableHead>
 				</TableRow>
 			</TableHeader>
 			<TableBody>
@@ -179,7 +176,7 @@ export function MembersTable({ mode }: { mode: "members" | "invitations" }) {
 							colSpan={5}
 							className="text-center text-muted-foreground"
 						>
-							{t("no_invitations")}
+							{"No invitations"}
 						</TableCell>
 					</TableRow>
 				)}

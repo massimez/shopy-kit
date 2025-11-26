@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -29,7 +28,7 @@ const formSchema = z.object({
 type TravelFeesFormValues = z.infer<typeof formSchema>;
 
 export function TravelFeesForm() {
-	const t = useTranslations("common");
+	// const t = useTranslations("common"); // removed
 	const { activeOrganization } = useActiveOrganization();
 	const organizationId = activeOrganization?.id;
 
@@ -58,50 +57,50 @@ export function TravelFeesForm() {
 				{
 					name: "travelFeeType",
 					type: "select",
-					labelKey: "travel_fee_type",
-					placeholderKey: "select_travel_fee_type",
+					labelKey: "Travel Fee Type",
+					placeholderKey: "Select travel fee type",
 					gridCols: 4,
 					options: [
-						{ value: "fixed", label: "fixed" },
-						{ value: "per_km", label: "per_km" },
-						{ value: "varies", label: "varies" },
-						{ value: "start_at", label: "start_at" },
-						{ value: "free", label: "free" },
+						{ value: "fixed", label: "Fixed" },
+						{ value: "per_km", label: "Per KM" },
+						{ value: "varies", label: "Varies" },
+						{ value: "start_at", label: "Start At" },
+						{ value: "free", label: "Free" },
 					],
 				},
 				{
 					name: "travelFeeValue",
 					type: "number",
-					labelKey: "travel_fee_value",
-					placeholderKey: "enter_travel_fee_value",
+					labelKey: "Travel Fee Value",
+					placeholderKey: "Enter travel fee value",
 					gridCols: 4,
 				},
 				{
 					name: "travelFeeValueByKm",
 					type: "number",
-					labelKey: "travel_fee_value_by_km",
-					placeholderKey: "enter_travel_fee_value_by_km",
+					labelKey: "Travel Fee Value By KM",
+					placeholderKey: "Enter travel fee value by km",
 					gridCols: 4,
 				},
 				{
 					name: "maxTravelDistance",
 					type: "number",
-					labelKey: "max_travel_distance",
-					placeholderKey: "enter_max_travel_distance",
+					labelKey: "Max Travel Distance",
+					placeholderKey: "Enter max travel distance",
 					gridCols: 4,
 				},
 				{
 					name: "minimumTravelFees",
 					type: "number",
-					labelKey: "minimum_travel_fees",
-					placeholderKey: "enter_minimum_travel_fees",
+					labelKey: "Minimum Travel Fees",
+					placeholderKey: "Enter minimum travel fees",
 					gridCols: 4,
 				},
 				{
 					name: "travelFeesPolicyText",
 					type: "textarea",
-					labelKey: "travel_fees_policy_text",
-					placeholderKey: "enter_travel_fees_policy_text",
+					labelKey: "Travel Fees Policy Text",
+					placeholderKey: "Enter travel fees policy text",
 					gridCols: 12,
 				},
 			],
@@ -160,9 +159,9 @@ export function TravelFeesForm() {
 				organizationInfoId: organizationInfo.id,
 				...parsedValues,
 			});
-			toast.success(t("travel_fees_updated_successfully"));
+			toast.success("Travel fees updated successfully");
 		} catch (error) {
-			toast.error(t("failed_to_update_travel_fees"));
+			toast.error("Failed to update travel fees");
 			console.error("Failed to update travel fees:", error);
 		}
 	}

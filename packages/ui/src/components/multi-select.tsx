@@ -458,7 +458,8 @@ const MultipleSelector = React.forwardRef<
 				} // When onSearch is provided, we don't want to filter the options. You can still override it.
 				filter={commandFilter()}
 			>
-				<button
+				{/* biome-ignore lint/a11y/useSemanticElements: Using div with role=button to avoid nested buttons */}
+				<div
 					className={cn(
 						"flex w-fit items-center justify-between gap-2 whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[size=default]:h-9 data-[size=sm]:h-8 data-placeholder:text-muted-foreground dark:bg-input/30 dark:aria-invalid:ring-destructive/40 dark:hover:bg-input/50 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0",
 						{
@@ -466,7 +467,8 @@ const MultipleSelector = React.forwardRef<
 						},
 						className,
 					)}
-					type="button"
+					role="button"
+					tabIndex={disabled ? -1 : 0}
 					onClick={() => {
 						if (disabled) return;
 						inputRef?.current?.focus();
@@ -576,7 +578,7 @@ const MultipleSelector = React.forwardRef<
 								"hidden",
 						)}
 					/>
-				</button>
+				</div>
 				<div className="relative">
 					{open && (
 						<CommandList

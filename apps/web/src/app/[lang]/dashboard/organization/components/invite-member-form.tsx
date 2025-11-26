@@ -18,7 +18,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@workspace/ui/components/select";
-import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
@@ -33,7 +32,7 @@ const formSchema = z.object({
 });
 
 export function InviteMemberForm() {
-	const t = useTranslations("common");
+	// const t = useTranslations("common"); // removed
 	const activeOrg = authClient.useActiveOrganization();
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -62,9 +61,9 @@ export function InviteMemberForm() {
 					name="email"
 					render={({ field }) => (
 						<FormItem className="flex">
-							<FormLabel className="sr-only">{t("email")}</FormLabel>
+							<FormLabel className="sr-only">Email</FormLabel>
 							<FormControl>
-								<Input placeholder={t("email_address")} {...field} />
+								<Input placeholder="Email address" {...field} />
 							</FormControl>
 							<FormMessage />
 						</FormItem>
@@ -75,23 +74,23 @@ export function InviteMemberForm() {
 					name="role"
 					render={({ field }) => (
 						<FormItem className="flex">
-							<FormLabel className="sr-only">{t("role")}</FormLabel>
+							<FormLabel className="sr-only">Role</FormLabel>
 							<Select onValueChange={field.onChange} defaultValue={field.value}>
 								<FormControl>
 									<SelectTrigger>
-										<SelectValue placeholder={"select_a_role"} />
+										<SelectValue placeholder="Select a role" />
 									</SelectTrigger>
 								</FormControl>
 								<SelectContent>
-									<SelectItem value="member">{t("member")}</SelectItem>
-									<SelectItem value="admin">{t("admin")}</SelectItem>
+									<SelectItem value="member">Member</SelectItem>
+									<SelectItem value="admin">Admin</SelectItem>
 								</SelectContent>
 							</Select>
 							<FormMessage />
 						</FormItem>
 					)}
 				/>
-				<Button type="submit">invite</Button>
+				<Button type="submit">Invite</Button>
 			</form>
 		</Form>
 	);

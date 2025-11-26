@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { useFormContext } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -58,7 +57,7 @@ const OrganizationImagesSlot: SlotComponent<
 	AdvancedSettingsFormValues
 > = () => {
 	const { setValue } = useFormContext<AdvancedSettingsFormValues>();
-	const t = useTranslations("common");
+	// const t = useTranslations("common"); // removed
 	const { activeOrganization } = useActiveOrganization();
 	const organizationId = activeOrganization?.id;
 	const { data: organizationInfo } = useGetOrganizationInfo(
@@ -87,10 +86,10 @@ const OrganizationImagesSlot: SlotComponent<
 	return (
 		<div>
 			<div className="block font-medium text-gray-700 text-sm dark:text-gray-300">
-				{t("organization_images")}
+				Organization Images
 			</div>
 			<p className="mb-2 text-gray-500 text-xs dark:text-gray-400">
-				{t("you_can_upload_up_to_6_images")}
+				You can upload up to 6 images
 			</p>
 			<UploadZone state={stateImages} actions={actions} />
 			<GalleryViewer
@@ -103,7 +102,7 @@ const OrganizationImagesSlot: SlotComponent<
 };
 
 export function AdvancedSettingsForm() {
-	const t = useTranslations("common");
+	// const t = useTranslations("common"); // removed
 	const { activeOrganization } = useActiveOrganization();
 	const organizationId = activeOrganization?.id;
 
@@ -125,7 +124,7 @@ export function AdvancedSettingsForm() {
 			items: [
 				{
 					name: "taxRate",
-					labelKey: "tax_rate",
+					labelKey: "Tax Rate",
 					itemType: "field",
 					type: "text",
 					gridCols: 6,
@@ -134,8 +133,8 @@ export function AdvancedSettingsForm() {
 					name: "defaultLanguage",
 					itemType: "field",
 					type: "select",
-					labelKey: "default_language",
-					placeholderKey: "enter_default_language",
+					labelKey: "Default Language",
+					placeholderKey: "Select default language",
 					gridCols: 6,
 					options: LANGUAGE_OPTIONS,
 				},
@@ -143,8 +142,8 @@ export function AdvancedSettingsForm() {
 					name: "activeLanguages",
 					itemType: "field",
 					type: "multiselect",
-					labelKey: "active_languages",
-					placeholderKey: "enter_active_languages",
+					labelKey: "Active Languages",
+					placeholderKey: "Select active languages",
 					gridCols: 6,
 					options: LANGUAGE_OPTIONS,
 				},
@@ -168,7 +167,7 @@ export function AdvancedSettingsForm() {
 	// Form submission
 	async function onSubmit(values: AdvancedSettingsFormValues) {
 		if (!organizationId || !organizationInfo?.id) {
-			toast.error(t("organization_info_missing"));
+			toast.error("Organization info missing");
 			return;
 		}
 
@@ -188,7 +187,7 @@ export function AdvancedSettingsForm() {
 				...values,
 			});
 
-			toast.success(t("advanced_settings_updated_successfully"));
+			toast.success("Advanced settings updated successfully");
 		} catch (error) {
 			console.error("Failed to update advanced settings:", error);
 			toast.error("Failed to update advanced settings");

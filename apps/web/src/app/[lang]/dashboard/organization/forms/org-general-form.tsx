@@ -1,7 +1,6 @@
 // Example 1: Organization Form using FormBuilder
 "use client";
 
-import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
@@ -15,7 +14,6 @@ import {
 	type FormBuilderConfig,
 } from "@/components/form/form-builder";
 import { authClient } from "@/lib/auth-client";
-import { getErrorMessage } from "@/lib/error-utils";
 
 const organizationSchema = z.object({
 	organizationName: z.string().max(100).optional().or(z.literal("")),
@@ -27,7 +25,7 @@ const organizationSchema = z.object({
 type OrganizationFormValues = z.infer<typeof organizationSchema>;
 
 export function OrganizationForm() {
-	const t = useTranslations("common");
+	// const t = useTranslations("common"); // removed
 	const { activeOrganization } = useActiveOrganization();
 	const activeOrganizationId = activeOrganization?.id ?? "";
 	const { data: activeInfoOrg } = useGetOrganizationInfo(activeOrganizationId);
@@ -43,30 +41,30 @@ export function OrganizationForm() {
 			{
 				name: "organizationName",
 				type: "text",
-				labelKey: "organization_name",
-				placeholderKey: "your_organization_name",
+				labelKey: "Organization Name",
+				placeholderKey: "Your organization name",
 				gridCols: 6,
 				required: true,
 			},
 			{
 				name: "contactName",
 				type: "text",
-				labelKey: "contact_name",
-				placeholderKey: "enter_contact_name",
+				labelKey: "Contact Name",
+				placeholderKey: "Enter contact name",
 				gridCols: 6,
 			},
 			{
 				name: "contactEmail",
 				type: "email",
-				labelKey: "contact_email",
-				placeholderKey: "enter_contact_email",
+				labelKey: "Contact Email",
+				placeholderKey: "Enter contact email",
 				gridCols: 6,
 			},
 			{
 				name: "contactPhone",
 				type: "tel",
-				labelKey: "contact_phone",
-				placeholderKey: "enter_contact_phone",
+				labelKey: "Contact Phone",
+				placeholderKey: "Enter contact phone",
 				gridCols: 6,
 			},
 		],
@@ -113,11 +111,9 @@ export function OrganizationForm() {
 					contactPhone: values.contactPhone,
 				});
 			}
-			toast.success(t("organization_info_updated_successfully"));
+			toast.success("Organization info updated successfully");
 		} catch (error: unknown) {
-			toast.error(
-				getErrorMessage(error) || t("failed_to_update_organization_info"),
-			);
+			toast.error("Failed to update organization info");
 			console.error("Failed to update organization info:", error);
 		}
 	};

@@ -1,16 +1,22 @@
-"use client";
-
-import { useTranslations } from "next-intl";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@workspace/ui/components/card";
 import { AdvancedSettingsForm } from "./forms/advanced-settings-form";
 
 export default function OrganizationAdvancedTab() {
-	const t = useTranslations("common");
-
 	return (
-		<div className="space-y-6">
-			<h2 className="font-semibold text-xl">{t("advanced_settings")}</h2>
-			<p>{t("manage_organization_advanced_settings")}</p>
-			<AdvancedSettingsForm />
-		</div>
+		<Card>
+			<CardHeader>
+				<CardTitle>Advanced Settings</CardTitle>
+				<CardDescription>Manage organization advanced settings</CardDescription>
+			</CardHeader>
+			<CardContent>
+				<AdvancedSettingsForm />
+			</CardContent>
+		</Card>
 	);
 }

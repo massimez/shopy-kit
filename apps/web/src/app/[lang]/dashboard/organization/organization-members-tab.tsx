@@ -1,6 +1,13 @@
 // OrganizationMembersTab.tsx
 
 import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@workspace/ui/components/card";
+import {
 	Tabs,
 	TabsContent,
 	TabsList,
@@ -11,25 +18,33 @@ import { MembersTable } from "./components/members-table";
 
 export default async function OrganizationMembersTab() {
 	return (
-		<div className="space-y-6">
-			<Tabs defaultValue="members" className="space-y-4 overflow-x-auto">
-				<TabsList>
-					<TabsTrigger value="members">current_members</TabsTrigger>
-					<TabsTrigger value="invitations">invitations</TabsTrigger>
-				</TabsList>
+		<Card>
+			<CardHeader>
+				<CardTitle>Members</CardTitle>
+				<CardDescription>
+					Manage your organization members and invitations.
+				</CardDescription>
+			</CardHeader>
+			<CardContent>
+				<Tabs defaultValue="members" className="space-y-4">
+					<TabsList>
+						<TabsTrigger value="members">Current Members</TabsTrigger>
+						<TabsTrigger value="invitations">Invitations</TabsTrigger>
+					</TabsList>
 
-				<TabsContent className="overflow-visible" value="members">
-					<MembersTable mode="members" />
-				</TabsContent>
+					<TabsContent value="members" className="space-y-4">
+						<MembersTable mode="members" />
+					</TabsContent>
 
-				<TabsContent className="overflow-visible" value="invitations">
-					<div className="mb-4 space-y-4">
-						<h3 className="font-semibold text-lg">invite_new_member</h3>
-						<InviteMemberForm />
-					</div>
-					<MembersTable mode="invitations" />
-				</TabsContent>
-			</Tabs>
-		</div>
+					<TabsContent value="invitations" className="space-y-4">
+						<div className="rounded-lg border p-4">
+							<h4 className="mb-4 font-semibold">Invite New Member</h4>
+							<InviteMemberForm />
+						</div>
+						<MembersTable mode="invitations" />
+					</TabsContent>
+				</Tabs>
+			</CardContent>
+		</Card>
 	);
 }
