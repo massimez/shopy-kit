@@ -1,17 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
 import { hc } from "@/lib/api-client";
 
-export const useOrders = (status?: string) => {
+interface UseOrdersParams {
+	status?: string;
+	limit?: string;
+	offset?: string;
+}
+
+export const useOrders = ({
+	status,
+	limit = "10",
+	offset = "0",
+}: UseOrdersParams = {}) => {
 	const query = {
-		limit: "20",
-		offset: "0",
+		limit,
+		offset,
 		orderBy: "createdAt",
 		direction: "desc" as const,
 		...(status && { status }),
 	};
 
 	return useQuery({
-		queryKey: ["orders", status],
+		queryKey: ["orders", status, limit, offset],
 		queryFn: async () => {
 			const result = await hc.api.store.orders.$get({
 				query,

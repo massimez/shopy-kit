@@ -3,6 +3,14 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@workspace/ui/components/button";
 import {
+	Pagination,
+	PaginationContent,
+	PaginationItem,
+	PaginationLink,
+	PaginationNext,
+	PaginationPrevious,
+} from "@workspace/ui/components/pagination";
+import {
 	Select,
 	SelectContent,
 	SelectItem,
@@ -21,11 +29,23 @@ const ProductsPage = () => {
 	const queryClient = useQueryClient();
 
 	const [selectedLanguage, setSelectedLanguage] = useState(DEFAULT_LOCALE);
+	const [page, setPage] = useState(1);
+	const limit = 10;
+	const offset = (page - 1) * limit;
+
 	const {
-		data: productsQueryResult,
+		data: productsData,
 		isLoading,
 		error,
-	} = useProducts({ languageCode: selectedLanguage });
+	} = useProducts({
+		languageCode: selectedLanguage,
+		limit: limit.toString(),
+		offset: offset.toString(),
+	});
+
+	const products = productsData?.data || [];
+	const total = productsData?.total || 0;
+	const totalPages = Math.ceil(total / limit);
 
 	if (isLoading) return <div>Loading...</div>;
 	if (error) return <div>Error: {error.message}</div>;
@@ -56,8 +76,7 @@ const ProductsPage = () => {
 				</div>
 			</div>
 			<ProductList
-				// biome-ignore lint/suspicious/noExplicitAny: <>
-				products={(productsQueryResult?.data as any) || []}
+				products={products}
 				selectedLanguage={selectedLanguage}
 				onDeleteProduct={async (productId) => {
 					await hc.api.store.products[":id"].$delete({
@@ -66,6 +85,54 @@ const ProductsPage = () => {
 					queryClient.invalidateQueries({ queryKey: ["products"] });
 				}}
 			/>
+			{totalPages > 1 && (
+				<Pagination className="mt-4">
+					<PaginationContent>
+						<PaginationItem>
+							<PaginationPrevious
+								href="#"
+								onClick={(e) => {
+									e.preventDefault();
+									setPage((p) => Math.max(1, p - 1));
+								}}
+								aria-disabled={page === 1}
+								className={
+									page === 1 ? "pointer-events-none opacity-50" : undefined
+								}
+							/>
+						</PaginationItem>
+						{Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+							<PaginationItem key={p}>
+								<PaginationLink
+									href="#"
+									isActive={page === p}
+									onClick={(e) => {
+										e.preventDefault();
+										setPage(p);
+									}}
+								>
+									{p}
+								</PaginationLink>
+							</PaginationItem>
+						))}
+						<PaginationItem>
+							<PaginationNext
+								href="#"
+								onClick={(e) => {
+									e.preventDefault();
+									setPage((p) => Math.min(totalPages, p + 1));
+								}}
+								aria-disabled={page === totalPages}
+								className={
+									page === totalPages
+										? "pointer-events-none opacity-50"
+										: undefined
+								}
+							/>
+						</PaginationItem>
+					</PaginationContent>
+				</Pagination>
+			)}
 		</div>
 	);
 };

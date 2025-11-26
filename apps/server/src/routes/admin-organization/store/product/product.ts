@@ -50,8 +50,7 @@ export const productRoute = createRouter()
 		"/products",
 		authMiddleware,
 		hasOrgPermission("product:read"),
-		queryValidator(offsetPaginationSchema),
-		queryValidator(languageCodeSchema),
+		queryValidator(offsetPaginationSchema.extend(languageCodeSchema)),
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;

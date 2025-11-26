@@ -10,18 +10,20 @@ export type ProductVariant = {
 	weightKg?: string | number | null;
 	compareAtPrice?: string | number | null;
 	cost?: string | number | null;
-	maxStock?: number;
+	maxStock?: number | null;
 	isActive?: boolean;
-	translations?: {
-		languageCode: string;
-		name: string;
-		attributes?: Record<string, string>;
-	}[];
+	translations?:
+		| {
+				languageCode: string;
+				name?: string;
+				attributes?: Record<string, string>;
+		  }[]
+		| null;
 };
 
 export type Product = {
 	id: string;
-	metadata: never;
+	metadata: unknown;
 	createdAt: string;
 	organizationId: string;
 	updatedAt: string | null;
@@ -31,7 +33,7 @@ export type Product = {
 	currency?: string;
 	deletedAt: string | null;
 	createdBy: string | null;
-	name: string;
+	name: string | null;
 	isFeatured: boolean;
 	isActive: boolean;
 	trackStock: boolean;

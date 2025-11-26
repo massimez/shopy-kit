@@ -68,7 +68,7 @@ export const VariantsBlock = ({
 									<TableHead className="w-[50px]" />
 									<TableHead>Variant</TableHead>
 									<TableHead className="w-[200px]">Price</TableHead>
-									<TableHead className="w-[150px]">Available</TableHead>
+									<TableHead className="w-[150px]">SKU</TableHead>
 									<TableHead className="w-[50px]" />
 								</TableRow>
 							</TableHeader>
@@ -142,17 +142,12 @@ export const VariantsBlock = ({
 												<FormField
 													control={control}
 													name={
-														`variants.${index}.maxStock` as Path<ProductFormValues>
+														`variants.${index}.sku` as Path<ProductFormValues>
 													}
 													render={({ field }) => (
 														<FormItem>
 															<FormControl>
-																<Input
-																	{...field}
-																	type="number"
-																	placeholder="0"
-																	className="h-9"
-																/>
+																<Input {...field} placeholder="SKU-001" />
 															</FormControl>
 															<FormMessage />
 														</FormItem>
@@ -186,21 +181,6 @@ export const VariantsBlock = ({
 												<TableCell colSpan={5} className="bg-muted/30 p-6">
 													<div className="space-y-4">
 														<div className="grid grid-cols-3 gap-4">
-															<FormField
-																control={control}
-																name={
-																	`variants.${index}.sku` as Path<ProductFormValues>
-																}
-																render={({ field }) => (
-																	<FormItem>
-																		<FormLabel>SKU</FormLabel>
-																		<FormControl>
-																			<Input {...field} placeholder="SKU-001" />
-																		</FormControl>
-																		<FormMessage />
-																	</FormItem>
-																)}
-															/>
 															<FormField
 																control={control}
 																name={

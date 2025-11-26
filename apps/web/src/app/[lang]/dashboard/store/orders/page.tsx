@@ -2,6 +2,14 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import {
+	Pagination,
+	PaginationContent,
+	PaginationItem,
+	PaginationLink,
+	PaginationNext,
+	PaginationPrevious,
+} from "@workspace/ui/components/pagination";
+import {
 	Select,
 	SelectContent,
 	SelectItem,
@@ -38,8 +46,19 @@ const OrdersPage = () => {
 	const [statusFilter, setStatusFilter] = useState<string | undefined>(
 		undefined,
 	);
+	const [page, setPage] = useState(1);
+	const limit = 10;
+	const offset = (page - 1) * limit;
 
-	const { data: ordersQueryResult, isLoading, error } = useOrders(statusFilter);
+	const {
+		data: ordersQueryResult,
+		isLoading,
+		error,
+	} = useOrders({
+		status: statusFilter,
+		limit: limit.toString(),
+		offset: offset.toString(),
+	});
 
 	const handleDeleteOrder = async (orderId: string) => {
 		try {
@@ -88,6 +107,8 @@ const OrdersPage = () => {
 		...order,
 		userId: order.userId ?? undefined,
 	}));
+	const total = ordersQueryResult?.total || 0;
+	const totalPages = Math.ceil(total / limit);
 
 	return (
 		<div className="p-4">
@@ -96,9 +117,10 @@ const OrdersPage = () => {
 				<div className="flex items-center gap-4">
 					<Select
 						value={statusFilter || "all"}
-						onValueChange={(value) =>
-							setStatusFilter(value === "all" ? undefined : value)
-						}
+						onValueChange={(value) => {
+							setStatusFilter(value === "all" ? undefined : value);
+							setPage(1); // Reset to first page when filter changes
+						}}
 					>
 						<SelectTrigger className="w-48">
 							<SelectValue placeholder="Filter by status" />
@@ -123,6 +145,54 @@ const OrdersPage = () => {
 				onCompleteOrder={handleCompleteOrder}
 				onCancelOrder={handleCancelOrder}
 			/>
+			{totalPages > 1 && (
+				<Pagination className="mt-4">
+					<PaginationContent>
+						<PaginationItem>
+							<PaginationPrevious
+								href="#"
+								onClick={(e) => {
+									e.preventDefault();
+									setPage((p) => Math.max(1, p - 1));
+								}}
+								aria-disabled={page === 1}
+								className={
+									page === 1 ? "pointer-events-none opacity-50" : undefined
+								}
+							/>
+						</PaginationItem>
+						{Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+							<PaginationItem key={p}>
+								<PaginationLink
+									href="#"
+									isActive={page === p}
+									onClick={(e) => {
+										e.preventDefault();
+										setPage(p);
+									}}
+								>
+									{p}
+								</PaginationLink>
+							</PaginationItem>
+						))}
+						<PaginationItem>
+							<PaginationNext
+								href="#"
+								onClick={(e) => {
+									e.preventDefault();
+									setPage((p) => Math.min(totalPages, p + 1));
+								}}
+								aria-disabled={page === totalPages}
+								className={
+									page === totalPages
+										? "pointer-events-none opacity-50"
+										: undefined
+								}
+							/>
+						</PaginationItem>
+					</PaginationContent>
+				</Pagination>
+			)}
 			<EditOrderDialog
 				order={editingOrder}
 				open={isEditDialogOpen}

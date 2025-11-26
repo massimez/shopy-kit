@@ -44,7 +44,8 @@ export const OrderList = ({
 					className="max-w-md"
 				/>
 				<p className="whitespace-nowrap text-muted-foreground text-sm">
-					{filteredOrders.length} of {total} orders
+					{filteredOrders.length} {searchTerm ? "filtered" : ""} of {total}{" "}
+					orders
 				</p>
 			</div>
 
