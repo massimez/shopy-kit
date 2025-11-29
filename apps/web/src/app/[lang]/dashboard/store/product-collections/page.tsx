@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PageDashboardHeader } from "@/components/sections/page-dashboard-header";
+import { PageDashboardHeader } from "@/app/[lang]/(landing)/_components/sections/page-dashboard-header";
 import { DEFAULT_LOCALE } from "@/constants/locales";
 import { ProductCollectionList } from "./_components/product-collection-list";
 import { ProductCollectionModal } from "./_components/product-collection-modal";

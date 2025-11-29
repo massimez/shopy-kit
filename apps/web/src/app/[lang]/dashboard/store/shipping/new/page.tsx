@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { use as ReactUse } from "react";
 
-import { PageDashboardHeader } from "@/components/sections/page-dashboard-header";
+import { PageDashboardHeader } from "@/app/[lang]/(landing)/_components/sections/page-dashboard-header";
 import { hc } from "@/lib/api-client";
 import { ShippingForm } from "../_components/shipping-form";
 

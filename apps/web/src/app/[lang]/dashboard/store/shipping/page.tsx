@@ -6,7 +6,7 @@ import { Card, CardContent } from "@workspace/ui/components/card";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { use } from "react";
-import { PageDashboardHeader } from "@/components/sections/page-dashboard-header";
+import { PageDashboardHeader } from "@/app/[lang]/(landing)/_components/sections/page-dashboard-header";
 import { hc } from "@/lib/api-client";
 import { ShippingList } from "./_components/shipping-list";
 import { useShippingMethods } from "./_components/use-shipping";

@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { PageDashboardHeader } from "@/components/sections/page-dashboard-header";
+import { PageDashboardHeader } from "@/app/[lang]/(landing)/_components/sections/page-dashboard-header";
 import { hc } from "@/lib/api-client";
 import { useShippingZone } from "../../_components/use-zones";
 import { ZoneForm } from "../../_components/zone-form";

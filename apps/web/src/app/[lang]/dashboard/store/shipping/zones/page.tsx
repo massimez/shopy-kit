@@ -5,7 +5,7 @@ import { Button } from "@workspace/ui/components/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { use as ReactUse } from "react";
-import { PageDashboardHeader } from "@/components/sections/page-dashboard-header";
+import { PageDashboardHeader } from "@/app/[lang]/(landing)/_components/sections/page-dashboard-header";
 import { hc } from "@/lib/api-client";
 import { useShippingZones } from "../_components/use-zones";
 import { ZoneList } from "../_components/zone-list";

@@ -6,7 +6,7 @@ import {
 	FeaturesSection,
 	HeroSection,
 	TestimonialsSection,
-} from "@/components/sections";
+} from "@/app/[lang]/(landing)/_components/sections";
 
 export default function HomePage() {
 	return (

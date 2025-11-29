@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@workspace/ui/components/button";
 import { useState } from "react";
-import { PageDashboardHeader } from "@/components/sections/page-dashboard-header";
+import { PageDashboardHeader } from "@/app/[lang]/(landing)/_components/sections/page-dashboard-header";
 import { ClientList } from "./_components/client-list";
 import { ClientModal } from "./_components/client-modal";
 import { useClients } from "./hooks";

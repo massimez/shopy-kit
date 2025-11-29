@@ -19,7 +19,7 @@ import {
 } from "@workspace/ui/components/select";
 import { Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { PageDashboardHeader } from "@/components/sections/page-dashboard-header";
+import { PageDashboardHeader } from "@/app/[lang]/(landing)/_components/sections/page-dashboard-header";
 import { hc } from "@/lib/api-client";
 import { useOrders } from "../hooks/use-orders";
 import { EditOrderDialog } from "./edit-order-dialog";

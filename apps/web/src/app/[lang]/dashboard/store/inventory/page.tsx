@@ -7,11 +7,11 @@ import {
 	TabsTrigger,
 } from "@workspace/ui/components/tabs";
 import { useState } from "react";
+import { PageDashboardHeader } from "@/app/[lang]/(landing)/_components/sections/page-dashboard-header";
 import {
 	useActiveOrganization,
 	useGetLocations,
 } from "@/app/[lang]/dashboard/organization/queries";
-import { PageDashboardHeader } from "@/components/sections/page-dashboard-header";
 import {
 	BatchesList,
 	BatchModal,

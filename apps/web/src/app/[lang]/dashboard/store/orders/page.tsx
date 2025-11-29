@@ -13,7 +13,7 @@ import {
 import { Search, X } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 import { useState } from "react";
-import { PageDashboardHeader } from "@/components/sections/page-dashboard-header";
+import { PageDashboardHeader } from "@/app/[lang]/(landing)/_components/sections/page-dashboard-header";
 import { useNuqsPagination } from "@/hooks/use-nuqs-pagination";
 import { hc } from "@/lib/api-client";
 import { EditOrderDialog } from "./_components/edit-order-dialog";

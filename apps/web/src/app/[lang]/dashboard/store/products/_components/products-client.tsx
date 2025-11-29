@@ -14,7 +14,7 @@ import {
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { parseAsString, useQueryState } from "nuqs";
-import { PageDashboardHeader } from "@/components/sections/page-dashboard-header";
+import { PageDashboardHeader } from "@/app/[lang]/(landing)/_components/sections/page-dashboard-header";
 import { DEFAULT_LOCALE, LOCALES } from "@/constants/locales";
 import { useNuqsPagination } from "@/hooks/use-nuqs-pagination";
 import { hc } from "@/lib/api-client";
