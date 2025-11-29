@@ -11,6 +11,7 @@ import { hasOrgPermission } from "@/middleware/org-permission";
 
 import {
 	type CommitParams,
+	cleanupOrphanFiles,
 	commitUploads,
 	deleteUploadedFile,
 	type PresignParams,
@@ -49,7 +50,12 @@ const storageRoutes = createRouter()
 				const tenantId = activeOrgId || user?.id;
 				const presignParams: PresignParams = c.req.valid("json");
 
-				const result = await presignUpload(presignParams, user, tenantId);
+				const result = await presignUpload(
+					presignParams,
+					user,
+					tenantId,
+					activeOrgId,
+				);
 
 				return c.json(createSuccessResponse(result));
 			} catch (error) {
@@ -123,6 +129,23 @@ const storageRoutes = createRouter()
 				);
 			} catch (error) {
 				return handleRouteError(c, error, "delete upload");
+			}
+		},
+	)
+
+	// POST: Cleanup orphan files (admin only or scheduled job)
+	.post(
+		"/cleanup",
+		authMiddleware,
+		// TODO: Add admin check or secret key check for security
+		async (c) => {
+			try {
+				const result = await cleanupOrphanFiles();
+				return c.json(
+					createSuccessResponse(result, "Orphan files cleaned up successfully"),
+				);
+			} catch (error) {
+				return handleRouteError(c, error, "cleanup orphan files");
 			}
 		},
 	);

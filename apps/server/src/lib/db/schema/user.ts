@@ -95,29 +95,3 @@ export const verification = pgTable(
 	},
 	(table) => [index("verification_identifier_idx").on(table.identifier)],
 );
-
-export const uploads = pgTable("uploads", {
-	id: uuid("id").defaultRandom().primaryKey(),
-
-	fileKey: text("file_key").notNull(),
-	bucket: varchar("bucket", { length: 100 }).notNull(),
-	contentType: varchar("content_type", { length: 100 }),
-	size: integer("size"), // in bytes
-
-	//structured metadata (like dimensions, thumbnails, etc.)
-	metadata: jsonb("metadata").default(null),
-
-	// Who initiated the upload (optional)
-	userId: text("user_id"),
-
-	// Upload status
-	status: varchar("status", { length: 20 })
-		.notNull()
-		.$default(() => "pending"), // "pending" | "committed" | "failed"
-
-	// When the upload token was generated
-	expiresAt: timestamp("expires_at", { withTimezone: true }).defaultNow(),
-
-	// Audit fields
-	...softAudit,
-});

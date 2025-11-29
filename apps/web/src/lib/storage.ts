@@ -20,6 +20,7 @@ export async function uploadPublic(file: File): Promise<UploadResult> {
 				fileName: file.name,
 				contentType: file.type,
 				visibility: "public",
+				size: file.size,
 			},
 		});
 
@@ -63,6 +64,14 @@ export async function uploadPublic(file: File): Promise<UploadResult> {
 			fileSize: file.size,
 			error: error instanceof Error ? error.message : String(error),
 		});
+
+		// Check for specific error messages
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		if (errorMessage.includes("Storage limit exceeded")) {
+			throw new Error(
+				"Storage limit exceeded. Please contact your administrator.",
+			);
+		}
 
 		// Re-throw with context
 		throw new Error(

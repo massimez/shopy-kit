@@ -103,7 +103,9 @@ export default function NewProductPage({
 							});
 						} catch (error) {
 							console.error(`Failed to upload ${img.name}:`, error);
-							toast.error(`Failed to upload ${img.name}`);
+							const errorMessage =
+								error instanceof Error ? error.message : "Unknown error";
+							toast.error(`Failed to upload ${img.name}: ${errorMessage}`);
 							uploadResults.push(img); // Return original on failure
 						}
 					}
