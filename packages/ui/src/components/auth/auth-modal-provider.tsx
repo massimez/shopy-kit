@@ -44,7 +44,6 @@ export function AuthModalProvider({
 	onSignInSuccess,
 	onSignUpSuccess,
 	onPasswordResetSuccess,
-	router,
 	toast,
 }: AuthModalProviderProps) {
 	const [view, setView] = useState<ViewType>(defaultView);
@@ -263,6 +262,7 @@ export function AuthModalProvider({
 			/>
 		),
 		resetPasswordOtp: <ResetPasswordOtp {...resetPasswordProps} />,
+		// biome-ignore lint/style/noNonNullAssertion: <>
 		verificationOtp: <OtpVerification {...otpProps!} />,
 	};
 	return (

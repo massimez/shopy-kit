@@ -25,6 +25,7 @@ const ModalRenderer = () => {
 			<AuthModalProvider
 				open={true}
 				onOpenChange={(open) => !open && closeModal()}
+				// biome-ignore lint/suspicious/noExplicitAny: <>
 				defaultView={modalType as any}
 				authClient={authClient}
 				router={router}
