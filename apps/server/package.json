@@ -16,14 +16,14 @@
 	},
 	"exports": {
 		"./hc": {
-			"types": "./dist/hc.d.ts",
-			"import": "./dist/hc.js",
-			"require": "./dist/hc.js"
+			"types": "./dist/hc.d.mts",
+			"import": "./dist/hc.mjs",
+			"require": "./dist/hc.mjs"
 		},
 		"./schema": {
-			"types": "./dist/schema.d.ts",
-			"import": "./dist/schema.js",
-			"require": "./dist/schema.js"
+			"types": "./dist/schema.d.mts",
+			"import": "./dist/schema.mjs",
+			"require": "./dist/schema.mjs"
 		}
 	},
 	"dependencies": {
@@ -38,7 +38,7 @@
 		"zod": "4.1.13"
 	},
 	"devDependencies": {
-		"tsdown": "^0.15.11",
-		"drizzle-kit": "^0.31.6"
+		"drizzle-kit": "^0.31.6",
+		"tsdown": "0.17.0-beta.1"
 	}
 }
