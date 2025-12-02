@@ -1,3 +1,4 @@
+import type { TransactionDb } from "@/types/db";
 import { getActiveBonusProgram } from "./bonus-program.service";
 import { awardPoints } from "./points.service";
 import { calculateUserTier } from "./tier.service";
@@ -86,6 +87,7 @@ export async function awardCashback(
 	orderId: string,
 	orderTotal: number,
 	status: "pending" | "confirmed" = "pending",
+	tx?: TransactionDb,
 ) {
 	// Get active bonus program
 	const program = await getActiveBonusProgram(organizationId);
@@ -113,24 +115,27 @@ export async function awardCashback(
 	}
 
 	// Award points
-	const transaction = await awardPoints({
-		userId,
-		organizationId,
-		bonusProgramId: program.id,
-		points: cashback.points,
-		type: "earned_purchase",
-		description: `Cashback for order (${cashback.multiplier}x multiplier)`,
-		orderId,
-		status,
-		expiresAt,
-		metadata: {
-			orderTotal,
-			basePoints: cashback.basePoints,
-			multiplier: cashback.multiplier,
-			tierId: cashback.tier?.id,
-			tierName: cashback.tier?.name,
+	const transaction = await awardPoints(
+		{
+			userId,
+			organizationId,
+			bonusProgramId: program.id,
+			points: cashback.points,
+			type: "earned_purchase",
+			description: `Cashback for order (${cashback.multiplier}x multiplier)`,
+			orderId,
+			status,
+			expiresAt,
+			metadata: {
+				orderTotal,
+				basePoints: cashback.basePoints,
+				multiplier: cashback.multiplier,
+				tierId: cashback.tier?.id,
+				tierName: cashback.tier?.name,
+			},
 		},
-	});
+		tx,
+	);
 
 	return {
 		transaction,

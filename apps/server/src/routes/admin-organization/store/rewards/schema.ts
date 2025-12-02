@@ -33,7 +33,7 @@ export const updateBonusProgramSchema = createBonusProgramSchema.partial();
  * ---------------------------------------------------------------------------
  */
 export const createTierSchema = z.object({
-	bonusProgramId: z.string().uuid(),
+	bonusProgramId: z.uuid(),
 	name: z.string().min(1).max(100),
 	slug: z.string().min(1).max(100),
 	minPoints: z.number().int().min(0),
@@ -87,9 +87,9 @@ export const createRewardSchema = z.object({
 		.optional(),
 	maxRedemptionsPerUser: z.number().int().positive().optional(),
 	totalRedemptionsLimit: z.number().int().positive().optional(),
-	validFrom: z.string().datetime().optional(),
-	validUntil: z.string().datetime().optional(),
-	image: z.string().url().optional(),
+	validFrom: z.iso.datetime().optional(),
+	validUntil: z.iso.datetime().optional(),
+	image: z.url().optional(),
 	sortOrder: z.number().int().optional(),
 	metadata: z.record(z.string(), z.any()).optional(),
 });
@@ -101,7 +101,7 @@ export const updateRewardSchema = createRewardSchema
 	.partial();
 
 export const redeemRewardSchema = z.object({
-	rewardId: z.string().uuid(),
+	rewardId: z.uuid(),
 });
 
 /**
@@ -156,7 +156,7 @@ export const applyCouponSchema = z.object({
 });
 
 export const cancelCouponSchema = z.object({
-	couponId: z.string().uuid(),
+	couponId: z.uuid(),
 });
 
 /**
@@ -168,5 +168,5 @@ export const awardPointsManualSchema = z.object({
 	userId: z.string(),
 	points: z.number().int(),
 	description: z.string().optional(),
-	expiresAt: z.string().datetime().optional(),
+	expiresAt: z.iso.datetime().optional(),
 });

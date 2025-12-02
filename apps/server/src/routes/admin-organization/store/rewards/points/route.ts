@@ -9,6 +9,7 @@ import {
 	idParamSchema,
 	jsonValidator,
 	paramValidator,
+	queryValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
 import { authMiddleware } from "@/middleware/auth";
@@ -210,36 +211,28 @@ export const pointsAdminRoute = createRouter()
 
 	/**
 	 * GET /points/balance/:userId
-	 * Get user's points balance
+	 * Get user's points balance with tier information
 	 */
 	.get(
 		"/points/balance/:userId",
 		authMiddleware,
-		paramValidator(idParamSchema.extend({ userId: idParamSchema.shape.id })),
+		hasOrgPermission("rewards:read"),
+		paramValidator(
+			z.object({
+				userId: idParamSchema.shape.id,
+			}),
+		),
+		queryValidator(
+			z.object({
+				bonusProgramId: z.string(),
+			}),
+		),
 		async (c) => {
 			try {
 				const { userId } = c.req.valid("param");
-				const sessionUserId = c.get("session")?.user?.id;
-
-				// Users can view their own balance, admins can view any user's balance
-				if (userId !== sessionUserId) {
-					const hasPermission = c
-						.get("session")
-						?.permissions?.includes("rewards:read");
-					if (!hasPermission) {
-						return c.json(
-							createErrorResponse("ForbiddenError", "Access denied", [
-								{
-									code: "FORBIDDEN",
-									path: ["userId"],
-									message: "You can only view your own points balance",
-								},
-							]),
-							403,
-						);
-					}
-				}
-
+				const organizationId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
 				const bonusProgramId = c.req.query("bonusProgramId");
 
 				if (!bonusProgramId) {
@@ -261,7 +254,48 @@ export const pointsAdminRoute = createRouter()
 
 				const balance = await getPointsBalance(userId, bonusProgramId);
 
-				return c.json(createSuccessResponse(balance));
+				// Verify the bonus program belongs to the current organization
+				const { db } = await import("@/lib/db");
+				const { bonusProgram } = await import("@/lib/db/schema");
+				const { eq } = await import("drizzle-orm");
+
+				const program = await db.query.bonusProgram.findFirst({
+					where: eq(bonusProgram.id, bonusProgramId),
+				});
+
+				if (!program || program.organizationId !== organizationId) {
+					return c.json(
+						createErrorResponse(
+							"ForbiddenError",
+							"Access denied to this bonus program",
+							[
+								{
+									code: "FORBIDDEN",
+									path: ["bonusProgramId"],
+									message:
+										"You do not have access to this bonus program or it does not exist",
+								},
+							],
+						),
+						403,
+					);
+				}
+
+				// Calculate tier information
+				const { calculateUserTier } = await import("../tier.service");
+				const tierInfo = await calculateUserTier(userId, bonusProgramId);
+
+				return c.json(
+					createSuccessResponse({
+						...balance,
+						nextTier: tierInfo?.nextTier
+							? {
+									name: tierInfo.nextTier.name,
+									minPoints: tierInfo.nextTier.minPoints,
+								}
+							: null,
+					}),
+				);
 			} catch (error) {
 				return handleRouteError(c, error, "fetch points balance");
 			}
@@ -275,30 +309,21 @@ export const pointsAdminRoute = createRouter()
 	.get(
 		"/points/history/:userId",
 		authMiddleware,
-		paramValidator(idParamSchema.extend({ userId: idParamSchema.shape.id })),
+		paramValidator(
+			z.object({
+				userId: idParamSchema.shape.id,
+			}),
+		),
+		queryValidator(
+			z.object({
+				bonusProgramId: z.string(),
+				limit: z.string().optional(),
+				offset: z.string().optional(),
+			}),
+		),
 		async (c) => {
 			try {
-				const { userId } = c.req.valid("param");
-				const sessionUserId = c.get("session")?.user?.id;
-
-				// Users can view their own history, admins can view any user's history
-				if (userId !== sessionUserId) {
-					const hasPermission = c
-						.get("session")
-						?.permissions?.includes("rewards:read");
-					if (!hasPermission) {
-						return c.json(
-							createErrorResponse("ForbiddenError", "Access denied", [
-								{
-									code: "FORBIDDEN",
-									path: ["userId"],
-									message: "You can only view your own transaction history",
-								},
-							]),
-							403,
-						);
-					}
-				}
+				const sessionUserId = c.get("session")?.userId as string;
 
 				const bonusProgramId = c.req.query("bonusProgramId");
 				const limit = Number.parseInt(c.req.query("limit") || "20", 10);
@@ -322,7 +347,7 @@ export const pointsAdminRoute = createRouter()
 				}
 
 				const history = await getTransactionHistory(
-					userId,
+					sessionUserId,
 					bonusProgramId,
 					limit,
 					offset,

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { createRouter } from "@/lib/create-hono-app";
 import {
 	createErrorResponse,
@@ -8,12 +9,14 @@ import {
 	idParamSchema,
 	jsonValidator,
 	paramValidator,
+	queryValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
 import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import {
 	getReferralStats,
+	getReferralsByProgram,
 	trackReferral,
 	validateReferralCode,
 } from "../referral.service";
@@ -78,30 +81,48 @@ export const referralRoute = createRouter()
 		"/referrals/stats/:userId",
 		authMiddleware,
 		hasOrgPermission("rewards:read"),
-		paramValidator(idParamSchema.extend({ userId: idParamSchema.shape.id })),
+		paramValidator(z.object({ userId: idParamSchema.shape.id })),
+		queryValidator(z.object({ bonusProgramId: z.string() })),
 		async (c) => {
 			try {
 				const { userId } = c.req.valid("param");
-				const bonusProgramId = c.req.query("bonusProgramId");
+				const organizationId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+				const { bonusProgramId } = c.req.valid("query");
 
-				if (!bonusProgramId) {
+				// Verify the bonus program belongs to the current organization
+				const { db } = await import("@/lib/db");
+				const { bonusProgram } = await import("@/lib/db/schema");
+				const { eq } = await import("drizzle-orm");
+
+				const program = await db.query.bonusProgram.findFirst({
+					where: eq(bonusProgram.id, bonusProgramId),
+				});
+
+				if (!program || program.organizationId !== organizationId) {
 					return c.json(
 						createErrorResponse(
-							"ValidationError",
-							"bonusProgramId is required",
+							"ForbiddenError",
+							"Access denied to this bonus program",
 							[
 								{
-									code: "REQUIRED",
+									code: "FORBIDDEN",
 									path: ["bonusProgramId"],
-									message: "bonusProgramId query parameter is required",
+									message:
+										"You do not have access to this bonus program or it does not exist",
 								},
 							],
 						),
-						400,
+						403,
 					);
 				}
 
-				const stats = await getReferralStats(userId, bonusProgramId);
+				const stats = await getReferralStats(
+					userId,
+					bonusProgramId,
+					organizationId,
+				);
 
 				return c.json(createSuccessResponse(stats));
 			} catch (error) {
@@ -111,9 +132,62 @@ export const referralRoute = createRouter()
 	)
 
 	/**
+	 * GET /referrals/program/:programId
+	 * Get all referrals for a bonus program (admin)
+	 */
+	.get(
+		"/referrals/program/:programId",
+		authMiddleware,
+		hasOrgPermission("rewards:read"),
+		paramValidator(z.object({ programId: z.string().uuid() })),
+		async (c) => {
+			try {
+				const { programId } = c.req.valid("param");
+				const organizationId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+
+				// Verify the bonus program belongs to the current organization
+				const { db } = await import("@/lib/db");
+				const { bonusProgram } = await import("@/lib/db/schema");
+				const { eq } = await import("drizzle-orm");
+
+				const program = await db.query.bonusProgram.findFirst({
+					where: eq(bonusProgram.id, programId),
+				});
+
+				if (!program || program.organizationId !== organizationId) {
+					return c.json(
+						createErrorResponse(
+							"ForbiddenError",
+							"Access denied to this bonus program",
+							[
+								{
+									code: "FORBIDDEN",
+									path: ["programId"],
+									message:
+										"You do not have access to this bonus program or it does not exist",
+								},
+							],
+						),
+						403,
+					);
+				}
+
+				const data = await getReferralsByProgram(programId, organizationId);
+
+				return c.json(createSuccessResponse(data));
+			} catch (error) {
+				return handleRouteError(c, error, "fetch program referrals");
+			}
+		},
+	)
+
+	/**
 	 * POST /referrals/track
 	 * Track a referral signup (admin endpoint)
 	 */
+
 	.post(
 		"/referrals/track",
 		authMiddleware,

@@ -14,6 +14,7 @@ import {
 	PieChart,
 	Settings2,
 	StoreIcon,
+	Trophy,
 } from "lucide-react";
 import type * as React from "react";
 
@@ -83,7 +84,18 @@ const data = {
 				},
 			],
 		},
-
+		{
+			title: "Rewards",
+			url: "#",
+			icon: Trophy,
+			isActive: true,
+			items: [
+				{
+					title: "Programs",
+					url: "/dashboard/rewards/programs",
+				},
+			],
+		},
 		{
 			title: "Settings",
 			url: "#",

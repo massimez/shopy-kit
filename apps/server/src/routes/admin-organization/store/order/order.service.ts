@@ -8,6 +8,7 @@ import {
 	incrementClientUncompletedOrders,
 	updateClientStatsOnOrderCompletion,
 } from "../client/client.service";
+import { createStockTransaction } from "../inventory/inventory.service";
 import { checkMilestonesForEvent } from "../rewards/milestone.service";
 import {
 	cancelPendingPoints,
@@ -247,58 +248,62 @@ export async function createOrder(
 }
 
 /**
- * Adjust inventory for order completion
+ * Adjust inventory for order completion by creating sale transactions
  */
 export async function adjustInventoryForCompletion(
+	orderId: string,
 	orderItems: Array<{
 		productVariantId: string;
 		organizationId: string;
 		quantity: number;
 		locationId: string;
+		unitPrice?: string;
 	}>,
+	activeOrgId: string,
 	tx: TransactionDb,
 ) {
 	for (const item of orderItems) {
-		const { productVariantId, organizationId, quantity, locationId } = item;
+		const { productVariantId, quantity, locationId, unitPrice } = item;
 
+		// Get current stock to determine unit cost
 		const currentStock = await tx.query.productVariantStock.findFirst({
 			where: and(
 				eq(schema.productVariantStock.productVariantId, productVariantId),
-				eq(schema.productVariantStock.organizationId, organizationId),
+				eq(schema.productVariantStock.organizationId, activeOrgId),
 				eq(schema.productVariantStock.locationId, locationId),
 			),
-			columns: {
-				quantity: true,
-				reservedQuantity: true,
-			},
 		});
 
+		// Create sale transaction with negative quantityChange
+		const transactionData = {
+			productVariantId,
+			locationId,
+			quantityChange: -quantity, // Negative for selling
+			reason: "sale" as const,
+			referenceId: orderId,
+			// Use selling price as unitCost for tracking revenue
+			unitCost: unitPrice,
+			organizationId: activeOrgId,
+		};
+
+		await createStockTransaction(transactionData, activeOrgId);
+
+		// Reduce reserved quantity since these items are now sold
 		if (currentStock) {
-			const newQty = Number(currentStock.quantity || 0) - Number(quantity || 0);
 			const newReservedQty =
-				Number(currentStock.reservedQuantity || 0) - Number(quantity || 0);
-			const safeQty = Math.max(0, newQty);
+				Number(currentStock.reservedQuantity || 0) - Number(quantity);
 			const safeReservedQty = Math.max(0, newReservedQty);
 
 			await tx
 				.update(schema.productVariantStock)
-				.set({ quantity: safeQty, reservedQuantity: safeReservedQty })
+				.set({ reservedQuantity: safeReservedQty })
 				.where(
 					and(
 						eq(schema.productVariantStock.productVariantId, productVariantId),
-						eq(schema.productVariantStock.organizationId, organizationId),
+						eq(schema.productVariantStock.organizationId, activeOrgId),
 						eq(schema.productVariantStock.locationId, locationId),
 					),
 				);
-		} else {
-			// Edge case: create stock record with negative quantities
-			await tx.insert(schema.productVariantStock).values({
-				productVariantId,
-				organizationId,
-				locationId,
-				quantity: -Number(quantity || 0),
-				reservedQuantity: -Number(quantity || 0),
-			});
 		}
 	}
 }
@@ -373,7 +378,7 @@ export async function completeOrder(orderId: string, activeOrgId: string) {
 			where: eq(schema.orderItem.orderId, orderId),
 		});
 
-		await adjustInventoryForCompletion(orderItems, tx);
+		await adjustInventoryForCompletion(orderId, orderItems, activeOrgId, tx);
 
 		// Process bonus completion
 		if (ord?.userId) {

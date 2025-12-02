@@ -1,10 +1,9 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 import { order, orderItem } from "@/lib/db/schema/store/order";
 import { incrementClientUncompletedOrders } from "@/routes/admin-organization/store/client/client.service";
 import { awardCashback } from "@/routes/admin-organization/store/rewards/cashback.service";
-import { checkMilestonesForEvent } from "@/routes/admin-organization/store/rewards/milestone.service";
 import type { TransactionDb } from "@/types/db";
 
 // Types
@@ -203,13 +202,7 @@ async function addPendingBonus(
 	tx: TransactionDb,
 ) {
 	// Award cashback points (pending status)
-	const cashbackResult = await awardCashback(
-		userId,
-		organizationId,
-		orderId,
-		subtotal,
-		"pending",
-	);
+	await awardCashback(userId, organizationId, orderId, subtotal, "pending", tx);
 
 	// Note: Milestone checking for first_purchase happens in cashback service
 }

@@ -201,7 +201,19 @@ export async function awardReferralBonuses(
 /**
  * Get referral statistics for user
  */
-export async function getReferralStats(userId: string, bonusProgramId: string) {
+export async function getReferralStats(
+	userId: string,
+	bonusProgramId: string,
+	organizationId: string,
+) {
+	// Get or create the user's referral code
+	const userReferral = await getOrCreateReferralCode(
+		userId,
+		organizationId,
+		bonusProgramId,
+	);
+
+	// Get all referrals made by this user
 	const referrals = await db.query.referral.findMany({
 		where: and(
 			eq(schema.referral.referrerId, userId),
@@ -209,14 +221,71 @@ export async function getReferralStats(userId: string, bonusProgramId: string) {
 		),
 	});
 
-	const totalReferrals = referrals.length;
-	const successfulReferrals = referrals.filter((r) => r.signedUpAt).length;
+	// Total referrals = successful referrals (where someone actually signed up)
+	const totalReferrals = referrals.filter((r) => r.signedUpAt).length;
+	const successfulReferrals = totalReferrals; // These are the same - successful = completed
 	const bonusesEarned = referrals.filter((r) => r.referrerBonusGiven).length;
 
 	return {
+		referralCode: userReferral.referralCode,
 		totalReferrals,
 		successfulReferrals,
 		bonusesEarned,
 		referrals,
+	};
+}
+
+/**
+ * Get all referrals for a bonus program (admin)
+ */
+export async function getReferralsByProgram(
+	bonusProgramId: string,
+	organizationId: string,
+) {
+	// Get all referrals for this program
+	const referrals = await db.query.referral.findMany({
+		where: and(
+			eq(schema.referral.bonusProgramId, bonusProgramId),
+			eq(schema.referral.organizationId, organizationId),
+		),
+		with: {
+			referrer: {
+				columns: {
+					id: true,
+					name: true,
+					email: true,
+				},
+			},
+			referredUser: {
+				columns: {
+					id: true,
+					name: true,
+					email: true,
+				},
+			},
+		},
+		orderBy: (referral, { desc }) => [desc(referral.createdAt)],
+	});
+
+	// Calculate aggregate statistics
+	const totalReferrals = referrals.length;
+	const successfulReferrals = referrals.filter((r) => r.signedUpAt).length;
+	const pendingReferrals = totalReferrals - successfulReferrals;
+	const referrerBonusesAwarded = referrals.filter(
+		(r) => r.referrerBonusGiven,
+	).length;
+	const refereeBonusesAwarded = referrals.filter(
+		(r) => r.refereeBonusGiven,
+	).length;
+
+	return {
+		referrals,
+		stats: {
+			totalReferrals,
+			successfulReferrals,
+			pendingReferrals,
+			referrerBonusesAwarded,
+			refereeBonusesAwarded,
+		},
 	};
 }

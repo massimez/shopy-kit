@@ -215,7 +215,7 @@ export async function getBonusProgramStats(
 			and(
 				eq(schema.userBonusAccount.bonusProgramId, programId),
 				eq(schema.userBonusAccount.organizationId, organizationId),
-				sql`${schema.userBonusAccount.lastEarnedAt} >= ${thirtyDaysAgo}`,
+				sql`${schema.userBonusAccount.lastEarnedAt} >= ${thirtyDaysAgo.toISOString()}`,
 			),
 		);
 

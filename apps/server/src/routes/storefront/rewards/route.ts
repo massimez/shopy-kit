@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createRouter } from "@/lib/create-hono-app";
 import {
+	createErrorResponse,
 	createSuccessResponse,
 	handleRouteError,
 } from "@/lib/utils/route-helpers";
@@ -10,8 +11,14 @@ import {
 	validateOrgId,
 } from "@/lib/utils/validator";
 import { authMiddleware } from "@/middleware/auth";
-import { getActiveBonusProgram } from "@/routes/admin-organization/store/rewards/bonus-program.service";
-import { getUserCoupons } from "@/routes/admin-organization/store/rewards/coupon.service";
+import {
+	getActiveBonusProgram,
+	getBonusProgramStats,
+} from "@/routes/admin-organization/store/rewards/bonus-program.service";
+import {
+	applyCoupon,
+	getUserCoupons,
+} from "@/routes/admin-organization/store/rewards/coupon.service";
 import { getUserMilestones } from "@/routes/admin-organization/store/rewards/milestone.service";
 import {
 	getPointsBalance,
@@ -25,7 +32,10 @@ import {
 	getAvailableRewards,
 	redeemReward,
 } from "@/routes/admin-organization/store/rewards/reward.service";
-import { redeemRewardSchema } from "@/routes/admin-organization/store/rewards/schema";
+import {
+	applyCouponSchema,
+	redeemRewardSchema,
+} from "@/routes/admin-organization/store/rewards/schema";
 import { calculateUserTier } from "@/routes/admin-organization/store/rewards/tier.service";
 
 const paginationSchema = z.object({
@@ -38,27 +48,25 @@ export const storefrontRewardsRoute = createRouter()
 	 * GET /api/storefront/rewards/balance
 	 * Get user's points balance and tier info
 	 */
-	.get("/rewards/balance", authMiddleware, async (c) => {
+	.get("/balance", authMiddleware, async (c) => {
 		try {
 			const organizationId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
 			);
-			const user = c.get("user");
-
-			if (!user?.id) {
-				return c.json({ error: "Unauthorized" }, 401);
-			}
+			const user = c.get("user") as { id: string };
 
 			// Get active bonus program
 			const program = await getActiveBonusProgram(organizationId);
 
 			if (!program) {
 				return c.json(
-					createSuccessResponse({
-						hasProgram: false,
-						balance: null,
-						tier: null,
-					}),
+					createErrorResponse("NO_ACTIVE_PROGRAM", "No active bonus program", [
+						{
+							code: "NO_ACTIVE_PROGRAM",
+							path: ["rewards"],
+							message: "",
+						},
+					]),
 				);
 			}
 
@@ -90,7 +98,7 @@ export const storefrontRewardsRoute = createRouter()
 	 * Get user's transaction history
 	 */
 	.get(
-		"/rewards/history",
+		"/history",
 		authMiddleware,
 		queryValidator(paginationSchema),
 		async (c) => {
@@ -98,12 +106,8 @@ export const storefrontRewardsRoute = createRouter()
 				const organizationId = validateOrgId(
 					c.get("session")?.activeOrganizationId as string,
 				);
-				const user = c.get("user");
+				const user = c.get("user") as { id: string };
 				const { limit, offset } = c.req.valid("query");
-
-				if (!user?.id) {
-					return c.json({ error: "Unauthorized" }, 401);
-				}
 
 				// Get active bonus program
 				const program = await getActiveBonusProgram(organizationId);
@@ -136,26 +140,30 @@ export const storefrontRewardsRoute = createRouter()
 	 * GET /api/storefront/rewards/available
 	 * Get available rewards user can redeem
 	 */
-	.get("/rewards/available", authMiddleware, async (c) => {
+	.get("/available", authMiddleware, async (c) => {
 		try {
 			const organizationId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
 			);
-			const user = c.get("user");
-
-			if (!user?.id) {
-				return c.json({ error: "Unauthorized" }, 401);
-			}
+			const user = c.get("user") as { id: string };
 
 			// Get active bonus program
 			const program = await getActiveBonusProgram(organizationId);
 
 			if (!program) {
-				return c.json(createSuccessResponse({ rewards: [] }));
+				return c.json(
+					createErrorResponse("NO_ACTIVE_PROGRAM", "No active bonus program", [
+						{
+							code: "NO_ACTIVE_PROGRAM",
+							path: ["rewards"],
+							message: "",
+						},
+					]),
+				);
 			}
 
 			// Get available rewards
-			const rewards = await getAvailableRewards(user.id, program.id);
+			const rewards = await getAvailableRewards(user?.id, program.id);
 
 			return c.json(createSuccessResponse({ rewards }));
 		} catch (error) {
@@ -168,7 +176,7 @@ export const storefrontRewardsRoute = createRouter()
 	 * Redeem a reward
 	 */
 	.post(
-		"/rewards/redeem",
+		"/redeem",
 		authMiddleware,
 		jsonValidator(redeemRewardSchema),
 		async (c) => {
@@ -176,18 +184,26 @@ export const storefrontRewardsRoute = createRouter()
 				const organizationId = validateOrgId(
 					c.get("session")?.activeOrganizationId as string,
 				);
-				const user = c.get("user");
+				const user = c.get("user") as { id: string };
 				const { rewardId } = c.req.valid("json");
-
-				if (!user?.id) {
-					return c.json({ error: "Unauthorized" }, 401);
-				}
 
 				// Get active bonus program
 				const program = await getActiveBonusProgram(organizationId);
 
 				if (!program) {
-					return c.json({ error: "No active bonus program" }, 400);
+					return c.json(
+						createErrorResponse(
+							"NO_ACTIVE_PROGRAM",
+							"No active bonus program",
+							[
+								{
+									code: "NO_ACTIVE_PROGRAM",
+									path: ["rewards"],
+									message: "",
+								},
+							],
+						),
+					);
 				}
 
 				// Redeem reward
@@ -212,16 +228,12 @@ export const storefrontRewardsRoute = createRouter()
 	 * GET /api/storefront/rewards/coupons
 	 * Get user's coupons
 	 */
-	.get("/rewards/coupons", authMiddleware, async (c) => {
+	.get("/coupons", authMiddleware, async (c) => {
 		try {
 			const organizationId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
 			);
-			const user = c.get("user");
-
-			if (!user?.id) {
-				return c.json({ error: "Unauthorized" }, 401);
-			}
+			const user = c.get("user") as { id: string };
 
 			// Get user's coupons
 			const coupons = await getUserCoupons(user.id, organizationId, false);
@@ -236,24 +248,27 @@ export const storefrontRewardsRoute = createRouter()
 	 * GET /api/storefront/rewards/referral-code
 	 * Get user's referral code
 	 */
-	.get("/rewards/referral-code", authMiddleware, async (c) => {
+	.get("/referral", authMiddleware, async (c) => {
 		try {
 			const organizationId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
 			);
-			const user = c.get("user");
-
-			if (!user?.id) {
-				return c.json({ error: "Unauthorized" }, 401);
-			}
+			const user = c.get("user") as { id: string };
 
 			// Get active bonus program
 			const program = await getActiveBonusProgram(organizationId);
 
 			if (!program) {
-				return c.json({ error: "No active bonus program" }, 400);
+				return c.json(
+					createErrorResponse("NO_ACTIVE_PROGRAM", "No active bonus program", [
+						{
+							code: "NO_ACTIVE_PROGRAM",
+							path: ["rewards"],
+							message: "",
+						},
+					]),
+				);
 			}
-
 			// Get or create referral code
 			const referral = await getOrCreateReferralCode(
 				user.id,
@@ -262,7 +277,7 @@ export const storefrontRewardsRoute = createRouter()
 			);
 
 			// Get referral stats
-			const stats = await getReferralStats(user.id, program.id);
+			const stats = await getReferralStats(user.id, program.id, organizationId);
 
 			return c.json(
 				createSuccessResponse({
@@ -283,22 +298,26 @@ export const storefrontRewardsRoute = createRouter()
 	 * GET /api/storefront/rewards/milestones
 	 * Get user's milestone progress
 	 */
-	.get("/rewards/milestones", authMiddleware, async (c) => {
+	.get("/milestones", authMiddleware, async (c) => {
 		try {
 			const organizationId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
 			);
-			const user = c.get("user");
-
-			if (!user?.id) {
-				return c.json({ error: "Unauthorized" }, 401);
-			}
+			const user = c.get("user") as { id: string };
 
 			// Get active bonus program
 			const program = await getActiveBonusProgram(organizationId);
 
 			if (!program) {
-				return c.json(createSuccessResponse({ milestones: [] }));
+				return c.json(
+					createErrorResponse("NO_ACTIVE_PROGRAM", "No active bonus program", [
+						{
+							code: "NO_ACTIVE_PROGRAM",
+							path: ["rewards"],
+							message: "",
+						},
+					]),
+				);
 			}
 
 			// Get user's milestones
@@ -314,22 +333,26 @@ export const storefrontRewardsRoute = createRouter()
 	 * GET /api/storefront/rewards/tier
 	 * Get user's current tier information
 	 */
-	.get("/rewards/tier", authMiddleware, async (c) => {
+	.get("/tier", authMiddleware, async (c) => {
 		try {
 			const organizationId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
 			);
-			const user = c.get("user");
-
-			if (!user?.id) {
-				return c.json({ error: "Unauthorized" }, 401);
-			}
+			const user = c.get("user") as { id: string };
 
 			// Get active bonus program
 			const program = await getActiveBonusProgram(organizationId);
 
 			if (!program) {
-				return c.json(createSuccessResponse({ tier: null }));
+				return c.json(
+					createErrorResponse("NO_ACTIVE_PROGRAM", "No active bonus program", [
+						{
+							code: "NO_ACTIVE_PROGRAM",
+							path: ["rewards"],
+							message: "",
+						},
+					]),
+				);
 			}
 
 			// Get tier info
@@ -339,6 +362,118 @@ export const storefrontRewardsRoute = createRouter()
 		} catch (error) {
 			return handleRouteError(c, error, "fetch tier information");
 		}
-	});
+	})
+
+	/**
+	 * POST /api/storefront/rewards/coupons/validate
+	 * Validate a coupon code
+	 */
+	.post(
+		"/coupons/validate",
+		authMiddleware,
+		jsonValidator(applyCouponSchema),
+		async (c) => {
+			try {
+				const organizationId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+				const { code, orderTotal } = c.req.valid("json");
+
+				try {
+					// Use applyCoupon to check everything (validity, expiration, min order amount)
+					// It throws an error if invalid
+					const result = await applyCoupon(code, organizationId, orderTotal);
+
+					return c.json(
+						createSuccessResponse(
+							{
+								valid: true,
+								coupon: result.coupon,
+								discountAmount: result.discountAmount,
+							},
+							"Coupon is valid",
+						),
+					);
+				} catch (error: unknown) {
+					const errorMessage =
+						error instanceof Error ? error.message : "Unknown error";
+					return c.json(
+						createErrorResponse("ValidationError", errorMessage, [
+							{
+								code: "INVALID_COUPON",
+								path: ["code"],
+								message: errorMessage,
+							},
+						]),
+						400,
+					);
+				}
+			} catch (error) {
+				return handleRouteError(c, error, "validate coupon");
+			}
+		},
+	)
+
+	/**
+	 * GET /api/storefront/rewards/stats
+	 * Get program statistics (total points issued, active users)
+	 */
+	.get("/stats", authMiddleware, async (c) => {
+		try {
+			const organizationId = validateOrgId(
+				c.get("session")?.activeOrganizationId as string,
+			);
+
+			// Get active bonus program
+			const program = await getActiveBonusProgram(organizationId);
+
+			if (!program) {
+				return c.json(
+					createSuccessResponse({
+						totalPointsIssued: 0,
+						activeUsers: 0,
+					}),
+				);
+			}
+
+			// Get program statistics
+			const stats = await getBonusProgramStats(program.id, organizationId);
+
+			return c.json(
+				createSuccessResponse({
+					totalPointsIssued: stats.totalPointsIssued,
+					activeUsers: stats.activeUsers,
+				}),
+			);
+		} catch (error) {
+			return handleRouteError(c, error, "fetch program statistics");
+		}
+	})
+
+	/**
+	 * POST /api/storefront/rewards/coupons/apply
+	 * Apply a coupon to an order
+	 */
+	.post(
+		"/coupons/apply",
+		authMiddleware,
+		jsonValidator(applyCouponSchema),
+		async (c) => {
+			try {
+				const organizationId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+				const { code, orderTotal } = c.req.valid("json");
+
+				const result = await applyCoupon(code, organizationId, orderTotal);
+
+				return c.json(
+					createSuccessResponse(result, "Coupon applied successfully"),
+				);
+			} catch (error) {
+				return handleRouteError(c, error, "apply coupon");
+			}
+		},
+	);
 
 export { storefrontRewardsRoute as rewardsRoutes };

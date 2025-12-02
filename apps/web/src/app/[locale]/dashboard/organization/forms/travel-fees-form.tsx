@@ -138,11 +138,11 @@ export function TravelFeesForm() {
 			travelFeeValue:
 				values.travelFeeValue === ""
 					? undefined
-					: Number(values.travelFeeValue),
+					: Number(values.travelFeeValue).toString(),
 			travelFeeValueByKm:
 				values.travelFeeValueByKm === ""
 					? undefined
-					: Number(values.travelFeeValueByKm),
+					: Number(values.travelFeeValueByKm).toString(),
 			maxTravelDistance:
 				values.maxTravelDistance === ""
 					? undefined
@@ -150,7 +150,7 @@ export function TravelFeesForm() {
 			minimumTravelFees:
 				values.minimumTravelFees === ""
 					? undefined
-					: Number(values.minimumTravelFees),
+					: Number(values.minimumTravelFees).toString(),
 		};
 
 		try {

@@ -60,7 +60,8 @@ export const auth = betterAuth({
 				if (type === "sign-in") {
 					// Send the OTP for sign in
 				} else if (type === "email-verification") {
-					await emailService.sendVerificationEmail(email, otp);
+					console.log(email, otp);
+					// await emailService.sendVerificationEmail(email, otp);
 				} else {
 					await emailService.sendPasswordResetEmail(email, otp);
 				}

@@ -345,6 +345,7 @@ export async function getPointsBalance(userId: string, bonusProgramId: string) {
 			totalRedeemedPoints: 0,
 			totalExpiredPoints: 0,
 			currentTier: null,
+			nextTier: null,
 		};
 	}
 
@@ -355,6 +356,7 @@ export async function getPointsBalance(userId: string, bonusProgramId: string) {
 		totalRedeemedPoints: Number(account.totalRedeemedPoints),
 		totalExpiredPoints: Number(account.totalExpiredPoints),
 		currentTier: account.currentTier,
+		nextTier: null as { name: string; minPoints: number } | null,
 	};
 }
 

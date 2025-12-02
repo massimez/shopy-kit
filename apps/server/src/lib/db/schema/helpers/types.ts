@@ -96,6 +96,7 @@ export type TBonusTransactionType =
 	| "redeemed_discount"
 	| "redeemed_product"
 	| "redeemed_cash"
+	| "deducted_manual"
 	| "expired";
 
 export type TRewardType =
