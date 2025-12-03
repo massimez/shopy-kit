@@ -41,6 +41,7 @@ const createOrderSchema = z.object({
 	customerFullName: z.string().optional(),
 	locationId: z.string().uuid(),
 	userId: z.string().optional(),
+	couponCode: z.string().optional(),
 });
 
 export const ordersRoutes = createRouter()

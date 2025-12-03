@@ -27,6 +27,7 @@ type CreateOrderInput = {
 	customerFullName?: string;
 	locationId: string;
 	userId?: string;
+	couponCode?: string;
 };
 
 // Helper functions (legacy - kept for backward compatibility)
@@ -219,6 +220,34 @@ export async function createStorefrontOrder(payload: CreateOrderInput) {
 		const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 		const userId = payload.userId || null;
 
+		// Apply coupon if provided
+		let discountAmount = 0;
+		let couponId: string | null = null;
+		let finalTotal = subtotal;
+
+		if (payload.couponCode) {
+			// Import applyCoupon function
+			const { applyCoupon } = await import(
+				"@/routes/admin-organization/store/rewards/coupon.service"
+			);
+
+			try {
+				const couponResult = await applyCoupon(
+					payload.couponCode,
+					payload.organizationId,
+					subtotal,
+				);
+				discountAmount = couponResult.discountAmount;
+				couponId = couponResult.coupon.id;
+				finalTotal = couponResult.finalTotal;
+			} catch (error) {
+				// If coupon is invalid, throw error to prevent order creation
+				throw new Error(
+					error instanceof Error ? error.message : "Invalid coupon code",
+				);
+			}
+		}
+
 		// Create order
 		const [newOrder] = await tx
 			.insert(schema.order)
@@ -228,7 +257,8 @@ export async function createStorefrontOrder(payload: CreateOrderInput) {
 				orderNumber,
 				currency: payload.currency,
 				subtotal: subtotal.toString(),
-				totalAmount: subtotal.toString(),
+				discountAmount: discountAmount > 0 ? discountAmount.toString() : null,
+				totalAmount: finalTotal.toString(),
 				shippingAddress: payload.shippingAddress,
 				customerEmail: payload.customerEmail || null,
 				customerPhone: payload.customerPhone || null,
@@ -236,6 +266,14 @@ export async function createStorefrontOrder(payload: CreateOrderInput) {
 				status: "pending",
 			})
 			.returning();
+
+		// Mark coupon as used if applied
+		if (couponId) {
+			const { markCouponAsUsed } = await import(
+				"@/routes/admin-organization/store/rewards/coupon.service"
+			);
+			await markCouponAsUsed(couponId, newOrder.id, tx);
+		}
 
 		// Create order items
 		const createdOrderItems = await tx
@@ -252,8 +290,8 @@ export async function createStorefrontOrder(payload: CreateOrderInput) {
 		// Reserve stock
 		await reserveStockForOrder(createdOrderItems, tx);
 
-		// Add pending bonus
-		if (userId) {
+		// Add pending bonus (only if no coupon was used)
+		if (userId && !couponId) {
 			await addPendingBonus(
 				userId,
 				payload.organizationId,

@@ -1,6 +1,7 @@
 import { and, desc, eq, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
+import type { TransactionDb } from "@/types/db";
 
 /**
  * ---------------------------------------------------------------------------
@@ -127,6 +128,9 @@ export async function applyCoupon(
 		discountAmount = (orderTotal * percentage) / 100;
 	} else if (coupon.type === "fixed_discount" && coupon.discountAmount) {
 		discountAmount = Number(coupon.discountAmount);
+	} else if (coupon.type === "cash_back" && coupon.reward?.cashAmount) {
+		// Cash back coupons use the reward's cashAmount
+		discountAmount = Number(coupon.reward.cashAmount);
 	} else if (coupon.type === "free_shipping") {
 		// Shipping discount would be calculated separately
 		discountAmount = 0;
@@ -145,8 +149,13 @@ export async function applyCoupon(
 /**
  * Mark coupon as used
  */
-export async function markCouponAsUsed(couponId: string, orderId: string) {
-	const [updated] = await db
+export async function markCouponAsUsed(
+	couponId: string,
+	orderId: string,
+	tx?: TransactionDb,
+) {
+	const dbClient = tx || db;
+	const [updated] = await dbClient
 		.update(schema.bonusCoupon)
 		.set({
 			status: "used",
