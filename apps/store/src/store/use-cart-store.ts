@@ -14,20 +14,33 @@ export interface CartItem {
 	variantSku?: string;
 }
 
+export interface AppliedCoupon {
+	code: string;
+	discountAmount: number;
+	couponId: string;
+	type: string;
+}
+
 interface CartState {
 	items: CartItem[];
+	appliedCoupon: AppliedCoupon | null;
 	addItem: (item: CartItem) => void;
 	removeItem: (id: string) => void;
 	updateQuantity: (id: string, quantity: number) => void;
 	clearCart: () => void;
 	total: () => number;
+	subtotal: () => number;
+	finalTotal: () => number;
 	itemCount: () => number;
+	applyCoupon: (coupon: AppliedCoupon) => void;
+	removeCoupon: () => void;
 }
 
 export const useCartStore = create<CartState>()(
 	persist(
 		(set, get) => ({
 			items: [],
+			appliedCoupon: null,
 			addItem: (item) =>
 				set((state) => {
 					// Use productVariantId as the unique identifier to distinguish between different variants
@@ -57,11 +70,19 @@ export const useCartStore = create<CartState>()(
 							: item,
 					),
 				})),
-			clearCart: () => set({ items: [] }),
-			total: () =>
+			clearCart: () => set({ items: [], appliedCoupon: null }),
+			subtotal: () =>
 				get().items.reduce((acc, item) => acc + item.price * item.quantity, 0),
+			total: () => {
+				const subtotal = get().subtotal();
+				const discount = get().appliedCoupon?.discountAmount || 0;
+				return Math.max(0, subtotal - discount);
+			},
+			finalTotal: () => get().total(),
 			itemCount: () =>
 				get().items.reduce((acc, item) => acc + item.quantity, 0),
+			applyCoupon: (coupon) => set({ appliedCoupon: coupon }),
+			removeCoupon: () => set({ appliedCoupon: null }),
 		}),
 		{
 			name: "cart-storage",

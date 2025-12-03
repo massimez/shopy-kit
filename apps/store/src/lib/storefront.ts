@@ -135,6 +135,7 @@ export const storefrontClient = {
 		customerFullName?: string;
 		locationId: string;
 		userId?: string;
+		couponCode?: string;
 	}) => {
 		const response = await hc.api.storefront.orders.$post({
 			json: params,

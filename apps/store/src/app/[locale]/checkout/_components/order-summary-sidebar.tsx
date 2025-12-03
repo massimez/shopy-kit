@@ -8,15 +8,20 @@ import { Separator } from "@workspace/ui/components/separator";
 import { Check, Shield, Truck } from "lucide-react";
 import Image from "next/image";
 import type { CartItem } from "@/store/use-cart-store";
+import { CouponInput } from "./coupon-input";
 
 interface OrderSummarySidebarProps {
 	items: CartItem[];
 	total: number;
+	subtotal: number;
+	discount: number;
 }
 
 export function OrderSummarySidebar({
 	items,
 	total,
+	subtotal,
+	discount,
 }: OrderSummarySidebarProps) {
 	return (
 		<div className="space-y-6 lg:sticky lg:top-6 lg:w-96">
@@ -85,12 +90,25 @@ export function OrderSummarySidebar({
 
 					<Separator className="my-6" />
 
+					{/* Coupon Input */}
+					<CouponInput />
+
+					<Separator className="my-6" />
+
 					{/* Price Breakdown */}
 					<div className="space-y-4">
 						<div className="flex justify-between text-sm">
 							<span className="text-muted-foreground">Subtotal</span>
-							<span className="font-semibold">${total.toFixed(2)}</span>
+							<span className="font-semibold">${subtotal.toFixed(2)}</span>
 						</div>
+						{discount > 0 && (
+							<div className="flex justify-between text-sm">
+								<span className="text-muted-foreground">Discount</span>
+								<span className="font-semibold text-green-600">
+									-${discount.toFixed(2)}
+								</span>
+							</div>
+						)}
 						<div className="flex justify-between text-sm">
 							<span className="text-muted-foreground">Shipping</span>
 							<div className="flex items-center gap-2">

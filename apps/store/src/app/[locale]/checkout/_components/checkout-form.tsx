@@ -36,7 +36,7 @@ export function CheckoutForm({
 	locationId,
 	currency = "USD",
 }: CheckoutFormProps) {
-	const { items, total, clearCart } = useCartStore();
+	const { items, total, subtotal, appliedCoupon, clearCart } = useCartStore();
 	const { data: session } = useSession();
 	const { profile, updateProfile } = useProfile();
 	const router = useRouter();
@@ -234,6 +234,7 @@ export function CheckoutForm({
 					quantity: item.quantity,
 					locationId: item.locationId,
 				})),
+				...(appliedCoupon?.code ? { couponCode: appliedCoupon.code } : {}),
 			};
 
 			console.log(
@@ -396,7 +397,12 @@ export function CheckoutForm({
 				</div>
 
 				{/* Sidebar */}
-				<OrderSummarySidebar items={items} total={total()} />
+				<OrderSummarySidebar
+					items={items}
+					total={total()}
+					subtotal={subtotal()}
+					discount={appliedCoupon?.discountAmount || 0}
+				/>
 			</div>
 		</div>
 	);
