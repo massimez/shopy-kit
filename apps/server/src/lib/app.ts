@@ -1,4 +1,5 @@
 import { adminRoutes } from "@/routes/admin";
+import { financialRoute } from "@/routes/admin-organization/financial";
 import { locationRoute } from "@/routes/admin-organization/organization/location/location";
 import { organizationInfoRoute } from "@/routes/admin-organization/organization/organization-info";
 import { storeRoute } from "@/routes/admin-organization/store";
@@ -16,6 +17,7 @@ const app = createApp()
 	.route("/organizations", organizationInfoRoute)
 	.route("/storage", storageRoutes)
 	.route("/store", storeRoute)
+	.route("/financial", financialRoute)
 	.route("/storefront", storefrontRoutes)
 	.route("/admin", adminRoutes);
 

@@ -11,10 +11,7 @@ import {
 	validateOrgId,
 } from "@/lib/utils/validator";
 import { authMiddleware } from "@/middleware/auth";
-import {
-	getActiveBonusProgram,
-	getBonusProgramStats,
-} from "@/routes/admin-organization/store/rewards/bonus-program.service";
+import { getActiveBonusProgram } from "@/routes/admin-organization/store/rewards/bonus-program.service";
 import {
 	applyCoupon,
 	getUserCoupons,
@@ -185,7 +182,7 @@ export const storefrontRewardsRoute = createRouter()
 					c.get("session")?.activeOrganizationId as string,
 				);
 				const user = c.get("user") as { id: string };
-				const { rewardId } = c.req.valid("json");
+				const { rewardId, payoutDetails } = c.req.valid("json");
 
 				// Get active bonus program
 				const program = await getActiveBonusProgram(organizationId);
@@ -212,6 +209,10 @@ export const storefrontRewardsRoute = createRouter()
 					organizationId,
 					program.id,
 					rewardId,
+					payoutDetails as {
+						type: "paypal" | "bank_transfer";
+						details: Record<string, string>;
+					},
 				);
 
 				return c.json(
@@ -413,42 +414,6 @@ export const storefrontRewardsRoute = createRouter()
 			}
 		},
 	)
-
-	/**
-	 * GET /api/storefront/rewards/stats
-	 * Get program statistics (total points issued, active users)
-	 */
-	.get("/stats", authMiddleware, async (c) => {
-		try {
-			const organizationId = validateOrgId(
-				c.get("session")?.activeOrganizationId as string,
-			);
-
-			// Get active bonus program
-			const program = await getActiveBonusProgram(organizationId);
-
-			if (!program) {
-				return c.json(
-					createSuccessResponse({
-						totalPointsIssued: 0,
-						activeUsers: 0,
-					}),
-				);
-			}
-
-			// Get program statistics
-			const stats = await getBonusProgramStats(program.id, organizationId);
-
-			return c.json(
-				createSuccessResponse({
-					totalPointsIssued: stats.totalPointsIssued,
-					activeUsers: stats.activeUsers,
-				}),
-			);
-		} catch (error) {
-			return handleRouteError(c, error, "fetch program statistics");
-		}
-	})
 
 	/**
 	 * POST /api/storefront/rewards/coupons/apply

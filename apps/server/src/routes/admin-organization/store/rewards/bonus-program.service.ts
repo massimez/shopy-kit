@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 import type { TransactionDb } from "@/types/db";
@@ -63,6 +63,7 @@ export async function getBonusProgram(
 		where: and(
 			eq(schema.bonusProgram.id, programId),
 			eq(schema.bonusProgram.organizationId, organizationId),
+			isNull(schema.bonusProgram.deletedAt),
 		),
 		with: {
 			tiers: {
@@ -91,6 +92,7 @@ export async function getActiveBonusProgram(organizationId: string) {
 		where: and(
 			eq(schema.bonusProgram.organizationId, organizationId),
 			eq(schema.bonusProgram.isActive, true),
+			isNull(schema.bonusProgram.deletedAt),
 		),
 		with: {
 			tiers: {
@@ -108,7 +110,10 @@ export async function getActiveBonusProgram(organizationId: string) {
  */
 export async function listBonusPrograms(organizationId: string) {
 	const programs = await db.query.bonusProgram.findMany({
-		where: eq(schema.bonusProgram.organizationId, organizationId),
+		where: and(
+			eq(schema.bonusProgram.organizationId, organizationId),
+			isNull(schema.bonusProgram.deletedAt),
+		),
 		orderBy: [desc(schema.bonusProgram.createdAt)],
 	});
 

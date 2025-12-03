@@ -207,6 +207,10 @@ export async function redeemReward(
 	organizationId: string,
 	bonusProgramId: string,
 	rewardId: string,
+	payoutDetails?: {
+		type: "paypal" | "bank_transfer";
+		details: Record<string, string>;
+	},
 	tx?: TransactionDb,
 ) {
 	return await (tx || db).transaction(async (trx) => {
@@ -257,7 +261,58 @@ export async function redeemReward(
 			}
 		}
 
-		// Deduct points
+		// Handle Cash Back Payout
+		if (reward.type === "cash_back") {
+			if (!payoutDetails) {
+				throw new Error("Payout details are required for cash back rewards");
+			}
+
+			if (!reward.cashAmount) {
+				throw new Error("Reward does not have a cash amount configured");
+			}
+
+			// Deduct points
+			const transaction = await deductPoints(
+				userId,
+				organizationId,
+				bonusProgramId,
+				reward.pointsCost,
+				"redeemed_cash",
+				`Requested cash back: ${reward.name}`,
+				{ rewardId: reward.id, rewardName: reward.name },
+				trx,
+			);
+
+			// Create Payout Request
+			const [payout] = await trx
+				.insert(schema.payoutRequest)
+				.values({
+					organizationId,
+					userId,
+					pointsDeducted: reward.pointsCost,
+					cashAmount: reward.cashAmount,
+					status: "pending",
+					payoutMethod: payoutDetails,
+					bonusTransactionId: transaction.id,
+				})
+				.returning();
+
+			// Update reward redemption count
+			await trx
+				.update(schema.reward)
+				.set({
+					currentRedemptions: Number(reward.currentRedemptions) + 1,
+				})
+				.where(eq(schema.reward.id, rewardId));
+
+			return {
+				reward,
+				payout,
+				transaction,
+			};
+		}
+
+		// Deduct points (Standard Reward)
 		const transaction = await deductPoints(
 			userId,
 			organizationId,

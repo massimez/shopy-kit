@@ -102,6 +102,12 @@ export const updateRewardSchema = createRewardSchema
 
 export const redeemRewardSchema = z.object({
 	rewardId: z.uuid(),
+	payoutDetails: z
+		.object({
+			type: z.enum(["paypal", "bank_transfer"]),
+			details: z.record(z.string(), z.string()),
+		})
+		.optional(),
 });
 
 /**
