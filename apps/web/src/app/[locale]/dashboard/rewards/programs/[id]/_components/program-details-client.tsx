@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -10,6 +10,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@workspace/ui/components/card";
+import { DeleteConfirmationDialog } from "@workspace/ui/components/delete-confirmation-dialog";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import {
 	Tabs,
@@ -25,12 +26,15 @@ import {
 	Settings,
 	ShoppingBag,
 	Target,
+	Trash2,
 	TrendingUp,
 	Trophy,
 	Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { createParser, useQueryState } from "nuqs";
+import { toast } from "sonner";
 import { PageDashboardHeader } from "@/app/[locale]/(landing)/_components/sections/page-dashboard-header";
 import { hc } from "@/lib/api-client";
 import { StatIcon } from "../../../_components/reward-icons";
@@ -43,6 +47,23 @@ import { TiersManager } from "./tiers-manager";
 export const ProgramDetailsClient = () => {
 	const params = useParams();
 	const id = params.id as string;
+	const router = useRouter();
+	const queryClient = useQueryClient();
+
+	const [activeTab, setActiveTab] = useQueryState(
+		"tab",
+		createParser({
+			parse: (value: string) =>
+				value as
+					| "overview"
+					| "tiers"
+					| "rewards"
+					| "milestones"
+					| "referrals"
+					| "settings",
+			serialize: (value) => value,
+		}).withDefault("overview"),
+	);
 
 	const { data: response, isLoading: isProgramLoading } = useQuery({
 		queryKey: ["bonus-program", id],
@@ -63,6 +84,31 @@ export const ProgramDetailsClient = () => {
 			return await res.json();
 		},
 		enabled: !!response?.success,
+	});
+
+	const deleteMutation = useMutation({
+		mutationFn: async () => {
+			const res = await hc.api.store["bonus-programs"][":id"].$delete({
+				param: { id },
+			});
+			if (!res.ok) {
+				const errorData = await res.json();
+				const errorMessage =
+					errorData && "error" in errorData && errorData.error
+						? errorData.error.message
+						: "Failed to delete bonus program";
+				throw new Error(errorMessage);
+			}
+			return await res.json();
+		},
+		onSuccess: () => {
+			toast.success("Bonus program deleted successfully");
+			queryClient.invalidateQueries({ queryKey: ["bonus-programs"] });
+			router.push("/dashboard/rewards/programs");
+		},
+		onError: (error: Error) => {
+			toast.error(error.message || "Failed to delete bonus program");
+		},
 	});
 
 	const program = response?.data;
@@ -134,7 +180,11 @@ export const ProgramDetailsClient = () => {
 				</Badge>
 			</div>
 
-			<Tabs defaultValue="overview" className="space-y-4">
+			<Tabs
+				value={activeTab}
+				onValueChange={(value) => setActiveTab(value as typeof activeTab)}
+				className="space-y-4"
+			>
 				<TabsList>
 					<TabsTrigger value="overview" className="gap-2">
 						<TrendingUp className="h-4 w-4" />
@@ -329,8 +379,44 @@ export const ProgramDetailsClient = () => {
 				</TabsContent>
 
 				<TabsContent value="settings">
-					<div className="max-w-2xl">
+					<div className="max-w-2xl space-y-6">
 						<ProgramForm initialData={program} isEditing />
+
+						<Card className="border-destructive/50">
+							<CardHeader>
+								<CardTitle className="text-destructive">Danger Zone</CardTitle>
+								<CardDescription>
+									Irreversible actions that affect this bonus program
+								</CardDescription>
+							</CardHeader>
+							<CardContent>
+								<div className="flex items-center justify-between rounded-lg border border-destructive/50 bg-destructive/5 p-4">
+									<div className="space-y-1">
+										<p className="font-medium text-sm">Delete this program</p>
+										<p className="text-muted-foreground text-xs">
+											Once deleted, this program and all its data will be
+											removed. This action cannot be undone.
+										</p>
+									</div>
+									<DeleteConfirmationDialog
+										onConfirm={() => deleteMutation.mutate()}
+										title="Are you absolutely sure?"
+										description={`This action cannot be undone. This will permanently delete the bonus program "${program.name}" and remove all associated data including tiers, rewards, and milestones.`}
+										disabled={deleteMutation.isPending}
+									>
+										<Button
+											variant="destructive"
+											size="sm"
+											className="ml-4 gap-2"
+											disabled={deleteMutation.isPending}
+										>
+											<Trash2 className="h-4 w-4" />
+											Delete
+										</Button>
+									</DeleteConfirmationDialog>
+								</div>
+							</CardContent>
+						</Card>
 					</div>
 				</TabsContent>
 			</Tabs>

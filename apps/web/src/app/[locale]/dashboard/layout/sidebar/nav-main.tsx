@@ -30,6 +30,7 @@ export function NavMain({
 		items?: {
 			title: string;
 			url: string;
+			action?: () => void;
 		}[];
 	}[];
 }) {
@@ -59,13 +60,23 @@ export function NavMain({
 										<SidebarMenuSubItem key={subItem.title}>
 											<SidebarMenuSubButton
 												isActive={pathname === subItem.url}
-												asChild
+												asChild={!subItem.action}
 											>
-												<a href={subItem.url}>
-													<span className={cn(pathname === subItem.url)}>
-														{subItem.title}
-													</span>
-												</a>
+												{subItem.action ? (
+													<button
+														onClick={subItem.action}
+														className={cn(
+															pathname === subItem.url &&
+																"bg-sidebar-accent text-sidebar-accent-foreground",
+														)}
+													>
+														<span>{subItem.title}</span>
+													</button>
+												) : (
+													<a href={subItem.url}>
+														<span>{subItem.title}</span>
+													</a>
+												)}
 											</SidebarMenuSubButton>
 										</SidebarMenuSubItem>
 									))}

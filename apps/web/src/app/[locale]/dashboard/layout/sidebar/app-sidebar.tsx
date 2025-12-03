@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
 	Sidebar,
 	SidebarContent,
@@ -16,129 +17,142 @@ import {
 	StoreIcon,
 	Trophy,
 } from "lucide-react";
-import type * as React from "react";
+import { useRouter } from "next/navigation";
 
+import type * as React from "react";
+import { hc } from "@/lib/api-client";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { TeamSwitcher } from "./team-switcher";
 
-// This is sample data.
+/* -----------------------------------------------
+ * BASE NAVIGATION
+ * ----------------------------------------------- */
+const baseNavMain = [
+	{
+		title: "Store",
+		url: "#",
+		icon: StoreIcon,
+		isActive: true,
+		items: [
+			{ title: "Products", url: "/dashboard/store/products" },
+			{ title: "Orders", url: "/dashboard/store/orders" },
+			{ title: "Clients", url: "/dashboard/store/clients" },
+			{ title: "Collections", url: "/dashboard/store/product-collections" },
+			{ title: "Brands", url: "/dashboard/store/brands" },
+			{ title: "Shipping", url: "/dashboard/store/shipping" },
+		],
+	},
+	{
+		title: "Inventory",
+		url: "/dashboard/store/inventory",
+		icon: ContainerIcon,
+		isActive: true,
+		items: [
+			{ title: "Overview", url: "/dashboard/store/inventory" },
+			{ title: "Suppliers", url: "/dashboard/store/suppliers" },
+		],
+	},
+	{
+		title: "Rewards",
+		url: "#",
+		icon: Trophy,
+		isActive: true,
+		items: [], // dynamic
+	},
+	{
+		title: "Settings",
+		url: "#",
+		icon: Settings2,
+		items: [{ title: "General", url: "/dashboard/organization/" }],
+	},
+];
 
-const data = {
-	navMain: [
-		{
-			title: "Store",
-			url: "#",
-			icon: StoreIcon,
-			isActive: true,
-			items: [
-				{
-					title: "Products",
-					url: "/dashboard/store/products",
-				},
-				{
-					title: "Orders",
-					url: "/dashboard/store/orders",
-				},
-				{
-					title: "Clients",
-					url: "/dashboard/store/clients",
-				},
+/* -----------------------------------------------
+ * HELPERS
+ * ----------------------------------------------- */
+const rewardTabs = [
+	"overview",
+	"tiers",
+	"rewards",
+	"milestones",
+	"referrals",
+	"settings",
+] as const;
 
-				{
-					title: "Collections",
-					url: "/dashboard/store/product-collections",
-				},
-				{
-					title: "Brands",
-					url: "/dashboard/store/brands",
-				},
-				{
-					title: "Shipping",
-					url: "/dashboard/store/shipping",
-				},
-				{
-					title: "Settings",
-					url: "/dashboard/store/settings",
-				},
-			],
-		},
-		{
-			title: "Inventory",
-			url: "/dashboard/store/inventory",
-			icon: ContainerIcon,
-			isActive: true,
-			items: [
-				{
-					title: "Overview",
-					url: "/dashboard/store/inventory",
-				},
-				{
-					title: "Suppliers",
-					url: "/dashboard/store/suppliers",
-				},
+type RewardTab = (typeof rewardTabs)[number];
 
-				{
-					title: "Settings",
-					url: "#",
-				},
-			],
-		},
-		{
-			title: "Rewards",
-			url: "#",
-			icon: Trophy,
-			isActive: true,
-			items: [
-				{
-					title: "Programs",
-					url: "/dashboard/rewards/programs",
-				},
-			],
-		},
-		{
-			title: "Settings",
-			url: "#",
-			icon: Settings2,
-			items: [
-				{
-					title: "General",
-					url: "/dashboard/organization/",
-				},
-			],
-		},
-	],
-	projects: [
-		{
-			name: "Design Engineering",
-			url: "#",
-			icon: Frame,
-		},
-		{
-			name: "Sales & Marketing",
-			url: "#",
-			icon: PieChart,
-		},
-		{
-			name: "Travel",
-			url: "#",
-			icon: MapIcon,
-		},
-	],
+/** Build a reward program URL */
+const rewardUrl = (programId: string | null, tab: RewardTab) =>
+	programId
+		? `/dashboard/rewards/programs/${programId}?tab=${tab}`
+		: "/dashboard/rewards/programs";
+
+/** Build item with click action */
+const buildRewardItem = (
+	title: string,
+	tab: RewardTab,
+	programId: string | null,
+	router: ReturnType<typeof useRouter>,
+) => {
+	const url = rewardUrl(programId, tab);
+
+	return {
+		title,
+		url,
+		action: () => router.push(url),
+	};
 };
 
+/* -----------------------------------------------
+ * COMPONENT
+ * ----------------------------------------------- */
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+	const router = useRouter();
+
+	// Fetch active reward program
+	const { data: programsResponse } = useQuery({
+		queryKey: ["bonus-programs"],
+		queryFn: async () => {
+			const res = await hc.api.store["bonus-programs"].$get();
+			return res.json();
+		},
+	});
+
+	const activeProgram = programsResponse?.data?.programs?.find(
+		(p) => p.isActive,
+	);
+	const programId = activeProgram?.id ?? null;
+
+	/* Build rewards items */
+	const rewardItems = [
+		buildRewardItem("Overview", "overview", programId, router),
+		buildRewardItem("Tiers", "tiers", programId, router),
+		buildRewardItem("Rewards", "rewards", programId, router),
+		buildRewardItem("Milestones", "milestones", programId, router),
+		buildRewardItem("Referrals", "referrals", programId, router),
+		{ title: "Programs", url: "/dashboard/rewards/programs" },
+	];
+
+	/* Merge rewards into navMain */
+	const navMain = baseNavMain.map((item) =>
+		item.title === "Rewards" ? { ...item, items: rewardItems } : item,
+	);
+
 	return (
 		<Sidebar collapsible="icon" {...props}>
 			<SidebarHeader>
 				<TeamSwitcher />
 			</SidebarHeader>
+
 			<SidebarContent>
-				<NavMain items={data.navMain} />
+				<NavMain items={navMain} />
 			</SidebarContent>
+
 			<SidebarFooter>
 				<NavUser />
 			</SidebarFooter>
+
 			<SidebarRail />
 		</Sidebar>
 	);
