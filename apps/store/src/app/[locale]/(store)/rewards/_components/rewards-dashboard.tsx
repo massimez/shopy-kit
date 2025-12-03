@@ -13,7 +13,6 @@ import { CouponsList } from "./coupons-list";
 import { HistoryList } from "./history-list";
 import { MilestonesList } from "./milestones-list";
 import { PointsCard } from "./points-card";
-import { ProgramStatsCard } from "./program-stats-card";
 import { ReferralCard } from "./referral-card";
 import { RewardsCatalog } from "./rewards-catalog";
 import { TierCard } from "./tier-card";
@@ -23,14 +22,6 @@ export function RewardsDashboard() {
 		queryKey: ["rewards", "balance"],
 		queryFn: async () => {
 			const res = await hc.api.storefront.rewards.balance.$get();
-			return await res.json();
-		},
-	});
-
-	const { data: statsData } = useQuery({
-		queryKey: ["rewards", "stats"],
-		queryFn: async () => {
-			const res = await hc.api.storefront.rewards.stats.$get();
 			return await res.json();
 		},
 	});
@@ -88,12 +79,6 @@ export function RewardsDashboard() {
 					nextTierName={tier?.nextTier?.name}
 					pointsToNextTier={tier?.pointsToNextTier}
 				/>
-				{statsData?.success && (
-					<ProgramStatsCard
-						totalPointsIssued={statsData.data.totalPointsIssued}
-						activeUsers={statsData.data.activeUsers}
-					/>
-				)}
 			</div>
 
 			<Tabs defaultValue="rewards" className="space-y-4">
