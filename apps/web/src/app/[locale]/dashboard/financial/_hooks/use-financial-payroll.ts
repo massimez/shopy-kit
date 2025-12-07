@@ -64,6 +64,9 @@ export function useFinancialPayroll() {
 				employmentType: "full_time" | "part_time" | "contract";
 				bankAccountNumber?: string;
 				taxId?: string;
+				baseSalary?: string;
+				currency?: string;
+				paymentFrequency?: "monthly" | "bi_weekly" | "weekly";
 			}) => {
 				const res = await hc.api.financial.payroll.employees.$post({
 					json: data as typeof data & {
@@ -97,9 +100,8 @@ export function useFinancialPayroll() {
 					status?: "active" | "on_leave" | "terminated";
 				};
 			}) => {
-				const res = await (hc.api.financial.payroll["employees"] as any)[
-					data.employeeId
-				].$put({
+				const res = await hc.api.financial.payroll.employees[":id"].$put({
+					param: { id: data.employeeId },
 					json: data.data,
 				});
 				const json = await res.json();
@@ -128,6 +130,7 @@ export function useFinancialPayroll() {
 		return useQuery({
 			queryKey: ["financial", "salary-structures"],
 			queryFn: async () => {
+				// biome-ignore lint/suspicious/noExplicitAny: Hono RPC dynamic route workaround
 				const res = await (hc.api.financial.payroll as any)[
 					"salary-structures"
 				].$get();
@@ -141,7 +144,7 @@ export function useFinancialPayroll() {
 		return useMutation({
 			mutationFn: async (data: {
 				name: string;
-				componentType: "earning" | "deduction" | "employer_contribution";
+				componentType: "earning" | "deduction";
 				calculationType: "fixed" | "percentage" | "formula";
 				accountId: string;
 				isTaxable: boolean;
@@ -175,7 +178,10 @@ export function useFinancialPayroll() {
 					calculationBasis?: "base_salary" | "gross_salary";
 				}[];
 			}) => {
-				const res = await hc.api.financial.payroll["salary-structures"].$post({
+				// biome-ignore lint/suspicious/noExplicitAny: Hono RPC dynamic route workaround
+				const res = await (hc.api.financial.payroll as any)[
+					"salary-structures"
+				].$post({
 					json: data as typeof data & {
 						effectiveFrom: Date;
 					}, // Type assertion needed due to z.coerce.date() inference
@@ -198,9 +204,11 @@ export function useFinancialPayroll() {
 		return useQuery({
 			queryKey: ["financial", "payroll-run-details", runId],
 			queryFn: async () => {
-				const res = await (hc.api.financial.payroll["payroll-runs"] as any)[
-					runId
-				].details.$get();
+				const res = await hc.api.financial.payroll["payroll-runs"][
+					":id"
+				].details.$get({
+					param: { id: runId },
+				});
 				const json = await res.json();
 				return json.data;
 			},
@@ -211,9 +219,11 @@ export function useFinancialPayroll() {
 	const useCalculatePayroll = () => {
 		return useMutation({
 			mutationFn: async (runId: string) => {
-				const res = await (hc.api.financial.payroll["payroll-runs"] as any)[
-					runId
-				].calculate.$post();
+				const res = await hc.api.financial.payroll["payroll-runs"][
+					":id"
+				].calculate.$post({
+					param: { id: runId },
+				});
 				const json = await res.json();
 				return json.data;
 			},
@@ -231,9 +241,11 @@ export function useFinancialPayroll() {
 	const useApprovePayrollRun = () => {
 		return useMutation({
 			mutationFn: async (runId: string) => {
-				const res = await (hc.api.financial.payroll["payroll-runs"] as any)[
-					runId
-				].approve.$post();
+				const res = await hc.api.financial.payroll["payroll-runs"][
+					":id"
+				].approve.$post({
+					param: { id: runId },
+				});
 				const json = await res.json();
 				return json.data;
 			},
@@ -251,7 +263,7 @@ export function useFinancialPayroll() {
 	const useProcessPayrollPayments = () => {
 		return useMutation({
 			mutationFn: async (data: { entryIds: string[] }) => {
-				const res = await hc.api.financial.payroll["entries"][
+				const res = await hc.api.financial.payroll.entries[
 					"process-payment"
 				].$post({
 					json: data,
@@ -270,9 +282,11 @@ export function useFinancialPayroll() {
 	const useDeletePayrollRun = () => {
 		return useMutation({
 			mutationFn: async (runId: string) => {
-				const res = await (hc.api.financial.payroll["payroll-runs"] as any)[
-					runId
-				].$delete();
+				const res = await hc.api.financial.payroll["payroll-runs"][
+					":id"
+				].$delete({
+					param: { id: runId },
+				});
 				const json = await res.json();
 				return json.data;
 			},

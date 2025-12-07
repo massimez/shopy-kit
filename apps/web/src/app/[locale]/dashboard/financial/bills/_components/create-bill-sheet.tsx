@@ -40,11 +40,12 @@ import {
 } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-bills";
 import { useSuppliers } from "@/app/[locale]/dashboard/store/suppliers/hooks/use-suppliers";
 
-const itemSchema = z.object({
-	expenseAccountId: z.string().min(1, "Account is required"),
+const billItemSchema = z.object({
 	description: z.string().min(1, "Description is required"),
-	quantity: z.string().min(1, "Quantity is required"),
-	unitPrice: z.string().min(1, "Price is required"),
+	quantity: z.coerce.number().min(1, "Quantity must be at least 1"),
+	unitPrice: z.coerce.number().min(0, "Unit price must be positive"),
+	accountId: z.string().min(1, "Account is required"),
+	taxRate: z.coerce.number().min(0).max(100).optional(),
 });
 
 const formSchema = z.object({
@@ -52,7 +53,7 @@ const formSchema = z.object({
 	invoiceNumber: z.string().min(1, "Bill Number is required"),
 	date: z.string().min(1, "Date is required"),
 	dueDate: z.string().min(1, "Due Date is required"),
-	items: z.array(itemSchema).min(1, "At least one item is required"),
+	items: z.array(billItemSchema).min(1, "At least one item is required"),
 });
 
 interface Supplier {
@@ -104,7 +105,8 @@ export function CreateBillSheet({
 	const expenseAccounts = (accounts as Account[]) || [];
 
 	const form = useForm<z.infer<typeof formSchema>>({
-		resolver: zodResolver(formSchema),
+		// biome-ignore lint/suspicious/noExplicitAny: pragmatic fix for hookform resolver mismatch
+		resolver: zodResolver(formSchema) as any,
 		defaultValues: {
 			supplierId: "",
 			invoiceNumber: `BILL-${Date.now()}`,
@@ -114,10 +116,10 @@ export function CreateBillSheet({
 				.split("T")[0],
 			items: [
 				{
-					expenseAccountId: "",
+					accountId: "",
 					description: "",
-					quantity: "1",
-					unitPrice: "0",
+					quantity: 1,
+					unitPrice: 0,
 				},
 			],
 		},
@@ -127,21 +129,21 @@ export function CreateBillSheet({
 	useEffect(() => {
 		if (existingBill && isEditing && !isLoadingBill) {
 			form.reset({
-				supplierId: existingBill.supplierId,
-				invoiceNumber: existingBill.invoiceNumber,
+				supplierId: existingBill.supplierId || "",
+				invoiceNumber: existingBill.invoiceNumber || "",
 				date: new Date(existingBill.invoiceDate).toISOString().split("T")[0],
 				dueDate: new Date(existingBill.dueDate).toISOString().split("T")[0],
 				items: (existingBill.lines || []).map(
 					(line: {
-						expenseAccountId: string;
+						accountId: string;
 						description: string;
 						quantity: string | null;
 						unitPrice: string | null;
 					}) => ({
-						expenseAccountId: line.expenseAccountId,
-						description: line.description,
-						quantity: String(line.quantity ?? "1"),
-						unitPrice: String(line.unitPrice ?? "0"),
+						accountId: line.accountId,
+						description: line.description || "",
+						quantity: Number(line.quantity ?? 1),
+						unitPrice: Number(line.unitPrice ?? 0),
 					}),
 				),
 			});
@@ -161,7 +163,7 @@ export function CreateBillSheet({
 			dueDate: new Date(values.dueDate),
 			currency: "USD",
 			items: values.items.map((item) => ({
-				expenseAccountId: item.expenseAccountId,
+				accountId: item.accountId,
 				description: item.description,
 				quantity: Number(item.quantity),
 				unitPrice: Number(item.unitPrice),
@@ -317,10 +319,10 @@ export function CreateBillSheet({
 										className="h-8 text-xs"
 										onClick={() =>
 											append({
-												expenseAccountId: "",
+												accountId: "",
 												description: "",
-												quantity: "1",
-												unitPrice: "0",
+												quantity: 1,
+												unitPrice: 0,
 											})
 										}
 									>
@@ -338,7 +340,7 @@ export function CreateBillSheet({
 											<div className="col-span-12 md:col-span-4">
 												<FormField
 													control={form.control}
-													name={`items.${index}.expenseAccountId`}
+													name={`items.${index}.accountId`}
 													render={({ field }) => (
 														<FormItem className="space-y-1">
 															<FormLabel className="text-muted-foreground text-xs">

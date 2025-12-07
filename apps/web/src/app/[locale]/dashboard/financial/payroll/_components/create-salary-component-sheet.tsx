@@ -36,7 +36,7 @@ import { useFinancialPayroll } from "@/app/[locale]/dashboard/financial/_hooks/u
 
 const formSchema = z.object({
 	name: z.string().min(1, "Name is required"),
-	componentType: z.enum(["earning", "deduction", "employer_contribution"]),
+	componentType: z.enum(["earning", "deduction"]),
 	calculationType: z.enum(["fixed", "percentage", "formula"]),
 	accountId: z.string().min(1, "Account is required"),
 	isTaxable: z.boolean(),
@@ -130,9 +130,6 @@ export function CreateSalaryComponentSheet() {
 										<SelectContent>
 											<SelectItem value="earning">Earning</SelectItem>
 											<SelectItem value="deduction">Deduction</SelectItem>
-											<SelectItem value="employer_contribution">
-												Employer Contribution
-											</SelectItem>
 										</SelectContent>
 									</Select>
 									<FormMessage />

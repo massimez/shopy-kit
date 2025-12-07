@@ -18,6 +18,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@workspace/ui/components/select";
+import { Separator } from "@workspace/ui/components/separator";
 import {
 	Sheet,
 	SheetContent,
@@ -26,7 +27,7 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "@workspace/ui/components/sheet";
-import { Plus } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -36,6 +37,7 @@ import {
 	useCreateBankTransaction,
 	useEnsureCashAccount,
 } from "@/app/[locale]/dashboard/financial/_hooks/use-financial";
+import { useFinancialAccounting } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-accounting";
 
 const formSchema = z.object({
 	bankAccountId: z.string().optional(),
@@ -45,12 +47,15 @@ const formSchema = z.object({
 	date: z.string().min(1, "Date is required"),
 	payeePayer: z.string().optional(),
 	referenceNumber: z.string().optional(),
+	offsetAccountId: z.string().uuid().optional(),
 });
 
 export function TransactionSheet() {
 	const [open, setOpen] = useState(false);
 	const { data: bankAccountsData, isLoading: isLoadingAccounts } =
 		useBankAccounts();
+	const { useAccounts } = useFinancialAccounting();
+	const { data: glAccountsData, isLoading: isLoadingGL } = useAccounts();
 	const createTransaction = useCreateBankTransaction();
 	const ensureCashAccount = useEnsureCashAccount();
 
@@ -58,6 +63,7 @@ export function TransactionSheet() {
 	const cashAccountAttempted = useRef(false);
 
 	const bankAccounts = bankAccountsData?.data || [];
+	const glAccounts = glAccountsData || [];
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -69,8 +75,11 @@ export function TransactionSheet() {
 			date: new Date().toISOString().split("T")[0],
 			payeePayer: "",
 			referenceNumber: "",
+			offsetAccountId: undefined,
 		},
 	});
+
+	const transactionType = form.watch("type");
 
 	// Auto-select first account when accounts are loaded
 	useEffect(() => {
@@ -117,6 +126,7 @@ export function TransactionSheet() {
 				description: values.description,
 				payeePayer: values.payeePayer || undefined,
 				referenceNumber: values.referenceNumber || undefined,
+				offsetAccountId: values.offsetAccountId,
 			});
 
 			toast.success("Transaction created successfully");
@@ -136,161 +146,278 @@ export function TransactionSheet() {
 					New Transaction
 				</Button>
 			</SheetTrigger>
-			<SheetContent>
+			<SheetContent className="overflow-y-auto sm:max-w-xl">
 				<SheetHeader>
-					<SheetTitle>New Transaction</SheetTitle>
+					<SheetTitle>Record Manual Transaction</SheetTitle>
 					<SheetDescription>
-						Record a new transaction manually.
+						Record a bank or cash transaction that occurred outside the system
 					</SheetDescription>
 				</SheetHeader>
 				<div className="mt-6">
 					<Form {...form}>
-						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-							<FormField
-								control={form.control}
-								name="bankAccountId"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Bank Account</FormLabel>
-										<Select
-											onValueChange={field.onChange}
-											value={field.value}
-											disabled={isLoadingAccounts}
-										>
-											<FormControl>
-												<SelectValue placeholder="Select bank account" />
-											</FormControl>
-											<SelectContent>
-												{bankAccounts.map((account: any) => (
-													<SelectItem key={account.id} value={account.id}>
-														{account.bankName} - {account.accountName}
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-										{bankAccounts.length === 0 &&
-											!ensureCashAccount.isPending && (
-												<p className="text-muted-foreground text-xs">
-													{ensureCashAccount.isError
-														? "Failed to create cash account. Please create one in the Banking section."
-														: "Creating default Cash account..."}
-												</p>
-											)}
-										{ensureCashAccount.isPending && (
-											<p className="text-muted-foreground text-xs">
-												Setting up Cash account...
-											</p>
-										)}
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+							{/* Transaction Type - Compact Segmented Control */}
 							<FormField
 								control={form.control}
 								name="type"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Type</FormLabel>
-										<Select
-											onValueChange={field.onChange}
-											defaultValue={field.value}
-										>
+										<div className="grid grid-cols-2 gap-2 rounded-lg bg-muted p-1">
+											<button
+												type="button"
+												onClick={() => field.onChange("deposit")}
+												className={`flex items-center justify-center gap-2 rounded-md py-2 font-medium text-sm transition-all ${
+													field.value === "deposit"
+														? "bg-background text-green-600 shadow-sm dark:text-green-400"
+														: "text-muted-foreground hover:bg-background/50 hover:text-foreground"
+												}`}
+											>
+												<ArrowDownCircle className="h-4 w-4" />
+												Deposit
+											</button>
+											<button
+												type="button"
+												onClick={() => field.onChange("withdrawal")}
+												className={`flex items-center justify-center gap-2 rounded-md py-2 font-medium text-sm transition-all ${
+													field.value === "withdrawal"
+														? "bg-background text-red-600 shadow-sm dark:text-red-400"
+														: "text-muted-foreground hover:bg-background/50 hover:text-foreground"
+												}`}
+											>
+												<ArrowUpCircle className="h-4 w-4" />
+												Withdrawal
+											</button>
+										</div>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							{/* Main Form Fields */}
+							<div className="space-y-4">
+								<div className="grid gap-4 sm:grid-cols-2">
+									<FormField
+										control={form.control}
+										name="amount"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>
+													Amount*{" "}
+													{transactionType === "deposit" ? (
+														<span className="text-green-600 dark:text-green-400">
+															(+)
+														</span>
+													) : (
+														<span className="text-red-600 dark:text-red-400">
+															(-)
+														</span>
+													)}
+												</FormLabel>
+												<FormControl>
+													<div className="relative">
+														<span className="absolute inset-y-0 left-3 flex items-center text-muted-foreground">
+															$
+														</span>
+														<Input
+															placeholder="0.00"
+															{...field}
+															type="number"
+															step="0.01"
+															className="pl-7 font-bold"
+														/>
+													</div>
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+
+									<FormField
+										control={form.control}
+										name="date"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Date*</FormLabel>
+												<FormControl>
+													<Input type="date" {...field} />
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+								</div>
+
+								<FormField
+									control={form.control}
+									name="description"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Description*</FormLabel>
 											<FormControl>
-												<SelectTrigger>
-													<SelectValue placeholder="Select type" />
-												</SelectTrigger>
+												<Input
+													placeholder={
+														transactionType === "deposit"
+															? "e.g., Cash sale, Service income"
+															: "e.g., Office supplies, Utilities"
+													}
+													{...field}
+												/>
 											</FormControl>
-											<SelectContent>
-												<SelectItem value="deposit">
-													Deposit (Income)
-												</SelectItem>
-												<SelectItem value="withdrawal">
-													Withdrawal (Expense)
-												</SelectItem>
-											</SelectContent>
-										</Select>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="amount"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Amount</FormLabel>
-										<FormControl>
-											<Input
-												placeholder="0.00"
-												{...field}
-												type="number"
-												step="0.01"
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="date"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Date</FormLabel>
-										<FormControl>
-											<Input type="date" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="description"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Description</FormLabel>
-										<FormControl>
-											<Input placeholder="e.g. Office Supplies" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="payeePayer"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Payee/Payer (Optional)</FormLabel>
-										<FormControl>
-											<Input placeholder="e.g. John Doe" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="referenceNumber"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Reference Number (Optional)</FormLabel>
-										<FormControl>
-											<Input placeholder="e.g. INV-001" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</div>
+
+							<Separator />
+
+							{/* Account Details */}
+							<div className="space-y-4">
+								<div className="grid gap-4 sm:grid-cols-2">
+									<FormField
+										control={form.control}
+										name="bankAccountId"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>
+													{transactionType === "deposit" ? "To" : "From"} Bank
+													Account*
+												</FormLabel>
+												<Select
+													onValueChange={field.onChange}
+													value={field.value}
+												>
+													<FormControl>
+														<SelectTrigger>
+															<SelectValue placeholder="Select bank account" />
+														</SelectTrigger>
+													</FormControl>
+													<SelectContent>
+														{isLoadingAccounts ? (
+															<div className="flex items-center justify-center p-2 text-muted-foreground text-sm">
+																Loading accounts...
+															</div>
+														) : bankAccounts.length === 0 ? (
+															<div className="p-2 text-center text-muted-foreground text-sm">
+																No accounts found
+															</div>
+														) : (
+															bankAccounts.map((account) => (
+																<SelectItem key={account.id} value={account.id}>
+																	<span className="font-medium">
+																		{account.bankName}
+																	</span>{" "}
+																	<span className="text-muted-foreground">
+																		- {account.accountName}
+																	</span>
+																</SelectItem>
+															))
+														)}
+													</SelectContent>
+												</Select>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+
+									<FormField
+										control={form.control}
+										name="offsetAccountId"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>
+													{transactionType === "deposit" ? "From" : "To"}{" "}
+													Category (Optional)
+												</FormLabel>
+												<Select
+													onValueChange={field.onChange}
+													value={field.value}
+												>
+													<FormControl>
+														<SelectTrigger>
+															<SelectValue placeholder="Select category" />
+														</SelectTrigger>
+													</FormControl>
+													<SelectContent>
+														{isLoadingGL ? (
+															<div className="flex items-center justify-center p-2 text-muted-foreground text-sm">
+																Loading categories...
+															</div>
+														) : (
+															glAccounts
+																.filter((_) => true) // Show all accounts for flexibility
+																.sort((a, b) => a.code.localeCompare(b.code))
+																.map((account) => (
+																	<SelectItem
+																		key={account.id}
+																		value={account.id}
+																	>
+																		<span className="font-mono text-muted-foreground text-xs">
+																			{account.code}
+																		</span>{" "}
+																		{account.name}
+																	</SelectItem>
+																))
+														)}
+													</SelectContent>
+												</Select>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+								</div>
+							</div>
+
+							<Separator />
+
+							{/* Additional Info (Collapsible-like feel less prominent) */}
+							<div>
+								<h4 className="mb-2 font-medium text-muted-foreground text-xs uppercase tracking-wider">
+									Additional Details
+								</h4>
+								<div className="grid gap-4 sm:grid-cols-2">
+									<FormField
+										control={form.control}
+										name="payeePayer"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>
+													{transactionType === "deposit"
+														? "Received From"
+														: "Paid To"}
+												</FormLabel>
+												<FormControl>
+													<Input placeholder="Optional" {...field} />
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+
+									<FormField
+										control={form.control}
+										name="referenceNumber"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Ref Number</FormLabel>
+												<FormControl>
+													<Input placeholder="Optional" {...field} />
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+								</div>
+							</div>
+
 							<Button
 								type="submit"
 								className="w-full"
 								disabled={createTransaction.isPending}
 							>
 								{createTransaction.isPending
-									? "Creating..."
-									: "Create Transaction"}
+									? "Processing..."
+									: `Record ${transactionType === "deposit" ? "Deposit" : "Withdrawal"}`}
 							</Button>
 						</form>
 					</Form>

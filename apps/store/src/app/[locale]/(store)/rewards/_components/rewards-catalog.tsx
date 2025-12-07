@@ -18,6 +18,7 @@ import { PayoutModal } from "./payout-modal";
 
 export function RewardsCatalog() {
 	const queryClient = useQueryClient();
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	const [selectedReward, setSelectedReward] = useState<any>(null);
 	const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
 
@@ -57,6 +58,7 @@ export function RewardsCatalog() {
 		},
 	});
 
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	const handleRedeemClick = (reward: any) => {
 		if (reward.type === "cash_back") {
 			setSelectedReward(reward);

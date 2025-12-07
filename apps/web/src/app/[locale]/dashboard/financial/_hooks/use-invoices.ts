@@ -2,14 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { hc } from "@/lib/api-client";
 
 /**
- * @deprecated Use useInvoices from use-invoices.ts instead
+ * Fetch invoices (receivables or payables)
  */
-export function useSupplierInvoices(limit = 50) {
+export function useInvoices(type: "receivable" | "payable", limit = 50) {
 	return useQuery({
-		queryKey: ["financial", "invoices", "payable", limit],
+		queryKey: ["financial", "invoices", type, limit],
 		queryFn: async () => {
 			const res = await hc.api.financial.invoices.$get({
-				query: { type: "payable", limit: limit.toString() },
+				query: { type, limit: limit.toString() },
 			});
 			const json = await res.json();
 			return json.data;
@@ -18,9 +18,9 @@ export function useSupplierInvoices(limit = 50) {
 }
 
 /**
- * @deprecated Use useInvoice from use-invoices.ts instead
+ * Fetch single invoice by ID
  */
-export function useBill(id: string) {
+export function useInvoice(id: string) {
 	return useQuery({
 		queryKey: ["financial", "invoice", id],
 		queryFn: async () => {
@@ -28,7 +28,7 @@ export function useBill(id: string) {
 				param: { id },
 			});
 			if (!res.ok) {
-				throw new Error("Failed to fetch bill");
+				throw new Error("Failed to fetch invoice");
 			}
 			const json = await res.json();
 			return json.data;
@@ -38,14 +38,16 @@ export function useBill(id: string) {
 }
 
 /**
- * @deprecated Use useCreateInvoice from use-invoices.ts instead
+ * Create new invoice (receivable or payable)
  */
-export function useCreateBill() {
+export function useCreateInvoice() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
 		mutationFn: async (data: {
-			supplierId: string;
+			invoiceType: "receivable" | "payable";
+			customerId?: string;
+			supplierId?: string;
 			invoiceNumber: string;
 			invoiceDate: Date;
 			dueDate: Date;
@@ -59,30 +61,27 @@ export function useCreateBill() {
 			}[];
 		}) => {
 			const res = await hc.api.financial.invoices.$post({
-				json: {
-					invoiceType: "payable",
-					...data,
-				},
+				json: data,
 			});
 			if (!res.ok) {
 				const json = await res.json();
-				throw new Error(json.error?.message || "Failed to create bill");
+				throw new Error(json.error?.message || "Failed to create invoice");
 			}
 			const json = await res.json();
 			return json.data;
 		},
-		onSuccess: () => {
+		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({
-				queryKey: ["financial", "invoices", "payable"],
+				queryKey: ["financial", "invoices", variables.invoiceType],
 			});
 		},
 	});
 }
 
 /**
- * @deprecated Use useUpdateInvoice from use-invoices.ts instead
+ * Update existing invoice
  */
-export function useUpdateBill() {
+export function useUpdateInvoice() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
@@ -92,7 +91,9 @@ export function useUpdateBill() {
 		}: {
 			id: string;
 			data: {
-				supplierId: string;
+				invoiceType: "receivable" | "payable";
+				customerId?: string;
+				supplierId?: string;
 				invoiceNumber: string;
 				invoiceDate: Date;
 				dueDate: Date;
@@ -108,30 +109,30 @@ export function useUpdateBill() {
 		}) => {
 			const res = await hc.api.financial.invoices[":id"].$put({
 				param: { id },
-				json: {
-					invoiceType: "payable",
-					...data,
-				},
+				json: data,
 			});
 			if (!res.ok) {
 				const json = await res.json();
-				throw new Error(json.error?.message || "Failed to update bill");
+				throw new Error(json.error?.message || "Failed to update invoice");
 			}
 			const json = await res.json();
 			return json.data;
 		},
-		onSuccess: () => {
+		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({
-				queryKey: ["financial", "invoices", "payable"],
+				queryKey: ["financial", "invoices", variables.data.invoiceType],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["financial", "invoice", variables.id],
 			});
 		},
 	});
 }
 
 /**
- * @deprecated Use useApproveInvoice from use-invoices.ts instead
+ * Approve invoice
  */
-export function useApproveBill() {
+export function useApproveInvoice() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
@@ -141,31 +142,33 @@ export function useApproveBill() {
 			});
 			if (!res.ok) {
 				const json = await res.json();
-				throw new Error(json.error?.message || "Failed to approve bill");
+				throw new Error(json.error?.message || "Failed to approve invoice");
 			}
 			const json = await res.json();
 			return json.data;
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: ["financial", "invoices", "payable"],
+				queryKey: ["financial", "invoices"],
 			});
 		},
 	});
 }
 
 /**
- * @deprecated Use useRecordPayment from use-invoices.ts instead
+ * Record payment (for any invoice type)
  */
 export function useRecordPayment() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
 		mutationFn: async (data: {
-			supplierId: string;
+			paymentType: "received" | "sent";
+			customerId?: string;
+			supplierId?: string;
 			amount: number;
 			paymentDate: Date;
-			paymentMethod: "bank_transfer" | "check" | "cash" | "card";
+			paymentMethod: "bank_transfer" | "check" | "cash" | "card" | "online";
 			referenceNumber?: string;
 			bankAccountId?: string;
 			allocations: {
@@ -174,10 +177,7 @@ export function useRecordPayment() {
 			}[];
 		}) => {
 			const res = await hc.api.financial.invoices.payments.$post({
-				json: {
-					paymentType: "sent",
-					...data,
-				},
+				json: data,
 			});
 			if (!res.ok) {
 				const json = await res.json();
@@ -188,8 +188,54 @@ export function useRecordPayment() {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: ["financial", "invoices", "payable"],
+				queryKey: ["financial", "invoices"],
 			});
+			queryClient.invalidateQueries({
+				queryKey: ["financial", "payments"],
+			});
+		},
+	});
+}
+
+/**
+ * Get party balance (customer or supplier)
+ */
+export function usePartyBalance(
+	partyId: string,
+	partyType: "customer" | "supplier",
+) {
+	return useQuery({
+		queryKey: ["financial", "balance", partyType, partyId],
+		queryFn: async () => {
+			const res = await hc.api.financial.invoices.balance[":partyType"][
+				":partyId"
+			].$get({
+				param: { partyType, partyId },
+			});
+			if (!res.ok) {
+				throw new Error("Failed to fetch balance");
+			}
+			const json = await res.json();
+			return json.data;
+		},
+		enabled: !!partyId && !!partyType,
+	});
+}
+
+/**
+ * Get payments
+ */
+export function usePayments(type?: "received" | "sent", limit = 50) {
+	return useQuery({
+		queryKey: ["financial", "payments", type, limit],
+		queryFn: async () => {
+			const res = await hc.api.financial.invoices.payments.$get({
+				query: type
+					? { type, limit: limit.toString() }
+					: { limit: limit.toString() },
+			});
+			const json = await res.json();
+			return json.data;
 		},
 	});
 }

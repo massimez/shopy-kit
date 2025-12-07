@@ -78,7 +78,7 @@ export const ProgramDetailsClient = () => {
 	const { data: statsResponse, isLoading: isStatsLoading } = useQuery({
 		queryKey: ["bonus-program-stats", id],
 		queryFn: async () => {
-			const res = await hc.api.store["bonus-programs"][":id"]["stats"].$get({
+			const res = await hc.api.store["bonus-programs"][":id"].stats.$get({
 				param: { id },
 			});
 			return await res.json();

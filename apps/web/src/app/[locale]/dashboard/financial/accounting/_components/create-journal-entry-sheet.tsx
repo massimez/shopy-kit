@@ -47,7 +47,11 @@ const formSchema = z.object({
 	lines: z.array(lineSchema).min(2, "At least 2 lines are required"),
 });
 
-function BalanceIndicator({ control }: { control: any }) {
+function BalanceIndicator({
+	control,
+}: {
+	control: import("react-hook-form").Control<z.infer<typeof formSchema>>;
+}) {
 	const lines = useWatch({ control, name: "lines" });
 
 	const totalDebit = lines?.reduce(
@@ -111,8 +115,9 @@ export function CreateJournalEntrySheet() {
 	const createEntry = useCreateJournalEntry();
 	const { data: accounts } = useAccounts();
 
-	const form = useForm({
-		resolver: zodResolver(formSchema),
+	const form = useForm<z.infer<typeof formSchema>>({
+		// biome-ignore lint/suspicious/noExplicitAny: pragmatic fix for hookform resolver mismatch
+		resolver: zodResolver(formSchema) as any,
 		defaultValues: {
 			entryDate: new Date().toISOString().split("T")[0],
 			description: "",
@@ -217,11 +222,17 @@ export function CreateJournalEntrySheet() {
 		(
 			groups: Record<
 				string,
-				Array<{ id: string; code: string; name: string; category?: any }>
+				Array<{
+					id: string;
+					code: string;
+					name: string;
+					category?: string | null;
+					accountType: string;
+				}>
 			>,
 			account,
 		) => {
-			const type = account.category?.accountType?.name || "Other";
+			const type = account.accountType || "Other";
 			if (!groups[type]) {
 				groups[type] = [];
 			}

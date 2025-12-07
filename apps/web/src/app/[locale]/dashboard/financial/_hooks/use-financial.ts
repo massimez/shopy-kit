@@ -23,6 +23,32 @@ export function useBankAccounts() {
 	});
 }
 
+export function useCreateBankAccount() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async (data: {
+			accountName: string;
+			bankName: string;
+			accountNumber: string;
+			currency: string;
+			accountType: "checking" | "savings" | "credit_card";
+			glAccountId: string;
+			openingBalance?: number;
+		}) => {
+			const res = await hc.api.financial.banking["bank-accounts"].$post({
+				json: { ...data, openingBalance: data.openingBalance || 0 },
+			});
+			return res.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["financial", "bank-accounts"],
+			});
+		},
+	});
+}
+
 export function useCreateBankTransaction() {
 	const queryClient = useQueryClient();
 
@@ -40,6 +66,7 @@ export function useCreateBankTransaction() {
 			description?: string;
 			referenceNumber?: string;
 			payeePayer?: string;
+			offsetAccountId?: string;
 		}) => {
 			const res = await hc.api.financial.banking["bank-transactions"].$post({
 				json: data,
@@ -47,12 +74,15 @@ export function useCreateBankTransaction() {
 			return res.json();
 		},
 		onSuccess: () => {
-			// Invalidate both transactions and bank transactions queries
+			// Invalidate transactions, bank transactions, and bank accounts (for balance updates)
 			queryClient.invalidateQueries({
 				queryKey: ["financial", "transactions"],
 			});
 			queryClient.invalidateQueries({
 				queryKey: ["financial", "bank-transactions"],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["financial", "bank-accounts"],
 			});
 		},
 	});

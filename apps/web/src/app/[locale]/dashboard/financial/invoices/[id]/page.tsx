@@ -23,7 +23,7 @@ import { format } from "date-fns";
 import { ArrowLeft, Download, Send } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useInvoice } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-invoices";
+import { useInvoice } from "@/app/[locale]/dashboard/financial/_hooks/use-invoices";
 
 export default function InvoiceDetailsPage() {
 	const params = useParams();
@@ -205,14 +205,6 @@ export default function InvoiceDetailsPage() {
 										className="capitalize"
 									>
 										{invoice.status}
-									</Badge>
-								</div>
-								<div className="mt-2 flex items-center justify-between">
-									<span className="text-muted-foreground text-sm">
-										Payment Status
-									</span>
-									<Badge variant="outline" className="capitalize">
-										{invoice.paymentStatus}
 									</Badge>
 								</div>
 							</div>

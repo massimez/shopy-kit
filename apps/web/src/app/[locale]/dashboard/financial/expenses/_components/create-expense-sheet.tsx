@@ -125,7 +125,7 @@ export function CreateExpenseSheet({
 
 		const promise = isEditing
 			? updateExpenseMutation.mutateAsync({
-					id: expenseToEdit!.id,
+					id: expenseToEdit?.id,
 					...commonData,
 				})
 			: createExpenseMutation.mutateAsync(commonData);

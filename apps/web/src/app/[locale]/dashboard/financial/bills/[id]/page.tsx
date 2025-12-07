@@ -23,12 +23,12 @@ import { format } from "date-fns";
 import { ArrowLeft, Download, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useBill } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-bills";
+import { useInvoice } from "@/app/[locale]/dashboard/financial/_hooks/use-invoices";
 
 export default function BillDetailsPage() {
 	const params = useParams();
 	const id = params.id as string;
-	const { data: bill, isLoading, error } = useBill(id);
+	const { data: bill, isLoading, error } = useInvoice(id);
 
 	if (isLoading) {
 		return (
@@ -203,14 +203,6 @@ export default function BillDetailsPage() {
 										className="capitalize"
 									>
 										{bill.status}
-									</Badge>
-								</div>
-								<div className="mt-2 flex items-center justify-between">
-									<span className="text-muted-foreground text-sm">
-										Payment Status
-									</span>
-									<Badge variant="outline" className="capitalize">
-										{bill.paymentStatus}
 									</Badge>
 								</div>
 							</div>

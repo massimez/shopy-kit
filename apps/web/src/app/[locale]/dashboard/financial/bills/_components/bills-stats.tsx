@@ -8,10 +8,10 @@ import {
 } from "@workspace/ui/components/card";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { AlertCircle, CheckCircle2, DollarSign, FileText } from "lucide-react";
-import { useSupplierInvoices } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-bills";
+import { useInvoices } from "@/app/[locale]/dashboard/financial/_hooks/use-invoices";
 
 export function BillsStats() {
-	const { data: bills, isLoading } = useSupplierInvoices(100);
+	const { data: bills, isLoading } = useInvoices("payable", 100);
 
 	if (isLoading) {
 		return (
@@ -36,10 +36,7 @@ export function BillsStats() {
 	const totalBills = bills?.length ?? 0;
 
 	const unpaidBills =
-		bills?.filter(
-			(b) =>
-				b.paymentStatus === "unpaid" || b.paymentStatus === "partially_paid",
-		) || [];
+		bills?.filter((b) => b.status !== "paid" && b.status !== "cancelled") || [];
 
 	const totalUnpaidAmount = unpaidBills.reduce(
 		(sum, b) => sum + Number(b.netAmount || b.totalAmount), // Use netAmount if available, or totalAmount
@@ -48,7 +45,7 @@ export function BillsStats() {
 
 	const overdueBills =
 		bills?.filter((b) => {
-			const isUnpaid = b.paymentStatus !== "paid";
+			const isUnpaid = b.status !== "paid";
 			const isOverdue = new Date(b.dueDate) < new Date();
 			return isUnpaid && isOverdue;
 		}) || [];

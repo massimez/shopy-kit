@@ -92,11 +92,82 @@ export function useFinancialAccounting() {
 		});
 	};
 
+	const useCreateAccount = () => {
+		return useMutation({
+			mutationFn: async (data: {
+				code: string;
+				name: string;
+				accountType: "asset" | "liability" | "equity" | "revenue" | "expense";
+				category?: string;
+				normalBalance: "debit" | "credit";
+				description?: string;
+				allowManualEntries: boolean;
+			}) => {
+				const res = await hc.api.financial.accounting.accounts.$post({
+					json: data,
+				});
+				const json = await res.json();
+				return json.data;
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: ["financial", "accounts"],
+				});
+			},
+		});
+	};
+
+	const useUpdateAccount = () => {
+		return useMutation({
+			mutationFn: async ({
+				id,
+				data,
+			}: {
+				id: string;
+				data: {
+					name?: string;
+					description?: string;
+					isActive?: boolean;
+				};
+			}) => {
+				const res = await hc.api.financial.accounting.accounts[":id"].$patch({
+					param: { id },
+					json: data,
+				});
+				const json = await res.json();
+				return json.data;
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: ["financial", "accounts"],
+				});
+			},
+		});
+	};
+
+	const useTrialBalance = (asOf?: Date) => {
+		return useQuery({
+			queryKey: ["financial", "trial-balance", asOf?.toISOString()],
+			queryFn: async () => {
+				const params = asOf
+					? { query: { asOf: asOf.toISOString() } }
+					: undefined;
+				const res =
+					await hc.api.financial.accounting["trial-balance"].$get(params);
+				const json = await res.json();
+				return json.data;
+			},
+		});
+	};
+
 	return {
 		useAccounts,
 		useJournalEntries,
 		useCreateJournalEntry,
 		usePostJournalEntry,
 		useDeleteJournalEntry,
+		useCreateAccount,
+		useUpdateAccount,
+		useTrialBalance,
 	};
 }

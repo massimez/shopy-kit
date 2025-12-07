@@ -52,6 +52,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 interface CreateSalaryStructureSheetProps {
+	// biome-ignore lint/suspicious/noExplicitAny: complex structure
 	editingStructure?: any;
 }
 
@@ -76,12 +77,19 @@ export function CreateSalaryStructureSheet({
 			currency: editingStructure?.currency || "USD",
 			paymentFrequency: editingStructure?.paymentFrequency || "monthly",
 			components:
-				editingStructure?.components?.map((comp: any) => ({
-					componentId: comp.componentId,
-					amount: comp.amount,
-					percentage: comp.percentage,
-					calculationBasis: comp.calculationBasis || "base_salary",
-				})) || [],
+				editingStructure?.components?.map(
+					(comp: {
+						componentId: string;
+						amount: number;
+						percentage: number;
+						calculationBasis: "base_salary" | "gross_salary";
+					}) => ({
+						componentId: comp.componentId,
+						amount: comp.amount,
+						percentage: comp.percentage,
+						calculationBasis: comp.calculationBasis || "base_salary",
+					}),
+				) || [],
 		},
 	});
 

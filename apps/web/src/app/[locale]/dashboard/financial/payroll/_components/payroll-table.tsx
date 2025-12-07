@@ -86,7 +86,7 @@ export function PayrollTable() {
 							<TableCell className="text-right">
 								<div className="flex items-center justify-end gap-2">
 									<PayrollRunDetails payrollRun={run} />
-									{(run.status === "draft" || run.status === "calculated") && (
+									{run.status === "draft" && (
 										<DeleteConfirmationDialog
 											title="Delete Payroll Run?"
 											description="This action cannot be undone. This will permanently delete the payroll run and all associated data."

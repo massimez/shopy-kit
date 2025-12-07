@@ -17,10 +17,10 @@ import {
 	TableRow,
 } from "@workspace/ui/components/table";
 import { format } from "date-fns";
-import { useCustomerInvoices } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-invoices";
+import { useInvoices } from "@/app/[locale]/dashboard/financial/_hooks/use-invoices";
 
 export function InvoicesTable() {
-	const { data: invoices, isLoading } = useCustomerInvoices(50);
+	const { data: invoices, isLoading } = useInvoices("receivable", 50);
 
 	if (isLoading) {
 		return (
@@ -77,15 +77,15 @@ export function InvoicesTable() {
 								<TableCell>
 									<Badge
 										variant={
-											invoice.paymentStatus === "paid"
+											invoice.status === "paid"
 												? "success"
-												: invoice.paymentStatus === "partially_paid"
+												: invoice.status === "partial"
 													? "warning"
 													: "secondary"
 										}
 										className="capitalize"
 									>
-										{invoice.paymentStatus?.replace("_", " ")}
+										{invoice.status}
 									</Badge>
 								</TableCell>
 								<TableCell className="text-right font-medium">

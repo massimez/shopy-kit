@@ -29,7 +29,7 @@ import { format } from "date-fns";
 import { Copy, DollarSign, Edit, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useSupplierInvoices } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-bills";
+import { useInvoices } from "@/app/[locale]/dashboard/financial/_hooks/use-invoices";
 import { CreateBillSheet } from "./create-bill-sheet";
 import { RecordPaymentDialog } from "./record-payment-dialog";
 
@@ -37,25 +37,18 @@ interface Bill {
 	id: string;
 	supplierId: string;
 	invoiceNumber: string;
-	invoiceDate: string; // or Date, depending on what comes back. Usually string from JSON.
+	invoiceDate: string;
 	dueDate: string;
 	totalAmount: string;
 	netAmount: string;
-	status:
-		| "draft"
-		| "approved"
-		| "paid"
-		| "partially_paid"
-		| "overdue"
-		| "cancelled";
-	paymentStatus: "unpaid" | "partially_paid" | "paid";
+	status: "draft" | "sent" | "paid" | "partial" | "overdue" | "cancelled";
 	supplier?: {
 		name: string;
 	};
 }
 
 export function BillsTable() {
-	const { data: bills, isLoading } = useSupplierInvoices(50);
+	const { data: bills, isLoading } = useInvoices("payable", 50);
 	const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
 	const [editOpen, setEditOpen] = useState(false);
 	const [paymentOpen, setPaymentOpen] = useState(false);
@@ -116,15 +109,15 @@ export function BillsTable() {
 									<TableCell>
 										<Badge
 											variant={
-												bill.paymentStatus === "paid"
+												bill.status === "paid"
 													? "success"
-													: bill.paymentStatus === "partially_paid"
+													: bill.status === "partial"
 														? "warning"
 														: "secondary"
 											}
 											className="capitalize"
 										>
-											{bill.paymentStatus?.replace("_", " ")}
+											{bill.status}
 										</Badge>
 									</TableCell>
 									<TableCell className="text-right font-medium">
@@ -161,7 +154,7 @@ export function BillsTable() {
 														Edit
 													</DropdownMenuItem>
 												)}
-												{bill.paymentStatus !== "paid" && (
+												{bill.status !== "paid" && (
 													<DropdownMenuItem
 														onClick={() => {
 															setSelectedBill(bill);

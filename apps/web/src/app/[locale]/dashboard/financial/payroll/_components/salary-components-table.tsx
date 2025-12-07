@@ -78,7 +78,7 @@ export function SalaryComponentsTable() {
 										{component.componentType.replace("_", " ")}
 									</Badge>
 								</TableCell>
-								<TableCell>{component.calculationType}</TableCell>
+								<TableCell>Fixed</TableCell>
 								<TableCell>
 									<Badge
 										variant={component.isTaxable ? "success" : "secondary"}

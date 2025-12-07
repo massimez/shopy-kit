@@ -25,11 +25,10 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@workspace/ui/components/select";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { useRecordPayment } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-bills";
+import { useRecordPayment } from "@/app/[locale]/dashboard/financial/_hooks/use-invoices";
 
 const formSchema = z.object({
 	amount: z.string().min(1, "Amount is required"),
@@ -46,8 +45,7 @@ interface RecordPaymentDialogProps {
 		supplierId: string;
 		invoiceNumber: string;
 		totalAmount: string;
-		netAmount: string; // This is actually remaining amount in some contexts or equal to total if no tax/discount logic, but let's assume we want to pay the full remaining.
-		paymentStatus: "unpaid" | "partially_paid" | "paid";
+		netAmount: string;
 	};
 }
 
@@ -71,6 +69,7 @@ export function RecordPaymentDialog({
 	function onSubmit(values: z.infer<typeof formSchema>) {
 		recordPayment.mutate(
 			{
+				paymentType: "sent",
 				supplierId: bill.supplierId,
 				amount: Number(values.amount),
 				paymentDate: new Date(values.paymentDate),
