@@ -14,23 +14,30 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
+import { Input } from "@workspace/ui/components/input";
 import {
 	LanguageSelector,
 	type LocaleOption,
 } from "@workspace/ui/components/language-selector";
 import { ModeToggle } from "@workspace/ui/components/theme-toggle";
-import { LogIn, LogOut, Settings, User } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import {
+	ChevronDown,
+	Heart,
+	LogOut,
+	Search,
+	Settings,
+	Tornado,
+	User,
+} from "lucide-react";
+import { useLocale } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CartButton } from "@/components/features/cart/cart-button";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { signOut, useSession } from "@/lib/auth-client";
-import { cn } from "@/lib/utils";
 import { AuthModal } from "../auth/auth-modal";
 
 export function Navbar() {
-	const t = useTranslations("Navigation");
 	const pathname = usePathname();
 	const router = useRouter();
 	const currentLocale = useLocale();
@@ -58,12 +65,6 @@ export function Navbar() {
 		avatar: session?.user?.image || "", // Optional avatar URL
 	};
 
-	const links = [
-		{ href: "/", label: t("home") },
-		{ href: "/products", label: t("products") },
-		{ href: "/categories/all", label: t("categories") },
-	];
-
 	const handleSignOut = async () => {
 		await signOut({
 			fetchOptions: {
@@ -81,96 +82,137 @@ export function Navbar() {
 
 	return (
 		<header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-			<div className="container mx-auto flex h-14 items-center px-2">
-				<div className="me-4 hidden md:flex">
-					<Link href="/" className="me-6 flex items-center space-x-2">
-						<span className="hidden font-bold sm:inline-block">STORE</span>
-					</Link>
-					<nav className="flex items-center space-x-6 font-medium text-sm">
-						{links.map((link) => (
-							<Link
-								key={link.href}
-								href={link.href}
-								className={cn(
-									"transition-colors hover:text-foreground/80",
-									pathname === link.href
-										? "text-foreground"
-										: "text-foreground/60",
-								)}
-							>
-								{link.label}
-							</Link>
-						))}
-					</nav>
-				</div>
-				<div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-					<div className="w-full flex-1 md:w-auto md:flex-none">
-						{/* Search component would go here */}
+			<div className="container mx-auto flex h-16 items-center gap-4 px-4">
+				{/* Logo Section */}
+				<Link href="/" className="me-6 flex items-center gap-2">
+					<div className="flex items-center justify-center text-violet-600">
+						<Tornado className="h-8 w-8 rotate-180" />
 					</div>
-					<nav className="flex items-center gap-2">
-						<LanguageSelector
-							locales={locales}
-							currentLocale={currentLocale}
-							onLocaleChange={handleLocaleChange}
+					<span className="font-bold text-2xl text-violet-600 italic tracking-tight">
+						YAMMY
+					</span>
+				</Link>
+
+				{/* Search Bar */}
+				<div className="hidden flex-1 items-center justify-center px-8 lg:flex">
+					<div className="flex w-full max-w-2xl items-center rounded-md border border-input bg-muted/30 focus-within:ring-1 focus-within:ring-ring">
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant="ghost"
+									className="h-10 gap-2 rounded-r-none border-r px-4 font-normal text-muted-foreground hover:bg-transparent"
+								>
+									All Categories
+									<ChevronDown className="h-4 w-4 opacity-50" />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="start" className="w-48">
+								<DropdownMenuLabel>Categories</DropdownMenuLabel>
+								<DropdownMenuItem>All Categories</DropdownMenuItem>
+								<DropdownMenuItem>Electronics</DropdownMenuItem>
+								<DropdownMenuItem>Fashion</DropdownMenuItem>
+								<DropdownMenuItem>Home & Garden</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+
+						<div className="relative flex-1">
+							<Input
+								placeholder="Search"
+								className="h-10 rounded-none border-0 bg-transparent px-4 shadow-none focus-visible:ring-0"
+							/>
+						</div>
+
+						<Button
+							variant="ghost"
 							size="icon"
-						/>
-						{isAuthenticated ? (
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button variant="outline" size="icon">
-										<Avatar className="h-[1.2rem] w-[1.2rem]">
-											<AvatarImage src={user.avatar} alt={user.name} />
-											<AvatarFallback className="bg-linear-to-br from-blue-500 to-purple-600 text-white text-xs">
-												{user.name.charAt(0).toUpperCase()}
-											</AvatarFallback>
-										</Avatar>
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent className="w-56" align="end" forceMount>
-									<DropdownMenuLabel className="font-normal">
-										<div className="flex flex-col space-y-1">
-											<p className="font-medium text-sm leading-none">
-												{user.name}
-											</p>
-											<p className="text-muted-foreground text-xs leading-none">
-												{user.email}
-											</p>
-										</div>
-									</DropdownMenuLabel>
-									<DropdownMenuSeparator />
-									<DropdownMenuItem onClick={() => router.push("/profile")}>
-										<User className="ms-2 h-4 w-4" />
-										<span>Profile</span>
-									</DropdownMenuItem>
-									<DropdownMenuItem>
-										<Settings className="ms-2 h-4 w-4" />
-										<span>Settings</span>
-									</DropdownMenuItem>
-									<DropdownMenuSeparator />
-									<DropdownMenuItem
-										onClick={handleSignOut}
-										variant="destructive"
-									>
-										<LogOut className="mr-2 h-4 w-4" />
-										<span>Sign Out</span>
-									</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
-						) : (
-							<Button
-								variant="outline"
-								size="icon"
-								onClick={() => {
-									setAuthModalView("signIn");
-									setIsAuthModalOpen(true);
-								}}
-							>
-								<LogIn className="h-[1.2rem] w-[1.2rem]" />
-							</Button>
-						)}
-						<CartButton />
-						<ModeToggle />
-					</nav>
+							className="h-10 w-12 rounded-l-none hover:bg-transparent"
+						>
+							<Search className="h-5 w-5 text-muted-foreground" />
+						</Button>
+					</div>
+				</div>
+
+				{/* Right Actions */}
+				<div className="flex flex-1 items-center justify-end gap-1 sm:gap-4 lg:flex-none">
+					{/* <Button variant="ghost" size="icon" className="text-foreground">
+						<Bell className="size-6 stroke-[1.5]" />
+					</Button> */}
+					<Button variant="ghost" size="icon" className="text-foreground">
+						<Heart className="size-6 stroke-[1.5]" />
+					</Button>
+
+					<div className="flex items-center">
+						<CartButton classNameIcon="size-6" />
+					</div>
+					<LanguageSelector
+						locales={locales}
+						currentLocale={currentLocale}
+						onLocaleChange={handleLocaleChange}
+						triggerVariant="ghost"
+						size="icon"
+						iconClassName="size-6"
+					/>
+					<ModeToggle variant="ghost" iconClassName="size-6" />
+					{isAuthenticated ? (
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant="ghost"
+									className="gap-2 pr-0 pl-2 hover:bg-transparent"
+								>
+									<Avatar className="size-8 border">
+										<AvatarImage src={user.avatar} alt={user.name} />
+										<AvatarFallback className="bg-primary text-primary-foreground text-xs">
+											{user.name.charAt(0).toUpperCase()}
+										</AvatarFallback>
+									</Avatar>
+									<ChevronDown className="h-4 w-4 text-muted-foreground" />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent className="w-56" align="end" forceMount>
+								<DropdownMenuLabel className="font-normal">
+									<div className="flex flex-col space-y-1">
+										<p className="font-medium text-sm leading-none">
+											{user.name}
+										</p>
+										<p className="text-muted-foreground text-xs leading-none">
+											{user.email}
+										</p>
+									</div>
+								</DropdownMenuLabel>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem onClick={() => router.push("/profile")}>
+									<User className="ms-2 h-4 w-4" />
+									<span>Profile</span>
+								</DropdownMenuItem>
+								<DropdownMenuItem>
+									<Settings className="ms-2 h-4 w-4" />
+									<span>Settings</span>
+								</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem onClick={handleSignOut} variant="destructive">
+									<LogOut className="mr-2 h-4 w-4" />
+									<span>Sign Out</span>
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					) : (
+						<Button
+							variant="ghost"
+							className="gap-2 pr-0 pl-2 hover:bg-transparent"
+							onClick={() => {
+								setAuthModalView("signIn");
+								setIsAuthModalOpen(true);
+							}}
+						>
+							<Avatar className="h-8 w-8 border">
+								<AvatarFallback>
+									<User className="h-4 w-4" />
+								</AvatarFallback>
+							</Avatar>
+							<ChevronDown className="h-4 w-4 text-muted-foreground" />
+						</Button>
+					)}
 				</div>
 			</div>
 			<AuthModal

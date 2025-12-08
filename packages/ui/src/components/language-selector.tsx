@@ -23,6 +23,20 @@ export interface LanguageSelectorProps {
 	variant?: "default" | "compact";
 	size?: "sm" | "lg" | "icon";
 	onLocaleChange?: (locale: string) => void;
+	className?: string;
+	iconClassName?: string;
+	triggerVariant?:
+		| "primary"
+		| "mono"
+		| "destructive"
+		| "secondary"
+		| "outline"
+		| "dashed"
+		| "ghost"
+		| "dim"
+		| "link"
+		| "foreground"
+		| "inverse";
 }
 
 export function LanguageSelector({
@@ -32,6 +46,9 @@ export function LanguageSelector({
 	variant = "default",
 	size = "icon",
 	onLocaleChange,
+	className,
+	triggerVariant = "outline",
+	iconClassName = "h-[1.2rem] w-[1.2rem]",
 }: LanguageSelectorProps) {
 	const handleLocaleChange = (locale: string) => {
 		onLocaleChange?.(locale);
@@ -46,6 +63,7 @@ export function LanguageSelector({
 			<Button
 				variant="outline"
 				size={size}
+				className={className}
 				onClick={() => {
 					// Cycle through locales
 					if (locales.length === 0) return;
@@ -73,8 +91,8 @@ export function LanguageSelector({
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant="outline" size={size}>
-					<Globe className="h-[1.2rem] w-[1.2rem]" />
+				<Button className={className} variant={triggerVariant} size={size}>
+					<Globe className={iconClassName} />
 					{size !== "icon" && currentLocaleData && (
 						<>
 							{showFlagNames && currentLocaleData.flag && (

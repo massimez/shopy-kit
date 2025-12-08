@@ -1,14 +1,20 @@
 "use client";
 
-import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { useMounted } from "@workspace/ui/hooks/use-mounted";
-import { ShoppingCart } from "lucide-react";
+import { cn } from "@workspace/ui/lib/utils";
+import { ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import { useCartStore } from "@/store/use-cart-store";
 import { CartModal } from "./cart-modal";
 
-export function CartButton() {
+export function CartButton({
+	className,
+	classNameIcon,
+}: {
+	className?: string;
+	classNameIcon?: string;
+}) {
 	const [isOpen, setIsOpen] = useState(false);
 	const isMounted = useMounted();
 	const { itemCount } = useCartStore();
@@ -18,20 +24,17 @@ export function CartButton() {
 	return (
 		<>
 			<Button
-				variant="outline"
+				variant="ghost"
 				size="icon"
-				className="relative"
+				className={cn("relative", className)}
 				onClick={() => setIsOpen(true)}
 				title="Open cart"
 			>
-				<ShoppingCart className="size-5" />
+				<ShoppingBag className={cn("h-6 w-6 stroke-[1.5]", classNameIcon)} />
 				{cartCount > 0 && (
-					<Badge
-						variant="destructive"
-						className="-top-2 -right-2 absolute flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs"
-					>
+					<span className="-top-1 -right-1 absolute flex h-4 w-4 items-center justify-center rounded-full bg-red-600 font-medium text-[10px] text-white">
 						{cartCount > 99 ? "99+" : cartCount}
-					</Badge>
+					</span>
 				)}
 			</Button>
 
