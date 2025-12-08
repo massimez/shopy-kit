@@ -5,7 +5,7 @@ import {
 	CardTitle,
 } from "@workspace/ui/components/card";
 import { Separator } from "@workspace/ui/components/separator";
-import { Check, Shield, Truck } from "lucide-react";
+import { Check } from "lucide-react";
 import Image from "next/image";
 import type { CartItem } from "@/store/use-cart-store";
 import { CouponInput } from "./coupon-input";
@@ -143,41 +143,6 @@ export function OrderSummarySidebar({
 					</div>
 				</CardContent>
 			</Card>
-
-			{/* Trust signals */}
-			<div className="space-y-3 rounded-xl border-2 bg-linear-to-br from-muted/30 to-muted/50 p-5 shadow-sm">
-				<div className="flex items-center gap-3">
-					<div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10 shadow-sm">
-						<Shield className="h-5 w-5 text-green-600" />
-					</div>
-					<div className="flex-1">
-						<p className="font-semibold text-sm">Secure Checkout</p>
-						<p className="text-muted-foreground text-xs">
-							256-bit SSL encryption
-						</p>
-					</div>
-				</div>
-				<div className="flex items-center gap-3">
-					<div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10 shadow-sm">
-						<Check className="h-5 w-5 text-green-600" />
-					</div>
-					<div className="flex-1">
-						<p className="font-semibold text-sm">30-Day Returns</p>
-						<p className="text-muted-foreground text-xs">
-							Money-back guarantee
-						</p>
-					</div>
-				</div>
-				<div className="flex items-center gap-3">
-					<div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 shadow-sm">
-						<Truck className="h-5 w-5 text-blue-600" />
-					</div>
-					<div className="flex-1">
-						<p className="font-semibold text-sm">Free Shipping</p>
-						<p className="text-muted-foreground text-xs" />
-					</div>
-				</div>
-			</div>
 		</div>
 	);
 }

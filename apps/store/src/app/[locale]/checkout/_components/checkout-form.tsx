@@ -20,7 +20,6 @@ import { useCartStore } from "@/store/use-cart-store";
 import { NavigationButtons } from "./navigation-buttons";
 import { OrderSummarySidebar } from "./order-summary-sidebar";
 import { PaymentStep } from "./payment-step";
-import { CheckoutProgressBar } from "./progress-bar";
 import { ReviewStep } from "./review-step";
 import { ShippingStep } from "./shipping-step";
 import type { CheckoutFormProps, CheckoutStep, StepConfig } from "./types";
@@ -333,8 +332,6 @@ export function CheckoutForm({
 			<div className="grid gap-8 lg:grid-cols-[1fr_320px]">
 				{/* Main checkout form */}
 				<div>
-					<CheckoutProgressBar currentStep={currentStep} steps={steps} />
-
 					{/* API Error Summary */}
 					{Object.keys(apiErrors).length > 0 && (
 						<Alert variant="destructive" className="mb-6">

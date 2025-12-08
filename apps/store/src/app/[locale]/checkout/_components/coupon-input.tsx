@@ -8,12 +8,13 @@ import { Check, Loader2, Tag, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { hc } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
 import { useCartStore } from "@/store/use-cart-store";
 
 export function CouponInput() {
 	const [couponCode, setCouponCode] = useState("");
 	const { appliedCoupon, applyCoupon, removeCoupon, subtotal } = useCartStore();
-
+	const [isDisplayCoupon, setIsDisplayCoupon] = useState(false);
 	const validateCouponMutation = useMutation({
 		mutationFn: async (code: string) => {
 			const res = await hc.api.storefront.rewards.coupons.validate.$post({
@@ -96,10 +97,19 @@ export function CouponInput() {
 
 	return (
 		<div className="space-y-2">
-			<label htmlFor="coupon-code" className="font-medium text-sm">
-				Have a coupon code?
-			</label>
-			<div className="flex gap-2">
+			<button
+				type="button"
+				onClick={() => setIsDisplayCoupon((prev) => !prev)}
+				className="cursor-pointer font-medium text-sm"
+			>
+				Promo code?
+			</button>
+			<div
+				className={cn(
+					"flex gap-2 overflow-hidden transition-all duration-500",
+					isDisplayCoupon ? "max-h-40 opacity-100" : "max-h-0 opacity-0",
+				)}
+			>
 				<div className="relative flex-1">
 					<Tag className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
 					<Input
