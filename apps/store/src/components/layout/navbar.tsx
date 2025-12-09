@@ -6,13 +6,7 @@ import {
 	AvatarImage,
 } from "@workspace/ui/components/avatar";
 import { Button } from "@workspace/ui/components/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuTrigger,
-} from "@workspace/ui/components/dropdown-menu";
+
 import { Input } from "@workspace/ui/components/input";
 import {
 	LanguageSelector,

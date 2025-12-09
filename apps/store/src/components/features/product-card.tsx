@@ -2,14 +2,7 @@
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Card, CardContent } from "@workspace/ui/components/card";
-import {
-	Minus,
-	Plus,
-	PlusCircle,
-	PlusCircleIcon,
-	PlusIcon,
-	ShoppingCart,
-} from "lucide-react";
+import { Minus, PlusIcon, ShoppingCart } from "lucide-react";
 
 import Image from "next/image";
 import { toast } from "sonner";

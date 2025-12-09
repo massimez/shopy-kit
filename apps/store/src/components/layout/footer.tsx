@@ -5,17 +5,12 @@ import { FacebookIcon } from "@workspace/ui/components/icons/brands/FacebookIcon
 import { TikTokIcon } from "@workspace/ui/components/icons/brands/TikTokIcon";
 import { Input } from "@workspace/ui/components/input";
 import {
-	Facebook,
-	Github,
-	Instagram,
 	InstagramIcon,
-	Linkedin,
 	LinkedinIcon,
 	Mail,
 	MapPin,
 	Phone,
 	Send,
-	Twitter,
 	XIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";

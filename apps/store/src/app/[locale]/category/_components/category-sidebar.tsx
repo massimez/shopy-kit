@@ -6,9 +6,9 @@ import {
 	AccordionItem,
 	AccordionTrigger,
 } from "@workspace/ui/components/accordion";
-import { Separator } from "@workspace/ui/components/separator";
 import { cn } from "@workspace/ui/lib/utils";
 import { Sparkles, UtensilsCrossed } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Link } from "@/i18n/routing";
 import type { Collection } from "./utils";
@@ -25,7 +25,7 @@ export function CategorySidebar({
 	const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
 	// Mock static items based on the image provided
-	const staticItems = [
+	const _staticItems = [
 		{
 			name: "Collected for you",
 			icon: <Sparkles className="h-5 w-5 text-orange-500" />,
@@ -114,10 +114,11 @@ export function CategorySidebar({
 									<div className="flex items-center gap-3">
 										<div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/50 bg-background shadow-sm">
 											{collection.image ? (
-												<img
+												<Image
 													src={collection.image}
 													alt={collection.name}
-													className="h-full w-full object-cover"
+													fill
+													className="object-cover"
 												/>
 											) : (
 												<span className="text-muted-foreground text-xs" />
@@ -170,10 +171,11 @@ export function CategorySidebar({
 						>
 							<div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/50 bg-background shadow-sm">
 								{collection.image ? (
-									<img
+									<Image
 										src={collection.image}
 										alt={collection.name}
-										className="h-full w-full object-cover"
+										fill
+										className="object-cover"
 									/>
 								) : (
 									<span className="text-muted-foreground text-xs" />

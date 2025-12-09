@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@workspace/ui/components/button";
 import {
 	Carousel,
 	CarouselContent,
@@ -8,7 +7,7 @@ import {
 	CarouselNext,
 	CarouselPrevious,
 } from "@workspace/ui/components/carousel";
-import { ArrowRight } from "lucide-react";
+
 import { ProductCard } from "@/components/features/product-card";
 import { Link } from "@/i18n/routing";
 import {

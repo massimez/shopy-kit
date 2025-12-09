@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { useCollections } from "@/lib/hooks/use-storefront";
 import type { Collection } from "@/lib/storefront-types";
@@ -27,7 +28,10 @@ export default function CategoriesPage() {
 			<div className="grid grid-cols-1 gap-8 md:grid-cols-[240px_1fr] lg:grid-cols-[260px_1fr]">
 				<div className="hidden md:block">
 					{/* Pass empty activeSlug since we are on the root category page */}
-					<CategorySidebar collections={collections as any} activeSlug="" />
+					<CategorySidebar
+						collections={collections as Collection[]}
+						activeSlug=""
+					/>
 				</div>
 
 				<div className="min-w-0 space-y-16">
@@ -57,10 +61,11 @@ export default function CategoriesPage() {
 
 												<div className="absolute right-0 bottom-0 h-32 w-32 translate-x-4 translate-y-4 transform transition-transform duration-300 group-hover:scale-110">
 													{child.image ? (
-														<img
+														<Image
 															src={child.image}
 															alt={child.name}
-															className="h-full w-full object-contain object-bottom"
+															fill
+															className="object-contain object-bottom"
 														/>
 													) : (
 														<div className="flex h-full w-full items-end justify-end p-4 text-4xl opacity-50">

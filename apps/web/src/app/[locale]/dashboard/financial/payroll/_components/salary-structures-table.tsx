@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@workspace/ui/components/badge";
-import { Button } from "@workspace/ui/components/button";
+
 import {
 	Table,
 	TableBody,
@@ -10,10 +10,23 @@ import {
 	TableHeader,
 	TableRow,
 } from "@workspace/ui/components/table";
-import { DollarSign, Edit, User } from "lucide-react";
-import { useState } from "react";
+import { User } from "lucide-react";
 import { useFinancialPayroll } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-payroll";
 import { CreateSalaryStructureSheet } from "./create-salary-structure-sheet";
+
+interface SalaryStructure {
+	id: string;
+	employee: {
+		firstName: string;
+		lastName: string;
+		employeeCode: string;
+	};
+	baseSalary: number;
+	currency: string;
+	paymentFrequency: string;
+	effectiveFrom: string;
+	isActive: boolean;
+}
 
 export function SalaryStructuresTable() {
 	const { useSalaryStructures } = useFinancialPayroll();
@@ -62,7 +75,7 @@ export function SalaryStructuresTable() {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{salaryStructures?.map((structure: any) => (
+						{salaryStructures?.map((structure: SalaryStructure) => (
 							<TableRow key={structure.id}>
 								<TableCell className="font-medium">
 									{structure.employee.firstName} {structure.employee.lastName}
@@ -94,9 +107,7 @@ export function SalaryStructuresTable() {
 									</Badge>
 								</TableCell>
 								<TableCell>
-									<CreateSalaryStructureSheet
-										editingStructure={structure as any}
-									/>
+									<CreateSalaryStructureSheet editingStructure={structure} />
 								</TableCell>
 							</TableRow>
 						))}

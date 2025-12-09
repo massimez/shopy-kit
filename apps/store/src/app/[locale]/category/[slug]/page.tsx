@@ -1,6 +1,5 @@
 "use client";
 
-import { Separator } from "@workspace/ui/components/separator";
 import { use } from "react";
 import { CategoryHeader } from "@/components/features/category-header";
 import { ProductBreadcrumbs } from "@/components/features/product-breadcrumbs";
@@ -74,7 +73,7 @@ export default function CategoryPage({ params }: PageProps) {
 					/>
 
 					<div className="space-y-2">
-						{collection.children.map((child: Collection, index: number) => (
+						{collection.children.map((child: Collection, _index: number) => (
 							<div key={child.id}>
 								<SubcategoryRow
 									collectionId={child.id}

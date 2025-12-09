@@ -478,6 +478,7 @@ export const EditOrderDialog = ({
 						{/* Order Status History */}
 						<OrderStatusHistory
 							orderId={order.id}
+							// biome-ignore lint/suspicious/noExplicitAny: <>
 							history={(historyData as any) || []}
 							isLoading={isLoadingHistory}
 						/>

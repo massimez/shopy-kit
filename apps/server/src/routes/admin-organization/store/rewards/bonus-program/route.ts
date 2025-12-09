@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { createRouter } from "@/lib/create-hono-app";
 import {
 	createErrorResponse,
@@ -9,7 +8,6 @@ import {
 	idParamSchema,
 	jsonValidator,
 	paramValidator,
-	queryValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
 import { authMiddleware } from "@/middleware/auth";

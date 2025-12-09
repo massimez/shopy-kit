@@ -8,7 +8,7 @@ import { useDefaultLocation } from "@/lib/hooks/use-storefront";
 import { CheckoutForm } from "./_components";
 
 export default function CheckoutPage() {
-	const t = useTranslations("Navigation");
+	const _t = useTranslations("Navigation");
 	const { data: session, isPending } = useSession();
 	const router = useRouter();
 
