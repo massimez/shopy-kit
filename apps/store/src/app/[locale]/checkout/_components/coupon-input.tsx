@@ -100,9 +100,9 @@ export function CouponInput() {
 			<button
 				type="button"
 				onClick={() => setIsDisplayCoupon((prev) => !prev)}
-				className="cursor-pointer font-medium text-sm"
+				className="w-full cursor-pointer text-left font-medium text-sm"
 			>
-				Promo code?
+				Promo code
 			</button>
 			<div
 				className={cn(

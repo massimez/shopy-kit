@@ -44,7 +44,7 @@ export function CartModal({ open, onOpenChange }: CartModalProps) {
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetContent side="right" className="flex w-full flex-col sm:max-w-lg">
 				<SheetHeader className="shrink-0">
-					<div className="mt-2 flex items-center justify-between">
+					<div className="flex items-center justify-between">
 						<SheetTitle className="flex items-center gap-2">
 							<ShoppingBag className="size-5" />
 							{t("title")}

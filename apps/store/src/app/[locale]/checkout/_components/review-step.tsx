@@ -14,9 +14,9 @@ interface ReviewStepProps {
 
 export function ReviewStep({ formValues, total }: ReviewStepProps) {
 	return (
-		<div className="space-y-8">
+		<div className="space-y-6">
 			<Card className="border-2 shadow-sm">
-				<CardHeader className="pb-6">
+				<CardHeader>
 					<CardTitle className="text-xl">Order Review</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-8">

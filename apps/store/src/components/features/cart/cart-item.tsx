@@ -53,7 +53,7 @@ export function CartItem({ item }: CartItemProps) {
 	const totalPrice = item.price * quantity;
 
 	return (
-		<Card className="overflow-hidden py-4">
+		<Card className="overflow-hidden py-3">
 			<CardContent className="p-2">
 				<div className="flex gap-4">
 					{/* Product Image */}
@@ -87,16 +87,12 @@ export function CartItem({ item }: CartItemProps) {
 										{item.variantSku && <span>SKU: {item.variantSku}</span>}
 									</p>
 								)}
-								{item.description && (
-									<p className="mt-1 line-clamp-2 text-muted-foreground text-xs">
-										{item.description}
-									</p>
-								)}
+
 								<div className="mt-3 flex items-center justify-between">
 									<p className="font-semibold text-sm">
 										${totalPrice.toFixed(2)}
 									</p>
-									<p className="text-muted-foreground text-xs">
+									<p className="text-[9px] text-muted-foreground">
 										${item.price.toFixed(2)} each
 									</p>
 								</div>
@@ -128,7 +124,7 @@ export function CartItem({ item }: CartItemProps) {
 										-
 									</Button>
 
-									<span className="w-8 text-center font-medium text-sm">
+									<span className="w-6 text-center font-medium text-sm">
 										{quantity}
 									</span>
 

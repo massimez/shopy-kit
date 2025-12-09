@@ -23,7 +23,7 @@ export function NavigationButtons({
 	const shouldShowContinue = currentStep !== "review";
 
 	return (
-		<div className="flex gap-4 pt-8">
+		<div className="flex gap-4">
 			{currentStep !== "shipping" && (
 				<Button
 					type="button"

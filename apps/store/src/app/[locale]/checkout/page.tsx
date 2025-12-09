@@ -75,7 +75,6 @@ export default function CheckoutPage() {
 
 	return (
 		<div className="container mx-auto px-4 py-10">
-			<h1 className="mb-8 font-bold text-4xl">{t("checkout")}</h1>
 			<CheckoutForm
 				organizationId={organizationId}
 				locationId={defaultLocation.id}

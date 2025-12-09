@@ -1,6 +1,5 @@
 import { createRouter } from "@/lib/create-hono-app";
 import {
-	createErrorResponse,
 	createSuccessResponse,
 	handleRouteError,
 } from "@/lib/utils/route-helpers";
@@ -24,23 +23,6 @@ export const clientRoute = createRouter()
 				const userId = c.get("session")?.userId as string;
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
 
-				if (!userId) {
-					return c.json(
-						createErrorResponse(
-							"AuthenticationError",
-							"User not authenticated",
-							[
-								{
-									code: "USER_NOT_AUTHENTICATED",
-									path: ["session"],
-									message: "Valid user session required",
-								},
-							],
-						),
-						401,
-					);
-				}
-
 				const clientProfile = await getMyClient(userId, activeOrgId);
 				return c.json(createSuccessResponse(clientProfile));
 			} catch (error) {
@@ -58,23 +40,6 @@ export const clientRoute = createRouter()
 				const userId = c.get("session")?.userId as string;
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
 				const updateData = c.req.valid("json");
-
-				if (!userId) {
-					return c.json(
-						createErrorResponse(
-							"AuthenticationError",
-							"User not authenticated",
-							[
-								{
-									code: "USER_NOT_AUTHENTICATED",
-									path: ["session"],
-									message: "Valid user session required",
-								},
-							],
-						),
-						401,
-					);
-				}
 
 				const updatedProfile = await updateMyClient(
 					userId,

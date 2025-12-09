@@ -29,7 +29,7 @@ export function OrderSummarySidebar({
 				<CardHeader className="border-b">
 					<CardTitle className="text-xl">Order Summary</CardTitle>
 				</CardHeader>
-				<CardContent className="p-6">
+				<CardContent>
 					{/* Items List */}
 					<div className="mb-6 space-y-4">
 						<div className="flex items-center justify-between">
@@ -88,12 +88,12 @@ export function OrderSummarySidebar({
 						</div>
 					</div>
 
-					<Separator className="my-6" />
+					<Separator className="my-1" />
 
 					{/* Coupon Input */}
 					<CouponInput />
 
-					<Separator className="my-6" />
+					<Separator className="my-1" />
 
 					{/* Price Breakdown */}
 					<div className="space-y-4">

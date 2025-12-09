@@ -79,8 +79,7 @@ export const useCartStore = create<CartState>()(
 				return Math.max(0, subtotal - discount);
 			},
 			finalTotal: () => get().total(),
-			itemCount: () =>
-				get().items.reduce((acc, item) => acc + item.quantity, 0),
+			itemCount: () => get().items.length,
 			applyCoupon: (coupon) => set({ appliedCoupon: coupon }),
 			removeCoupon: () => set({ appliedCoupon: null }),
 		}),

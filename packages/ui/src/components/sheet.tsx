@@ -2,7 +2,7 @@
 
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@workspace/ui/lib/utils";
-import { XIcon } from "lucide-react";
+import { ArrowLeft, XIcon } from "lucide-react";
 import type * as React from "react";
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
@@ -70,11 +70,12 @@ function SheetContent({
 				)}
 				{...props}
 			>
-				{children}
-				<SheetPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-					<XIcon className="size-4" />
+				<SheetPrimitive.Close className="top-5 left-5 block w-fit rounded-4xl bg-muted px-2.5 py-1 opacity-70 transition-opacity hover:opacity-100 sm:absolute sm:right-5 sm:left-auto sm:px-1">
+					<XIcon className="hidden size-5 sm:block" />
+					<ArrowLeft className="block size-6 sm:hidden" />
 					<span className="sr-only">Close</span>
 				</SheetPrimitive.Close>
+				{children}
 			</SheetPrimitive.Content>
 		</SheetPortal>
 	);
@@ -107,7 +108,7 @@ function SheetTitle({
 	return (
 		<SheetPrimitive.Title
 			data-slot="sheet-title"
-			className={cn("font-semibold text-foreground", className)}
+			className={cn("font-semibold text-foreground text-xl", className)}
 			{...props}
 		/>
 	);
