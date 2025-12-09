@@ -11,7 +11,6 @@ import {
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuLabel,
-	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import { Input } from "@workspace/ui/components/input";
@@ -20,19 +19,12 @@ import {
 	type LocaleOption,
 } from "@workspace/ui/components/language-selector";
 import { ModeToggle } from "@workspace/ui/components/theme-toggle";
-import {
-	ChevronDown,
-	Heart,
-	LogOut,
-	Search,
-	Settings,
-	Tornado,
-	User,
-} from "lucide-react";
+import { ChevronDown, Search, Tornado, User } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CartButton } from "@/components/features/cart/cart-button";
+import { UserProfileDrawer } from "@/components/features/profile/user-profile-drawer";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { signOut, useSession } from "@/lib/auth-client";
 import { AuthModal } from "../auth/auth-modal";
@@ -133,13 +125,10 @@ export function Navbar() {
 				</div>
 
 				{/* Right Actions */}
-				<div className="flex flex-1 items-center justify-end gap-1 sm:gap-4 lg:flex-none">
+				<div className="flex flex-1 items-center justify-end gap-2 sm:gap-4 lg:flex-none">
 					{/* <Button variant="ghost" size="icon" className="text-foreground">
-						<Bell className="size-6 stroke-[1.5]" />
-					</Button> */}
-					<Button variant="ghost" size="icon" className="text-foreground">
 						<Heart className="size-6 stroke-[1.5]" />
-					</Button>
+					</Button> */}
 
 					<div className="flex items-center">
 						<CartButton classNameIcon="size-6" />
@@ -152,65 +141,34 @@ export function Navbar() {
 						size="icon"
 						iconClassName="size-6"
 					/>
-					<ModeToggle variant="ghost" iconClassName="size-6" />
+					<ModeToggle
+						className="max-sm:hidden"
+						variant="ghost"
+						iconClassName="size-6"
+					/>
 					{isAuthenticated ? (
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="ghost"
-									className="gap-2 pr-0 pl-2 hover:bg-transparent"
-								>
-									<Avatar className="size-8 border">
-										<AvatarImage src={user.avatar} alt={user.name} />
-										<AvatarFallback className="bg-primary text-primary-foreground text-xs">
-											{user.name.charAt(0).toUpperCase()}
-										</AvatarFallback>
-									</Avatar>
-									<ChevronDown className="h-4 w-4 text-muted-foreground" />
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent className="w-56" align="end" forceMount>
-								<DropdownMenuLabel className="font-normal">
-									<div className="flex flex-col space-y-1">
-										<p className="font-medium text-sm leading-none">
-											{user.name}
-										</p>
-										<p className="text-muted-foreground text-xs leading-none">
-											{user.email}
-										</p>
-									</div>
-								</DropdownMenuLabel>
-								<DropdownMenuSeparator />
-								<DropdownMenuItem onClick={() => router.push("/profile")}>
-									<User className="ms-2 h-4 w-4" />
-									<span>Profile</span>
-								</DropdownMenuItem>
-								<DropdownMenuItem>
-									<Settings className="ms-2 h-4 w-4" />
-									<span>Settings</span>
-								</DropdownMenuItem>
-								<DropdownMenuSeparator />
-								<DropdownMenuItem onClick={handleSignOut} variant="destructive">
-									<LogOut className="mr-2 h-4 w-4" />
-									<span>Sign Out</span>
-								</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
+						<UserProfileDrawer user={user} onSignOut={handleSignOut}>
+							<Button variant="ghost" className="gap-0 px-0">
+								<Avatar className="size-8">
+									<AvatarImage src={user.avatar} alt={user.name} />
+									<AvatarFallback className="bg-background-transparent">
+										<User className="size-7" />
+									</AvatarFallback>
+								</Avatar>
+								<ChevronDown className="size-4" />
+							</Button>
+						</UserProfileDrawer>
 					) : (
 						<Button
 							variant="ghost"
-							className="gap-2 pr-0 pl-2 hover:bg-transparent"
+							className="gap-2 pr-0 text-foreground"
 							onClick={() => {
 								setAuthModalView("signIn");
 								setIsAuthModalOpen(true);
 							}}
 						>
-							<Avatar className="h-8 w-8 border">
-								<AvatarFallback>
-									<User className="h-4 w-4" />
-								</AvatarFallback>
-							</Avatar>
-							<ChevronDown className="h-4 w-4 text-muted-foreground" />
+							<User className="size-7" />
+							<ChevronDown className="size-4" />
 						</Button>
 					)}
 				</div>
