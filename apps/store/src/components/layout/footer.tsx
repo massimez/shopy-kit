@@ -1,17 +1,22 @@
 "use client";
 
 import { Button } from "@workspace/ui/components/button";
+import { FacebookIcon } from "@workspace/ui/components/icons/brands/FacebookIcon";
+import { TikTokIcon } from "@workspace/ui/components/icons/brands/TikTokIcon";
 import { Input } from "@workspace/ui/components/input";
 import {
 	Facebook,
 	Github,
 	Instagram,
+	InstagramIcon,
 	Linkedin,
+	LinkedinIcon,
 	Mail,
 	MapPin,
 	Phone,
 	Send,
 	Twitter,
+	XIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -33,16 +38,13 @@ export function Footer() {
 
 	const footerLinks = {
 		shop: [
-			{ href: "/products", label: t("allProducts") },
-			{ href: "/categories/all", label: t("categories") },
+			{ href: "/category/", label: t("categories") },
 			{ href: "/products?sort=newest", label: t("newArrivals") },
 			{ href: "/products?sort=popular", label: t("bestSellers") },
 		],
 		company: [
 			{ href: "/about", label: t("aboutUs") },
 			{ href: "/contact", label: t("contactUs") },
-			{ href: "/careers", label: t("careers") },
-			{ href: "/blog", label: t("blog") },
 		],
 		support: [
 			{ href: "/help", label: t("helpCenter") },
@@ -54,35 +56,34 @@ export function Footer() {
 			{ href: "/privacy", label: t("privacy") },
 			{ href: "/terms", label: t("terms") },
 			{ href: "/cookies", label: t("cookies") },
-			{ href: "/accessibility", label: t("accessibility") },
 		],
 	};
 
 	const socialLinks = [
 		{
-			icon: Facebook,
+			icon: FacebookIcon,
 			href: "#",
 			label: "Facebook",
 			color: "hover:text-blue-500",
 		},
-		{ icon: Twitter, href: "#", label: "Twitter", color: "hover:text-sky-700" },
+		{ icon: XIcon, href: "#", label: "Twitter", color: "hover:text-sky-700" },
 		{
-			icon: Instagram,
+			icon: InstagramIcon,
 			href: "#",
 			label: "Instagram",
 			color: "hover:text-pink-500",
 		},
 		{
-			icon: Linkedin,
+			icon: LinkedinIcon,
 			href: "#",
 			label: "LinkedIn",
 			color: "hover:text-blue-600",
 		},
 		{
-			icon: Github,
+			icon: TikTokIcon,
 			href: "#",
-			label: "GitHub",
-			color: "hover:text-gray-600 dark:hover:text-purple-600",
+			label: "Tiktok",
+			color: "hover:text-blue-600",
 		},
 	];
 
@@ -93,50 +94,83 @@ export function Footer() {
 
 			<div className="container relative mx-auto px-4 py-12 md:py-16">
 				{/* Main Footer Content */}
-				<div className="grid gap-8 md:grid-cols-2 lg:grid-cols-12">
+				<div className="grid gap-12 md:grid-cols-2 lg:grid-cols-12 lg:gap-8 xl:gap-12">
 					{/* Brand Section */}
 					<div className="lg:col-span-4">
-						<Link href="/" className="mb-4 inline-block">
-							<h2 className="bg-linear-to-r from-primary to-primary/60 bg-clip-text font-bold text-2xl text-transparent">
+						<Link href="/" className="mb-6 inline-block">
+							<h2 className="bg-linear-to-r from-primary to-primary/60 bg-clip-text font-bold text-3xl text-transparent tracking-tight">
 								STORE
 							</h2>
 						</Link>
-						<p className="mb-6 text-muted-foreground text-sm leading-relaxed">
+						<p className="mb-8 max-w-sm text-muted-foreground leading-relaxed">
 							{t("brandDescription")}
 						</p>
 
 						{/* Contact Info */}
-						<div className="space-y-3">
-							<div className="flex items-center gap-3 text-muted-foreground text-sm transition-colors hover:text-foreground">
-								<MapPin className="h-4 w-4 shrink-0" />
-								<span>{t("address")}</span>
+						<div className="space-y-4">
+							<div className="flex items-center gap-3 text-muted-foreground transition-colors hover:text-foreground">
+								<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+									<MapPin className="h-4 w-4 shrink-0" />
+								</div>
+								<span className="font-medium text-sm">{t("address")}</span>
 							</div>
-							<div className="flex items-center gap-3 text-muted-foreground text-sm transition-colors hover:text-foreground">
-								<Phone className="h-4 w-4 shrink-0" />
-								<span>+1 (555) 123-4567</span>
+							<div className="flex items-center gap-3 text-muted-foreground transition-colors hover:text-foreground">
+								<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+									<Phone className="h-4 w-4 shrink-0" />
+								</div>
+								<span className="font-medium text-sm">+1 (555) 123-4567</span>
 							</div>
-							<div className="flex items-center gap-3 text-muted-foreground text-sm transition-colors hover:text-foreground">
-								<Mail className="h-4 w-4 shrink-0" />
-								<span>support@store.com</span>
+							<div className="flex items-center gap-3 text-muted-foreground transition-colors hover:text-foreground">
+								<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+									<Mail className="h-4 w-4 shrink-0" />
+								</div>
+								<span className="font-medium text-sm">support@store.com</span>
 							</div>
+						</div>
+						{/* Social Links */}
+						<div className="mt-8 flex items-center gap-2">
+							{socialLinks.map((social) => (
+								<Button
+									key={social.label}
+									variant="outline"
+									size="icon"
+									className={cn(
+										"hover:-translate-y-1 h-10 w-10 rounded-full border-muted-foreground/20 bg-background transition-all hover:border-primary/50 hover:shadow-md",
+										social.color,
+									)}
+									asChild
+								>
+									<a
+										href={social.href}
+										target="_blank"
+										rel="noopener noreferrer"
+										aria-label={social.label}
+									>
+										<social.icon className="h-4 w-4" />
+									</a>
+								</Button>
+							))}
 						</div>
 					</div>
 
 					{/* Links Sections */}
-					<div className="grid grid-cols-2 gap-8 sm:grid-cols-4 lg:col-span-8">
+					<div className="grid grid-cols-2 gap-8 sm:grid-cols-4 lg:col-span-8 lg:pl-8">
 						{/* Shop */}
 						<div>
-							<h3 className="mb-4 font-semibold text-foreground text-sm uppercase tracking-wider">
+							<h3 className="mb-6 font-semibold text-foreground text-sm uppercase tracking-widest">
 								{t("shop")}
 							</h3>
-							<ul className="space-y-3">
+							<ul className="space-y-4">
 								{footerLinks.shop.map((link) => (
 									<li key={link.href}>
 										<Link
 											href={link.href}
-											className="text-muted-foreground text-sm transition-colors hover:text-primary"
+											className="group flex items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-primary"
 										>
-											{link.label}
+											<span className="h-px w-0 bg-primary transition-all duration-300 group-hover:w-3" />
+											<span className="transition-transform duration-300 group-hover:translate-x-1">
+												{link.label}
+											</span>
 										</Link>
 									</li>
 								))}
@@ -145,17 +179,20 @@ export function Footer() {
 
 						{/* Company */}
 						<div>
-							<h3 className="mb-4 font-semibold text-foreground text-sm uppercase tracking-wider">
+							<h3 className="mb-6 font-semibold text-foreground text-sm uppercase tracking-widest">
 								{t("company")}
 							</h3>
-							<ul className="space-y-3">
+							<ul className="space-y-4">
 								{footerLinks.company.map((link) => (
 									<li key={link.href}>
 										<Link
 											href={link.href}
-											className="text-muted-foreground text-sm transition-colors hover:text-primary"
+											className="group flex items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-primary"
 										>
-											{link.label}
+											<span className="h-px w-0 bg-primary transition-all duration-300 group-hover:w-3" />
+											<span className="transition-transform duration-300 group-hover:translate-x-1">
+												{link.label}
+											</span>
 										</Link>
 									</li>
 								))}
@@ -164,17 +201,20 @@ export function Footer() {
 
 						{/* Support */}
 						<div>
-							<h3 className="mb-4 font-semibold text-foreground text-sm uppercase tracking-wider">
+							<h3 className="mb-6 font-semibold text-foreground text-sm uppercase tracking-widest">
 								{t("support")}
 							</h3>
-							<ul className="space-y-3">
+							<ul className="space-y-4">
 								{footerLinks.support.map((link) => (
 									<li key={link.href}>
 										<Link
 											href={link.href}
-											className="text-muted-foreground text-sm transition-colors hover:text-primary"
+											className="group flex items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-primary"
 										>
-											{link.label}
+											<span className="h-px w-0 bg-primary transition-all duration-300 group-hover:w-3" />
+											<span className="transition-transform duration-300 group-hover:translate-x-1">
+												{link.label}
+											</span>
 										</Link>
 									</li>
 								))}
@@ -183,17 +223,20 @@ export function Footer() {
 
 						{/* Legal */}
 						<div>
-							<h3 className="mb-4 font-semibold text-foreground text-sm uppercase tracking-wider">
+							<h3 className="mb-6 font-semibold text-foreground text-sm uppercase tracking-widest">
 								{t("legal")}
 							</h3>
-							<ul className="space-y-3">
+							<ul className="space-y-4">
 								{footerLinks.legal.map((link) => (
 									<li key={link.href}>
 										<Link
 											href={link.href}
-											className="text-muted-foreground text-sm transition-colors hover:text-primary"
+											className="group flex items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-primary"
 										>
-											{link.label}
+											<span className="h-px w-0 bg-primary transition-all duration-300 group-hover:w-3" />
+											<span className="transition-transform duration-300 group-hover:translate-x-1">
+												{link.label}
+											</span>
 										</Link>
 									</li>
 								))}
@@ -229,50 +272,11 @@ export function Footer() {
 				</div>
 
 				{/* Bottom Section */}
-				<div className="mt-12 flex flex-col items-center justify-between gap-4 border-t pt-8 md:flex-row">
+				<div className="mt-12 flex flex-col items-center justify-center gap-4 border-t pt-8 md:flex-row">
 					{/* Copyright */}
 					<p className="text-center text-muted-foreground text-sm">
 						© {new Date().getFullYear()} STORE. {t("allRightsReserved")}
 					</p>
-
-					{/* Social Links */}
-					<div className="flex items-center gap-2">
-						{socialLinks.map((social) => (
-							<Button
-								key={social.label}
-								variant="ghost"
-								size="icon"
-								className={cn("transition-all hover:scale-110", social.color)}
-								asChild
-							>
-								<a
-									href={social.href}
-									target="_blank"
-									rel="noopener noreferrer"
-									aria-label={social.label}
-								>
-									<social.icon className="size-6" />
-								</a>
-							</Button>
-						))}
-					</div>
-
-					{/* Payment Methods */}
-					<div className="flex items-center gap-2">
-						<span className="text-muted-foreground text-xs">
-							{t("weAccept")}
-						</span>
-						<div className="flex gap-1">
-							{["💳", "💰", "🏦", "📱"].map((emoji) => (
-								<div
-									key={emoji}
-									className="flex h-8 w-10 items-center justify-center rounded border bg-background text-lg"
-								>
-									{emoji}
-								</div>
-							))}
-						</div>
-					</div>
 				</div>
 			</div>
 		</footer>

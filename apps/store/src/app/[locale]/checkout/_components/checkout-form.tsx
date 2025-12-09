@@ -335,7 +335,7 @@ export function CheckoutForm({
 					{/* API Error Summary */}
 					{Object.keys(apiErrors).length > 0 && (
 						<Alert variant="destructive" className="mb-6">
-							<div className="flex items-start justify-between">
+							<div className="flex w-full items-start justify-between">
 								<div className="flex items-start gap-2">
 									<AlertCircle className="mt-0.5 h-4 w-4" />
 									<div className="flex-1">
@@ -343,7 +343,11 @@ export function CheckoutForm({
 										<AlertDescription className="mt-2 space-y-1">
 											{Object.entries(apiErrors).map(([field, message]) => (
 												<div key={field} className="text-sm">
-													<strong>{field}:</strong> {message}
+													<strong>
+														{field}
+														{field && ":"}
+													</strong>{" "}
+													{message}
 												</div>
 											))}
 										</AlertDescription>

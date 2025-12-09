@@ -1,14 +1,17 @@
 "use client";
 
 import { Badge } from "@workspace/ui/components/badge";
-import { Button } from "@workspace/ui/components/button";
+import { Card, CardContent } from "@workspace/ui/components/card";
 import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-} from "@workspace/ui/components/card";
-import { Heart, ShoppingCart, Star } from "lucide-react";
+	Minus,
+	Plus,
+	PlusCircle,
+	PlusCircleIcon,
+	PlusIcon,
+	ShoppingCart,
+} from "lucide-react";
+
+import Image from "next/image";
 import { toast } from "sonner";
 import { Link } from "@/i18n/routing";
 import { useDefaultLocationId } from "@/lib/hooks/use-default-location";
@@ -26,34 +29,38 @@ export interface Product {
 	isNew?: boolean;
 	isOnSale?: boolean;
 	discountPercentage?: number;
-	productVariantId?: string; // The variant ID to add to cart
+	productVariantId?: string;
 	variantName?: string;
 	variantSku?: string;
 }
 
 interface ProductCardProps {
 	product: Product;
-	showAddToCart?: boolean;
-	showViewDetails?: boolean;
-	showWishlist?: boolean;
-	compact?: boolean;
 }
 
-export function ProductCard({
-	product,
-	showWishlist = false,
-	compact = false,
-}: ProductCardProps) {
-	const { addItem } = useCartStore();
+export function ProductCard({ product }: ProductCardProps) {
+	const { items, addItem, removeItem, updateQuantity } = useCartStore();
 	const { locationId } = useDefaultLocationId();
 
-	const _handleAddToCart = () => {
+	// Find the current quantity of this item in the cart
+	// We need to match by productVariantId if available, or just rely on what's in the cart.
+	// The cart store uses productVariantId as the identifier in addItem logic, but let's double check.
+	// In use-cart-store.ts: existingItem check uses productVariantId.
+	// So we should find based on that.
+	const cartItem = items.find(
+		(item) => item.productVariantId === product.productVariantId,
+	);
+	const quantity = cartItem?.quantity || 0;
+
+	const handleAddToCart = (e: React.MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+
 		if (!locationId) {
 			toast.error("Unable to add to cart. Location not available.");
 			return;
 		}
 
-		// Validate that we have a variant ID
 		if (!product.productVariantId) {
 			toast.error(
 				"This product is currently unavailable. Please try another variant or check back later.",
@@ -61,8 +68,8 @@ export function ProductCard({
 			return;
 		}
 
-		const cartItem = {
-			id: product.productVariantId, // Use variant ID as unique identifier
+		const itemToAdd = {
+			id: product.productVariantId,
 			name: product.name,
 			price: product.price,
 			quantity: 1,
@@ -74,147 +81,111 @@ export function ProductCard({
 			variantSku: product.variantSku,
 		};
 
-		addItem(cartItem);
-		toast.success(`${product.name} has been added to your cart!`);
+		addItem(itemToAdd);
+		if (quantity === 0) {
+			toast.success(`${product.name} has been added to your cart!`);
+		}
+	};
+
+	const handleRemoveOne = (e: React.MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+
+		if (!cartItem) return;
+
+		if (quantity > 1) {
+			updateQuantity(cartItem.id, quantity - 1);
+		} else {
+			removeItem(cartItem.id);
+		}
 	};
 
 	return (
-		<Card className="group hover:-translate-y-1 relative flex h-full flex-col overflow-hidden transition-all duration-300 hover:shadow-lg">
-			<CardHeader className="p-2 sm:p-4">
-				<Link href={`/product/${product.id}`}>
-					<CardTitle
-						className={`${compact ? "text-base sm:text-lg" : "text-lg sm:text-xl"} line-clamp-1 cursor-pointer transition-colors group-hover:text-primary`}
-					>
-						{product.name}
-					</CardTitle>
-				</Link>
-				<Link
-					href={`/categories/${product.category.toLowerCase().replace(" ", "-")}`}
-				>
-					<Badge
-						variant="outline"
-						className="w-fit cursor-pointer text-xs transition-colors hover:bg-primary hover:text-primary-foreground sm:text-sm"
-					>
-						{product.category}
-					</Badge>
-				</Link>
-			</CardHeader>
-
-			<CardContent className="flex flex-1 flex-col p-2 pt-0 sm:p-4 sm:pt-0">
-				{/* Product Image */}
-				<Link href={`/product/${product.id}`}>
-					<div className="relative mb-3 aspect-square w-full overflow-hidden rounded-lg bg-muted/30">
+		<Link href={`/product/${product.id}`} className="block h-full">
+			<Card className="group relative flex h-full flex-col gap-0 overflow-hidden rounded-xl border-none bg-white py-0 shadow-none transition-all duration-300 hover:shadow-lg dark:bg-card">
+				{/* Image Container */}
+				<div className="relative aspect-square w-full overflow-hidden">
+					<div className="relative h-full w-full overflow-hidden rounded-lg bg-muted/20">
 						{product.image ? (
-							// biome-ignore lint/performance/noImgElement: <TODO>
-							<img
+							<Image
 								src={product.image}
 								alt={product.name}
-								className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+								fill
+								sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+								className="object-contain transition-transform duration-300 group-hover:scale-105"
 							/>
 						) : (
-							<div className="flex h-full items-center justify-center bg-linear-to-br from-muted/20 to-muted/40">
-								<ShoppingCart className="h-12 w-12 text-muted-foreground/50" />
+							<div className="flex h-full items-center justify-center">
+								<ShoppingCart className="h-8 w-8 text-muted-foreground/30" />
 							</div>
 						)}
 
-						{/* Product Badges */}
-						{product.isNew || product.isOnSale ? (
-							<div className="absolute right-2 bottom-2 z-10 flex flex-col gap-1">
-								{product.isNew && (
-									<div className="rounded backdrop-blur-sm">
-										<Badge variant="info" className="px-2 py-1">
-											New
-										</Badge>
-									</div>
-								)}
-								{product.isOnSale && product.discountPercentage && (
-									<div className="rounded backdrop-blur-sm">
-										<Badge variant="destructive" className="px-2 py-1">
-											-{product.discountPercentage}%
-										</Badge>
-									</div>
-								)}
+						{/* Quantity Overlay */}
+						{quantity > 0 && (
+							<div className="absolute inset-0 z-20 flex items-center justify-center bg-black/10 transition-opacity">
+								<span
+									key={quantity}
+									className="slide-in-from-top-6 fade-in animate-in fill-mode-both font-bold text-4xl text-white drop-shadow-md duration-300"
+								>
+									{quantity}
+								</span>
 							</div>
-						) : null}
-
-						{/* Wishlist Button */}
-						{showWishlist && (
-							<Button
-								variant="ghost"
-								size="sm"
-								className="absolute top-2 right-2 z-10 h-9 w-9 p-0 backdrop-blur-sm hover:bg-black/80 sm:h-8 sm:w-8"
-								onClick={(e) => {
-									e.preventDefault();
-									toast.success(`Added ${product.name} to wishlist!`);
-								}}
-							>
-								<Heart className="size-4 text-white" />
-							</Button>
 						)}
 
-						{/* Rating - overlaid on image */}
-						{product.rating && (
-							<div className="absolute bottom-2 left-2 z-10 sm:left-3">
-								<div className="flex items-center gap-1 rounded bg-black/30 px-2 py-1 backdrop-blur-sm">
-									<Star className="h-3 w-3 text-yellow-400" />
-									<span className="font-medium text-white text-xs">
-										{product.rating.toFixed(1)}
-									</span>
-									<span className="hidden font-medium text-white/70 text-xs sm:inline">
-										({product.reviews || 0})
-									</span>
-								</div>
+						{/* Badges */}
+						{product.discountPercentage && (
+							<div className="absolute top-1 left-1 z-10">
+								<Badge
+									variant="destructive"
+									className="h-auto min-w-0 rounded px-1 py-0.5 font-bold text-[9px] leading-none"
+								>
+									-{product.discountPercentage}%
+								</Badge>
 							</div>
 						)}
 					</div>
-				</Link>
-
-				{/* Product Description - Fixed height */}
-				{product.description && !compact && (
-					<p className="mb-3 line-clamp-2 text-muted-foreground text-sm">
-						{product.description}
-					</p>
-				)}
-
-				{/* Spacer to push price to bottom */}
-				<div className="flex-1" />
-
-				{/* Product Price */}
-				<div className="flex flex-wrap items-center gap-2">
-					{product.isOnSale && product.discountPercentage ? (
-						<div className="flex flex-wrap items-center gap-2">
-							<span className="font-bold text-green-600 text-lg sm:text-lg">
-								$
-								{(
-									(product.price * (100 - product.discountPercentage)) /
-									100
-								).toFixed(2)}
-							</span>
-							<span className="text-muted-foreground text-sm line-through">
-								${product.price.toFixed(2)}
-							</span>
-						</div>
-					) : (
-						<span className="font-bold text-xl sm:text-xl">
-							${product.price.toFixed(2)}
-						</span>
-					)}
 				</div>
-			</CardContent>
 
-			{/* {!compact && (
-				<CardFooter className="flex flex-col gap-2 p-2 pt-0 sm:p-4 sm:pt-0">
-					{showAddToCart && (
-						<Button
-							onClick={handleAddToCart}
-							className="min-h-11 w-full transition-colors group-hover:bg-primary/90 sm:min-h-10"
-						>
-							<ShoppingCart className="mr-2 h-4 w-4" />
-							{t("addToCart")}
-						</Button>
-					)}
-				</CardFooter>
-			)} */}
-		</Card>
+				{/* Content */}
+				<CardContent className="flex flex-1 flex-col px-2 pt-0 pb-2 text-left">
+					<h3 className="mt-0.5 line-clamp-2 min-h-[2.4em] font-bold text-foreground text-xs leading-tight">
+						{product.name}
+					</h3>
+
+					<p className="mt-0.5 font-medium text-[10px] text-muted-foreground leading-none">
+						{product.variantName || "1 pc"}
+					</p>
+
+					{/** biome-ignore lint/a11y/noStaticElementInteractions: <> */}
+					{/** biome-ignore lint/a11y/useKeyWithClickEvents: <> */}
+					<div
+						onClick={(e) => {
+							e.preventDefault();
+							e.stopPropagation();
+						}}
+						className="mt-3 flex items-center justify-between"
+					>
+						{/* Price Button Pill */}
+
+						<div className="flex cursor-pointer items-center gap-2 rounded-full bg-primary/10 px-3 py-1 transition-colors hover:bg-primary/20 dark:bg-primary/30 dark:hover:bg-primary/50">
+							{quantity > 0 && (
+								<button onClick={handleRemoveOne}>
+									<Minus className="h-4 w-4" />
+								</button>
+							)}
+							<button onClick={handleAddToCart}>
+								<span className="pt-0.5 font-bold text-foreground text-sm leading-none">
+									{product.price.toFixed(0)} ₽
+								</span>
+							</button>
+
+							<button onClick={handleAddToCart}>
+								<PlusIcon className="size-5 text-primary" />
+							</button>
+						</div>
+					</div>
+				</CardContent>
+			</Card>
+		</Link>
 	);
 }

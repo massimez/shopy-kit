@@ -70,9 +70,9 @@ function SheetContent({
 				)}
 				{...props}
 			>
-				<SheetPrimitive.Close className="top-5 left-5 block w-fit rounded-4xl bg-muted px-2.5 py-1 opacity-70 transition-opacity hover:opacity-100 sm:absolute sm:right-5 sm:left-auto sm:px-1">
+				<SheetPrimitive.Close className="top-5 left-5 block w-fit rounded-4xl bg-muted px-2.5 py-1 opacity-70 transition-opacity hover:opacity-100 sm:absolute sm:right-5 sm:left-auto sm:px-1 rtl:sm:right-auto rtl:sm:left-5">
 					<XIcon className="hidden size-5 sm:block" />
-					<ArrowLeft className="block size-6 sm:hidden" />
+					<ArrowLeft className="block size-6 sm:hidden rtl:rotate-180" />
 					<span className="sr-only">Close</span>
 				</SheetPrimitive.Close>
 				{children}

@@ -77,10 +77,10 @@ export function Navbar() {
 			<div className="container mx-auto flex h-20 items-center gap-4 px-4">
 				{/* Logo Section */}
 				<Link href="/" className="me-6 flex items-center gap-2">
-					<div className="flex items-center justify-center text-violet-600">
+					<div className="flex items-center justify-center text-primary">
 						<Tornado className="h-8 w-8 rotate-180" />
 					</div>
-					<span className="font-bold text-2xl text-violet-600 italic tracking-tight">
+					<span className="font-bold text-2xl text-primary italic tracking-tight">
 						YAMMY
 					</span>
 				</Link>
@@ -88,25 +88,6 @@ export function Navbar() {
 				{/* Search Bar */}
 				<div className="hidden flex-1 items-center justify-center px-8 lg:flex">
 					<div className="flex w-full max-w-2xl items-center rounded-md border border-input bg-muted/30 focus-within:ring-1 focus-within:ring-ring">
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="ghost"
-									className="h-10 gap-2 rounded-r-none border-r px-4 font-normal text-muted-foreground hover:bg-transparent"
-								>
-									All Categories
-									<ChevronDown className="h-4 w-4 opacity-50" />
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="start" className="w-48">
-								<DropdownMenuLabel>Categories</DropdownMenuLabel>
-								<DropdownMenuItem>All Categories</DropdownMenuItem>
-								<DropdownMenuItem>Electronics</DropdownMenuItem>
-								<DropdownMenuItem>Fashion</DropdownMenuItem>
-								<DropdownMenuItem>Home & Garden</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
-
 						<div className="relative flex-1">
 							<Input
 								placeholder="Search"

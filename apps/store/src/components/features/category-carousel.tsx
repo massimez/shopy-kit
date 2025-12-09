@@ -195,8 +195,8 @@ export function CategoryCarousel({
 					)}
 				</CarouselContent>
 				<div className="hidden md:block">
-					<CarouselPrevious className="-left-4" />
-					<CarouselNext className="-right-4" />
+					<CarouselPrevious className="-start-4" />
+					<CarouselNext className="-end-4" />
 				</div>
 			</Carousel>
 		</div>
