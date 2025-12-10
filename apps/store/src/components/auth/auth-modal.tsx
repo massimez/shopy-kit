@@ -61,7 +61,10 @@ export function AuthModal({
 				password,
 			},
 			{
-				onSuccess: () => {
+				onSuccess: async () => {
+					await authClient.organization.setActive({
+						organizationId: process.env.NEXT_PUBLIC_ORGANIZATION_ID,
+					});
 					toast.success("Signed in successfully");
 					onOpenChange(false);
 					router.refresh();
