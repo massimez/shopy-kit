@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { productCollection } from "@/lib/db/schema/store/product";
 
@@ -16,7 +16,8 @@ export async function getStorefrontCollections(params: {
 				eq(productCollection.isActive, true),
 				eq(productCollection.isVisible, true),
 			),
-		);
+		)
+		.orderBy(asc(productCollection.sortOrder));
 
 	// Build nested structure
 	return buildNestedCollections(collections);

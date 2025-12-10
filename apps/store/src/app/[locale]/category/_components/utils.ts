@@ -4,6 +4,7 @@ export interface Collection {
 	slug: string;
 	children?: Collection[];
 	image?: string | null;
+	sortOrder?: number;
 }
 
 export function getCollectionPath(

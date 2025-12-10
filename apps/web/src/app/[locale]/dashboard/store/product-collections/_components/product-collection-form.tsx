@@ -56,6 +56,7 @@ const productCollectionFormSchema = z.object({
 	translation: translationSchema,
 	isActive: z.boolean().default(true),
 	isVisible: z.boolean().default(true),
+	sortOrder: z.coerce.number().default(0),
 	image: z.string().nullable().optional(),
 });
 
@@ -87,6 +88,7 @@ export function ProductCollectionForm({
 			},
 			isActive: true,
 			isVisible: true,
+			sortOrder: 0,
 			image: null,
 		},
 	});
@@ -102,10 +104,10 @@ export function ProductCollectionForm({
 
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 				<div className="grid gap-8 md:grid-cols-[1fr_300px] lg:grid-cols-[1fr_350px]">
 					{/* Left Column: Main Content */}
-					<div className="space-y-8">
+					<div className="space-y-4">
 						{/* General Info */}
 						<Card>
 							<CardHeader>
@@ -180,7 +182,7 @@ export function ProductCollectionForm({
 									Optimize how this collection appears in search results
 								</CardDescription>
 							</CardHeader>
-							<CardContent className="space-y-6">
+							<CardContent className="space-y-4">
 								<div className="space-y-4">
 									<FormField
 										control={form.control}
@@ -255,10 +257,10 @@ export function ProductCollectionForm({
 					</div>
 
 					{/* Right Column: Settings */}
-					<div className="space-y-8">
+					<div className="space-y-4">
 						{/* Organization */}
 						<Card>
-							<CardContent>
+							<CardContent className="space-y-4">
 								<FormField
 									control={form.control}
 									name="parentId"
@@ -287,6 +289,29 @@ export function ProductCollectionForm({
 											</Select>
 											<FormDescription>
 												Nest this collection under another
+											</FormDescription>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<FormField
+									control={form.control}
+									name="sortOrder"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Sort Order</FormLabel>
+											<FormControl>
+												<Input
+													type="number"
+													{...field}
+													value={field.value as number}
+													onChange={(e) =>
+														field.onChange(e.target.valueAsNumber)
+													}
+												/>
+											</FormControl>
+											<FormDescription>
+												Higher numbers appear later in the list
 											</FormDescription>
 											<FormMessage />
 										</FormItem>

@@ -10,6 +10,7 @@ export interface ProductCollection {
 	image?: string | null;
 	isActive?: boolean;
 	isVisible?: boolean;
+	sortOrder?: number;
 	translations?:
 		| {
 				languageCode: string;

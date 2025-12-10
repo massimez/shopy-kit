@@ -5,6 +5,7 @@ export interface Collection {
 	description?: string | null;
 	parentId?: string | null;
 	image?: string | null;
+	sortOrder: number;
 	isActive: boolean;
 	isVisible: boolean;
 	translations?:

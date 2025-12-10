@@ -52,6 +52,7 @@ export const ProductCollectionModal = ({
 				},
 				isActive: collection.isActive ?? true,
 				isVisible: collection.isVisible ?? true,
+				sortOrder: collection.sortOrder ?? 0,
 				image: collection.image ?? null,
 			}
 		: {
@@ -66,6 +67,7 @@ export const ProductCollectionModal = ({
 				},
 				isActive: true,
 				isVisible: true,
+				sortOrder: 0,
 				image: null,
 			};
 
@@ -103,6 +105,7 @@ export const ProductCollectionModal = ({
 						translations: updatedTranslations,
 						isActive: values.isActive,
 						isVisible: values.isVisible,
+						sortOrder: values.sortOrder,
 						image: values.image,
 					},
 				});
@@ -118,6 +121,7 @@ export const ProductCollectionModal = ({
 						translations: [values.translation],
 						isActive: values.isActive,
 						isVisible: values.isVisible,
+						sortOrder: values.sortOrder,
 						image: values.image,
 					},
 				});
