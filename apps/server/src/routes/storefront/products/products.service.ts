@@ -42,7 +42,7 @@ export async function getStorefrontProducts(params: {
 
 	const conditions = [
 		eq(product.organizationId, organizationId),
-		eq(product.isActive, true),
+
 		eq(product.status, "active"),
 	];
 
@@ -165,7 +165,7 @@ export async function getStorefrontProduct(params: {
 			and(
 				eq(product.id, productId),
 				eq(product.organizationId, organizationId),
-				eq(product.isActive, true),
+				eq(product.status, "active"),
 			),
 		)
 		.limit(1);

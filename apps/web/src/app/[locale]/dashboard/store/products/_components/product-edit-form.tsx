@@ -119,7 +119,7 @@ export function ProductEditForm({
 			isFeatured: false,
 			trackStock: true,
 			allowBackorders: false,
-			isActive: true,
+
 			price: 0,
 			cost: 0,
 			compareAtPrice: 0,
@@ -519,23 +519,7 @@ export function ProductEditForm({
 										</FormItem>
 									)}
 								/>
-								<FormField
-									control={form.control}
-									name="isActive"
-									render={({ field }) => (
-										<FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-											<div className="space-y-0.5">
-												<FormLabel className="text-base">Active</FormLabel>
-											</div>
-											<FormControl>
-												<Switch
-													checked={field.value}
-													onCheckedChange={field.onChange}
-												/>
-											</FormControl>
-										</FormItem>
-									)}
-								/>
+
 								<FormField
 									control={form.control}
 									name="isFeatured"

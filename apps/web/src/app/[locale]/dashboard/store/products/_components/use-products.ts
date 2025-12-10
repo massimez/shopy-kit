@@ -35,7 +35,7 @@ export type Product = {
 	createdBy: string | null;
 	name: string | null;
 	isFeatured: boolean;
-	isActive: boolean;
+
 	trackStock: boolean;
 	minQuantity: number;
 	maxQuantity: number | null;

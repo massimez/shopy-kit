@@ -110,23 +110,17 @@ export const ProductCard = ({
 
 				<div className="flex flex-wrap gap-2">
 					<Badge variant={getStatusVariant(product.status)} className="text-xs">
-						{product.status}
+						{product.status === "active" ? (
+							<Eye className="mr-1 h-3 w-3" />
+						) : (
+							<EyeOff className="mr-1 h-3 w-3" />
+						)}
+
+						{product.status.charAt(0).toUpperCase() + product.status.slice(1)}
 					</Badge>
 					{product.isFeatured && (
 						<Badge variant="outline" className="text-xs">
 							⭐ Featured
-						</Badge>
-					)}
-					{!product.isActive && (
-						<Badge variant="outline" className="text-xs">
-							<EyeOff className="mr-1 h-3 w-3" />
-							Inactive
-						</Badge>
-					)}
-					{product.isActive && (
-						<Badge variant="outline" className="text-xs">
-							<Eye className="mr-1 h-3 w-3" />
-							Active
 						</Badge>
 					)}
 				</div>
@@ -219,7 +213,7 @@ export const ProductCard = ({
 				</div>
 			</CardContent>
 
-			<CardFooter className="flex items-center justify-between border-t bg-muted/30 pt-3 text-muted-foreground text-xs">
+			<CardFooter className="flex items-center justify-between border-t bg-muted/30 py-2 text-muted-foreground text-xs">
 				<div className="flex items-center gap-1">
 					<Calendar className="h-3 w-3" />
 					<span>

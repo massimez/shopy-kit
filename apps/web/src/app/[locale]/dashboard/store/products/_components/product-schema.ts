@@ -59,7 +59,7 @@ export type ProductFormValues = {
 	isFeatured: boolean;
 	trackStock: boolean;
 	allowBackorders: boolean;
-	isActive: boolean;
+
 	variants?: ProductVariantFormValues[];
 };
 

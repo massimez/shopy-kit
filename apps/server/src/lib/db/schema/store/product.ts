@@ -79,7 +79,7 @@ export const product = pgTable("product", {
 	isFeatured: boolean("is_featured").default(false).notNull(),
 	trackStock: boolean("track_stock").default(true).notNull(),
 	allowBackorders: boolean("allow_backorders").default(false).notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
+
 	metadata: jsonb("metadata"),
 
 	images: jsonb("images").$type<TImage[]>(),
