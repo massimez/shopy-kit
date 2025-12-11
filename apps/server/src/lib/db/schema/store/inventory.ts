@@ -4,7 +4,6 @@ import {
 	integer,
 	pgTable,
 	text,
-	timestamp,
 	uniqueIndex,
 	uuid,
 	varchar,
@@ -14,26 +13,6 @@ import { organization } from "../organization";
 import { location } from "./location";
 import { productVariant } from "./product";
 import { supplier } from "./supplier";
-
-/**
- * ---------------------------------------------------------------------------
- * INVENTORY TABLES (Moved from product.ts)
- * ---------------------------------------------------------------------------
- */
-
-export const productVariantBatch = pgTable("product_variant_batch", {
-	id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),
-	productVariantId: uuid("product_variant_id")
-		.notNull()
-		.references(() => productVariant.id),
-	organizationId: text("organization_id").notNull(),
-
-	batchNumber: varchar("batch_number", { length: 100 }).notNull(),
-	expiryDate: timestamp("expiry_date"),
-	locationId: uuid("location_id").notNull(),
-	quantity: integer("quantity").default(0).notNull(),
-	...softAudit,
-});
 
 // ─────────────────────────────
 // Stock Transactions (Ledger)
@@ -49,7 +28,6 @@ export const productVariantStockTransaction = pgTable(
 		locationId: uuid("location_id").notNull(),
 		supplierId: uuid("supplier_id").references(() => supplier.id),
 
-		batchId: uuid("batch_id").references(() => productVariantBatch.id),
 		quantityChange: integer("quantity_change").notNull(),
 		unitCost: decimal("unit_cost", { precision: 10, scale: 2 }),
 		reason: varchar("reason", { length: 50 }).notNull(), // purchase, sale, return, adjustment, transfer_in, transfer_out

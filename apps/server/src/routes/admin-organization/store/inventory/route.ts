@@ -13,24 +13,21 @@ import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import { offsetPaginationSchema } from "@/middleware/pagination";
 import {
-	createProductVariantBatch,
 	createStockTransaction,
-	getProductVariantBatches,
 	getProductVariantStock,
 	getProductVariantsGroupedByProductWithStock,
 	getStockTransactions,
 } from "./inventory.service";
-import {
-	insertProductVariantBatchSchema,
-	insertProductVariantStockTransactionSchema,
-} from "./schema";
+import { insertProductVariantStockTransactionSchema } from "./schema";
 
 const productVariantIdParamSchema = z.object({
 	productVariantId: z.string().min(1, "productVariantId is required"),
 });
 
-const getGroupedInventoryQuerySchema = z.object({
+const getGroupedInventoryQuerySchema = offsetPaginationSchema.extend({
 	locationId: z.string().optional(),
+	collectionId: z.string().optional(),
+	search: z.string().optional(),
 });
 
 // --------------------
@@ -120,44 +117,6 @@ export const inventoryRoute = createRouter()
 			}
 		},
 	)
-	// Product Variant Batches
-	.post(
-		"/inventory/batches",
-		authMiddleware,
-		hasOrgPermission("inventory:create"),
-		jsonValidator(insertProductVariantBatchSchema),
-		async (c) => {
-			try {
-				const activeOrgId = c.get("session")?.activeOrganizationId as string;
-				const data = c.req.valid("json");
-
-				const newBatch = await createProductVariantBatch(data, activeOrgId);
-				return c.json(createSuccessResponse(newBatch), 201);
-			} catch (error) {
-				return handleRouteError(c, error, "create product variant batch");
-			}
-		},
-	)
-	.get(
-		"/inventory/batches/:productVariantId",
-		authMiddleware,
-		hasOrgPermission("inventory:read"),
-		paramValidator(productVariantIdParamSchema),
-		async (c) => {
-			try {
-				const activeOrgId = c.get("session")?.activeOrganizationId as string;
-				const { productVariantId } = c.req.valid("param");
-
-				const foundBatches = await getProductVariantBatches(
-					productVariantId,
-					activeOrgId,
-				);
-				return c.json(createSuccessResponse(foundBatches));
-			} catch (error) {
-				return handleRouteError(c, error, "fetch product variant batches");
-			}
-		},
-	)
 	// Product variants grouped by product with stock
 	.get(
 		"/inventory/grouped-by-product",
@@ -167,10 +126,11 @@ export const inventoryRoute = createRouter()
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
-				const { locationId } = c.req.valid("query");
+				const { locationId, ...params } = c.req.valid("query");
 
 				const data = await getProductVariantsGroupedByProductWithStock(
 					activeOrgId,
+					params,
 					locationId,
 				);
 				return c.json(createSuccessResponse(data));

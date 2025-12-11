@@ -3,14 +3,6 @@
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardTitle } from "@workspace/ui/components/card";
-import { Input } from "@workspace/ui/components/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@workspace/ui/components/select";
 import { ChevronDown, ChevronRight, Package } from "lucide-react";
 import { useState } from "react";
 
@@ -18,49 +10,40 @@ import { StockDataRow } from "./stock-data-row";
 
 interface Product {
 	id: string;
-	name?: string;
+	name?: string | null;
 	translations?: Array<{
 		name?: string;
 		languageCode: string;
-	}>;
+	}> | null;
 }
 
 interface ProductVariant {
 	id: string;
-	sku?: string;
+	sku?: string | null;
 	price?: number;
 	translations?: Array<{
 		name?: string;
-	}>;
+	}> | null;
 	stock?: {
 		quantity: number;
 		reservedQuantity: number;
 	};
 }
 
-interface ProductWithVariants {
+export interface ProductWithVariants {
 	id: string;
-	name?: string;
+	name?: string | null;
 	translations?: Array<{
 		name?: string;
 		languageCode: string;
-	}>;
+	}> | null;
 	variants: ProductVariant[];
 }
 
 interface InventoryListProps {
 	inventory: ProductWithVariants[];
-	onAddBatch: (variantId: string) => void;
 	onAddTransaction: (variantId: string) => void;
-	locationsData?: Array<{
-		id: string;
-		name: string;
-		locationType: string;
-		isActive: boolean;
-	}>;
-	onLocationChange?: (locationId: string) => void;
-	defaultLocationId?: string;
-	showLocationFilter?: boolean;
+	hasActiveFilters?: boolean;
 }
 
 // Shared type interfaces
@@ -74,14 +57,11 @@ export interface FlattenedInventoryItem {
 
 export const InventoryList = ({
 	inventory,
-	onAddBatch,
 	onAddTransaction,
-	locationsData,
-	onLocationChange,
-	defaultLocationId,
-	showLocationFilter = false,
+	hasActiveFilters,
 }: InventoryListProps) => {
-	const [searchTerm, setSearchTerm] = useState("");
+	const filteredInventory = inventory;
+
 	const [expandedProducts, setExpandedProducts] = useState<Set<string>>(
 		new Set(),
 	);
@@ -95,21 +75,6 @@ export const InventoryList = ({
 		}
 		setExpandedProducts(newExpanded);
 	};
-
-	const filteredInventory = inventory.filter(
-		(item) =>
-			item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			item.translations?.[0]?.name
-				?.toLowerCase()
-				.includes(searchTerm.toLowerCase()) ||
-			item.variants.some(
-				(variant) =>
-					variant.sku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-					variant.translations?.[0]?.name
-						?.toLowerCase()
-						.includes(searchTerm.toLowerCase()),
-			),
-	);
 
 	const getTotalStockForProduct = (product: ProductWithVariants) => {
 		return product.variants.reduce(
@@ -128,32 +93,6 @@ export const InventoryList = ({
 	return (
 		<div className="space-y-4">
 			<div className="flex items-center gap-4">
-				<Input
-					placeholder="Search products or variants..."
-					value={searchTerm}
-					onChange={(e) => setSearchTerm(e.target.value)}
-					className="max-w-md"
-				/>
-				{showLocationFilter && locationsData && locationsData.length > 0 && (
-					<Select
-						value={defaultLocationId || "ALL"}
-						onValueChange={(value) => onLocationChange?.(value)}
-					>
-						<SelectTrigger className="w-[200px]">
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="ALL">All locations</SelectItem>
-							{locationsData
-								.filter((location) => location.isActive)
-								.map((location) => (
-									<SelectItem key={location.id} value={location.id}>
-										{location.name} ({location.locationType})
-									</SelectItem>
-								))}
-						</SelectContent>
-					</Select>
-				)}
 				<p className="whitespace-nowrap text-muted-foreground text-sm">
 					{filteredInventory.length}{" "}
 					{filteredInventory.length === 1 ? "product" : "products"} (
@@ -171,8 +110,8 @@ export const InventoryList = ({
 						<Package className="mb-4 h-12 w-12 text-muted-foreground" />
 						<CardTitle className="mb-2">No inventory found</CardTitle>
 						<p className="text-muted-foreground text-sm">
-							{searchTerm
-								? "Try adjusting your search terms"
+							{hasActiveFilters
+								? "Try adjusting your search terms or filters"
 								: "Create products and variants to get started"}
 						</p>
 					</CardContent>
@@ -243,7 +182,6 @@ export const InventoryList = ({
 														productName,
 														variantSku: variant.sku || "No SKU",
 													}}
-													onAddBatch={onAddBatch}
 													onAddTransaction={onAddTransaction}
 													isVariantRow={true}
 												/>

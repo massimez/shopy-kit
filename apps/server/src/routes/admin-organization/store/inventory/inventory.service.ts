@@ -1,27 +1,26 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, ilike, inArray, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { db } from "@/lib/db";
 import {
 	product,
 	productVariant,
-	productVariantBatch,
 	productVariantStock,
 	productVariantStockTransaction,
 } from "@/lib/db/schema";
 import { validateOrgId } from "@/lib/utils/validator";
-import type { offsetPaginationSchema } from "@/middleware/pagination";
-import type {
-	insertProductVariantBatchSchema,
-	insertProductVariantStockTransactionSchema,
-} from "./schema";
+import type { OffsetPaginationParams } from "@/types/api";
+import type { insertProductVariantStockTransactionSchema } from "./schema";
 
-type OffsetPaginationParams = z.infer<typeof offsetPaginationSchema>;
-type InsertProductVariantBatch = z.infer<
-	typeof insertProductVariantBatchSchema
->;
 type InsertProductVariantStockTransaction = z.infer<
 	typeof insertProductVariantStockTransactionSchema
 >;
+
+interface GetInventoryParams {
+	collectionId?: string;
+	search?: string;
+	limit?: number;
+	offset?: number;
+}
 
 /**
  * Get product variant stock
@@ -160,81 +159,78 @@ export async function getStockTransactions(
 }
 
 /**
- * Create product variant batch
- */
-export async function createProductVariantBatch(
-	data: InsertProductVariantBatch,
-	orgId: string,
-) {
-	return await db.transaction(async (tx) => {
-		const [newBatch] = await tx
-			.insert(productVariantBatch)
-			.values({
-				...data,
-				organizationId: orgId,
-			})
-			.returning();
-
-		// Create a stock transaction to sync batch stock with main stock
-		const [newTransaction] = await tx
-			.insert(productVariantStockTransaction)
-			.values({
-				productVariantId: data.productVariantId,
-				organizationId: orgId,
-				locationId: data.locationId,
-				quantityChange: data.quantity || 0,
-				reason: "purchase", // Reason for adding stock via batch
-			})
-			.returning();
-
-		// Update productVariantStock based on this transaction
-		await updateStockAfterTransaction(newTransaction, tx);
-
-		return newBatch;
-	});
-}
-
-/**
- * Get product variant batches
- */
-export async function getProductVariantBatches(
-	productVariantId: string,
-	organizationId: string,
-) {
-	const foundBatches = await db
-		.select()
-		.from(productVariantBatch)
-		.where(
-			and(
-				eq(productVariantBatch.productVariantId, productVariantId),
-				eq(productVariantBatch.organizationId, organizationId),
-			),
-		);
-	return foundBatches;
-}
-
-/**
  * Get product variants grouped by product with inventory stock
  */
 export async function getProductVariantsGroupedByProductWithStock(
 	orgId: string,
+	params: GetInventoryParams = {},
 	locationId?: string,
 ) {
 	const orgIdValidated = validateOrgId(orgId);
+	const { collectionId, search, limit = 20, offset = 0 } = params;
 
-	// Single query with joins and aggregation
-	const result = await db
+	// 1. Get paginated product IDs first
+	const filters = [eq(product.organizationId, orgIdValidated)];
+
+	if (collectionId) {
+		const { productCollectionAssignment } = await import("@/lib/db/schema");
+		const assignments = await db
+			.select({ productId: productCollectionAssignment.productId })
+			.from(productCollectionAssignment)
+			.where(
+				and(
+					eq(productCollectionAssignment.collectionId, collectionId),
+					eq(productCollectionAssignment.organizationId, orgIdValidated),
+				),
+			);
+		const productIdsInCollection = assignments.map((a) => a.productId);
+
+		if (productIdsInCollection.length === 0) {
+			return { data: [], total: 0 };
+		}
+
+		filters.push(inArray(product.id, productIdsInCollection));
+	}
+
+	if (search?.trim()) {
+		const searchPattern = `%${search.trim()}%`;
+		filters.push(ilike(product.name, searchPattern));
+	}
+
+	const whereClause = and(...filters);
+
+	// Get total count
+	const totalResult = await db
+		.select({ count: sql<number>`count(*)` })
+		.from(product)
+		.where(whereClause);
+	const total = Number(totalResult[0]?.count || 0);
+
+	// Get paginated product IDs
+	const productIdsResult = await db
+		.select({ id: product.id })
+		.from(product)
+		.where(whereClause)
+		.limit(limit)
+		.offset(offset)
+		.orderBy(product.createdAt);
+
+	const pageProductIds = productIdsResult.map((p) => p.id);
+
+	if (pageProductIds.length === 0) {
+		return { data: [], total };
+	}
+
+	// 2. Fetch full details for these products
+	const rows = await db
 		.select({
-			// Product fields
 			productId: product.id,
 			productName: product.name,
 			productTranslations: product.translations,
-			// Variant fields
 			variantId: productVariant.id,
 			variantSku: productVariant.sku,
 			variantPrice: productVariant.price,
 			variantTranslations: productVariant.translations,
-			// Aggregated stock fields
 			totalQuantity:
 				sql<number>`COALESCE(SUM(${productVariantStock.quantity}), 0)`.as(
 					"total_quantity",
@@ -256,6 +252,7 @@ export async function getProductVariantsGroupedByProductWithStock(
 		)
 		.where(
 			and(
+				inArray(product.id, pageProductIds),
 				eq(product.organizationId, orgIdValidated),
 				eq(productVariant.organizationId, orgIdValidated),
 				locationId ? eq(productVariantStock.locationId, locationId) : undefined,
@@ -272,33 +269,41 @@ export async function getProductVariantsGroupedByProductWithStock(
 		)
 		.orderBy(product.createdAt, productVariant.createdAt);
 
-	// Group results by product
-	const productMap = new Map();
+	type Row = (typeof rows)[0];
 
-	result.forEach((row) => {
-		const productId = row.productId;
-
-		if (!productMap.has(productId)) {
-			productMap.set(productId, {
-				id: productId,
-				name: row.productName,
-				translations: row.productTranslations,
-				variants: [],
-			});
-		}
-
-		const product = productMap.get(productId);
-		product.variants.push({
-			id: row.variantId,
-			sku: row.variantSku,
-			price: row.variantPrice ? Number(row.variantPrice) : undefined,
-			translations: row.variantTranslations,
-			stock: {
-				quantity: Number(row.totalQuantity),
-				reservedQuantity: Number(row.totalReservedQuantity),
-			},
-		});
+	const createVariant = (row: Row) => ({
+		id: row.variantId,
+		sku: row.variantSku,
+		price: row.variantPrice ? Number(row.variantPrice) : undefined,
+		translations: row.variantTranslations,
+		stock: {
+			quantity: Number(row.totalQuantity),
+			reservedQuantity: Number(row.totalReservedQuantity),
+		},
 	});
 
-	return Array.from(productMap.values());
+	const createProduct = (row: Row) => ({
+		id: row.productId,
+		name: row.productName,
+		translations: row.productTranslations,
+		variants: [createVariant(row)],
+	});
+
+	const productMap = new Map(
+		rows.map((row) => [row.productId, createProduct(row)]),
+	);
+
+	rows.forEach((row) => {
+		const existing = productMap.get(row.productId);
+		if (existing && existing.variants[0].id !== row.variantId) {
+			existing.variants.push(createVariant(row));
+		}
+	});
+
+	// Ensure we preserve the order of pageProductIds
+	const orderedData = pageProductIds
+		.map((id) => productMap.get(id))
+		.filter((p): p is ReturnType<typeof createProduct> => p !== undefined);
+
+	return { data: orderedData, total };
 }

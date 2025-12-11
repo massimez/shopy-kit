@@ -25,8 +25,6 @@ interface ProductCarouselProps {
 export function ProductCarousel({
 	products,
 	title,
-	showWishlist = false,
-	compact = false,
 	className = "",
 	enableAutoplay = false,
 	showArrows = true,
@@ -70,11 +68,7 @@ export function ProductCarousel({
 							>
 								<div className="p-1">
 									<div className="max-w-[260px]">
-										<ProductCard
-											product={product}
-											showWishlist={showWishlist}
-											compact={compact}
-										/>
+										<ProductCard product={product} />
 									</div>
 								</div>
 							</CarouselItem>

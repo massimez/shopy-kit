@@ -6,7 +6,6 @@ import type { FlattenedInventoryItem } from "./inventory-list";
 
 interface StockDataRowProps {
 	item: FlattenedInventoryItem;
-	onAddBatch: (variantId: string) => void;
 	onAddTransaction: (variantId: string) => void;
 	isVariantRow?: boolean;
 }

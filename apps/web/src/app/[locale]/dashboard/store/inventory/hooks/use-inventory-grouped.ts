@@ -1,13 +1,40 @@
 import { useQuery } from "@tanstack/react-query";
 import { hc } from "@/lib/api-client";
 
-export const useGroupedInventory = (locationId?: string) => {
+type InventoryParams = {
+	locationId?: string;
+	limit?: string;
+	offset?: string;
+	search?: string;
+	collectionId?: string;
+	setTotal?: (total: number) => void;
+};
+
+export const useGroupedInventory = ({
+	locationId,
+	limit = "20",
+	offset = "0",
+	search,
+	collectionId,
+}: InventoryParams = {}) => {
 	return useQuery({
-		queryKey: ["inventory-grouped", locationId],
+		queryKey: [
+			"inventory-grouped",
+			locationId,
+			limit,
+			offset,
+			search,
+			collectionId,
+		],
 		queryFn: async () => {
-			const params = locationId ? { locationId } : {};
 			const response = await hc.api.store.inventory["grouped-by-product"].$get({
-				query: params,
+				query: {
+					locationId,
+					limit,
+					offset,
+					search,
+					collectionId,
+				},
 			});
 
 			if (!response.ok) {
@@ -25,7 +52,9 @@ export const useGroupedInventory = (locationId?: string) => {
 				);
 			}
 
-			return json.data;
+			const data = json.data;
+
+			return data.data;
 		},
 	});
 };

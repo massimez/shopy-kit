@@ -1,10 +1,8 @@
 export * from "../../routes/admin-organization/organization/location/schema";
 export * from "../../routes/admin-organization/organization/schema";
 export {
-	insertProductVariantBatchSchema,
 	insertProductVariantStockSchema as insertInventoryVariantStockSchema,
 	insertProductVariantStockTransactionSchema,
-	updateProductVariantBatchSchema,
 	updateProductVariantStockSchema as updateInventoryVariantStockSchema,
 	updateProductVariantStockTransactionSchema,
 } from "../../routes/admin-organization/store/inventory/schema";
