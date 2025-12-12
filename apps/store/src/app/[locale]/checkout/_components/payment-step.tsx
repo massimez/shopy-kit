@@ -23,16 +23,16 @@ interface PaymentStepProps {
 export function PaymentStep({ form }: PaymentStepProps) {
 	return (
 		<div className="space-y-4">
-			<Card className="border-2 shadow-sm transition-shadow duration-300 hover:shadow-md">
-				<CardHeader className="">
+			<div className="">
+				<div className="mb-4">
 					<CardTitle className="flex items-center gap-3 text-xl">
 						<div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
 							<CreditCard className="h-5 w-5 text-primary" />
 						</div>
 						Payment Method
 					</CardTitle>
-				</CardHeader>
-				<CardContent className="space-y-6">
+				</div>
+				<div className="space-y-6">
 					<div className="rounded-xl border-2 bg-linear-to-br from-blue-50 to-cyan-50 p-6 shadow-sm dark:from-blue-950/30 dark:to-cyan-950/30">
 						<div className="flex items-center gap-4">
 							<div className="flex h-14 w-14 items-center justify-center rounded-xl bg-blue-500 text-white shadow-blue-500/30 shadow-lg">
@@ -49,8 +49,8 @@ export function PaymentStep({ form }: PaymentStepProps) {
 							</div>
 						</div>
 					</div>
-				</CardContent>
-			</Card>
+				</div>
+			</div>
 
 			<Card className="border-2 shadow-sm transition-shadow duration-300 hover:shadow-md">
 				<CardHeader>

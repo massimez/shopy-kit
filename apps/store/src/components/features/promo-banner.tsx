@@ -1,12 +1,23 @@
 import { Button } from "@workspace/ui/components/button";
 import { Link } from "@/i18n/routing";
 
-export function PromoBanner() {
+import { cn } from "@/lib/utils";
+
+interface PromoBannerProps {
+	className?: string;
+}
+
+export function PromoBanner({ className }: PromoBannerProps) {
 	return (
-		<section className="bg-primary py-20 text-primary-foreground">
-			<div className="container mx-auto px-4 text-center">
-				<h2 className="mb-4 font-bold text-4xl">Summer Sale is Here!</h2>
-				<p className="mb-8 text-xl opacity-90">
+		<section
+			className={cn(
+				"rounded bg-primary/60 py-15 text-primary-foreground",
+				className,
+			)}
+		>
+			<div className="text-center">
+				<h2 className="mb-4 font-bold text-3xl">Summer Sale is Here!</h2>
+				<p className="mb-8 text-lg opacity-90">
 					Get up to 50% off on selected items. Limited time offer.
 				</p>
 				<Link href="/products">

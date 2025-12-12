@@ -56,7 +56,7 @@ export default function ProfilePage() {
 	}
 
 	return (
-		<div className="container mx-auto space-y-8 px-4 py-10 pb-16 md:block">
+		<div className="w-full space-y-8 px-4 pb-16">
 			<div className="space-y-1">
 				<h2 className="font-bold text-3xl tracking-tight">{t("profile")}</h2>
 				<p className="text-muted-foreground">

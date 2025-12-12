@@ -5,7 +5,6 @@ import { CategoryHeader } from "@/components/features/category-header";
 import { ProductBreadcrumbs } from "@/components/features/product-breadcrumbs";
 import { SubcategoryRow } from "@/components/features/subcategory-row";
 import { useCollections } from "@/lib/hooks/use-storefront";
-import { CategorySidebar } from "../_components/category-sidebar";
 import { LeafCategoryGrid } from "../_components/leaf-category-grid";
 import { type Collection, getCollectionPath } from "../_components/utils";
 
@@ -99,15 +98,5 @@ export default function CategoryPage({ params }: PageProps) {
 			</div>
 		);
 	};
-
-	return (
-		<div className="container mx-auto px-4 py-8">
-			<div className="grid grid-cols-1 md:grid-cols-[240px_1fr] lg:grid-cols-[260px_1fr]">
-				<div className="hidden border-border/50 border-e pe-6 md:block">
-					<CategorySidebar collections={collections} activeSlug={slug} />
-				</div>
-				<div className="min-w-0 sm:ps-8">{renderContent()}</div>
-			</div>
-		</div>
-	);
+	return <div className="">{renderContent()}</div>;
 }

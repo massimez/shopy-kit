@@ -329,7 +329,7 @@ export function CheckoutForm({
 
 	return (
 		<div className="mx-auto max-w-6xl">
-			<div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+			<div className="grid gap-8">
 				{/* Main checkout form */}
 				<div>
 					{/* API Error Summary */}
@@ -397,13 +397,13 @@ export function CheckoutForm({
 					</Form>
 				</div>
 
-				{/* Sidebar */}
+				{/* Sidebar
 				<OrderSummarySidebar
 					items={items}
 					total={total()}
 					subtotal={subtotal()}
 					discount={appliedCoupon?.discountAmount || 0}
-				/>
+				/> */}
 			</div>
 		</div>
 	);

@@ -38,7 +38,7 @@ export default function CheckoutPage() {
 
 	if (isPending || isLocationLoading) {
 		return (
-			<div className="container mx-auto flex min-h-[400px] items-center justify-center px-4 py-10">
+			<div className="mx-auto flex min-h-[400px] items-center justify-center px-4 py-10">
 				<div className="text-center">
 					<div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-current border-r-transparent border-solid" />
 					<p className="text-muted-foreground">Loading checkout...</p>
@@ -53,7 +53,7 @@ export default function CheckoutPage() {
 
 	if (!organizationId) {
 		return (
-			<div className="container mx-auto px-4 py-10">
+			<div className="mx-auto px-4 py-10">
 				<p className="text-destructive">
 					Organization not configured. Please contact support.
 				</p>
@@ -63,7 +63,7 @@ export default function CheckoutPage() {
 
 	if (locationError || !defaultLocation) {
 		return (
-			<div className="container mx-auto px-4 py-10">
+			<div className="mx-auto px-4 py-10">
 				<p className="text-destructive">
 					{locationError
 						? "Failed to load location information. Please try again."
@@ -74,7 +74,7 @@ export default function CheckoutPage() {
 	}
 
 	return (
-		<div className="container mx-auto px-4 py-10">
+		<div className="mx-auto">
 			<CheckoutForm
 				organizationId={organizationId}
 				locationId={defaultLocation.id}

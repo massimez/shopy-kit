@@ -57,7 +57,7 @@ export function CategorySidebar({
 	}, [activeSlug, collections]);
 
 	return (
-		<aside className="scrollbar-hide sticky top-24 max-h-[calc(100vh-8rem)] w-full overflow-y-auto pe-2">
+		<aside className="w-full">
 			{/* Static Section */}
 			{/* <div className="space-y-1">
 				{staticItems.map((item) => (
@@ -103,7 +103,7 @@ export function CategorySidebar({
 							>
 								<AccordionTrigger
 									className={cn(
-										"items-center rounded-xl px-3 py-2 font-medium text-muted-foreground text-sm hover:bg-accent/50 hover:no-underline data-[state=open]:text-foreground [&>svg]:translate-y-0",
+										"items-center rounded-xl px-1 py-2 font-medium text-muted-foreground text-sm hover:bg-accent/50 hover:no-underline data-[state=open]:text-foreground [&>svg]:translate-y-0",
 										(isActive ||
 											collection.children?.some(
 												(child) => child.slug === activeSlug,
@@ -111,8 +111,8 @@ export function CategorySidebar({
 											"text-foreground",
 									)}
 								>
-									<div className="flex items-center gap-3">
-										<div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/50 bg-background shadow-sm">
+									<div className="flex items-center gap-2">
+										<div className="0 relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-background shadow-sm">
 											{collection.image ? (
 												<Image
 													src={collection.image}
@@ -124,7 +124,7 @@ export function CategorySidebar({
 												<span className="text-muted-foreground text-xs" />
 											)}
 										</div>
-										<span>{collection.name}</span>
+										<span className="font-semibold">{collection.name}</span>
 									</div>
 								</AccordionTrigger>
 								<AccordionContent className="space-y-1 ps-11 pe-2 pb-0">
@@ -169,7 +169,7 @@ export function CategorySidebar({
 									: "text-muted-foreground",
 							)}
 						>
-							<div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/50 bg-background shadow-sm">
+							<div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/50 bg-background shadow-sm">
 								{collection.image ? (
 									<Image
 										src={collection.image}

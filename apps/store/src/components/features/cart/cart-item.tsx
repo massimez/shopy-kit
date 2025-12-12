@@ -53,8 +53,8 @@ export function CartItem({ item }: CartItemProps) {
 	const totalPrice = item.price * quantity;
 
 	return (
-		<Card className="overflow-hidden py-3">
-			<CardContent className="p-2">
+		<Card className="overflow-hidden py-3 shadow-none">
+			<CardContent className="p-1">
 				<div className="flex gap-4">
 					{/* Product Image */}
 					<div className="shrink-0">

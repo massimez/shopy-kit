@@ -49,7 +49,7 @@ export function UserProfileDrawer({
 		{
 			label: "Bonus",
 			icon: Gift,
-			href: "/profile?tab=bonus",
+			href: "/rewards",
 			badge: "1", // Assuming 'p' for points or similar from image
 			badgeColor: "bg-lime-400 text-black",
 		},

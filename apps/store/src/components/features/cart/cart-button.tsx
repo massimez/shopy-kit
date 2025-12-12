@@ -26,7 +26,7 @@ export function CartButton({
 			<Button
 				variant="ghost"
 				size="icon"
-				className={cn("relative", className)}
+				className={cn("relative xl:hidden", className)}
 				onClick={() => setIsOpen(true)}
 				title="Open cart"
 			>

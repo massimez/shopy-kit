@@ -14,21 +14,21 @@ export function CartSummary({ subtotal, taxes, total }: CartSummaryProps) {
 	const t = useTranslations("Cart");
 
 	return (
-		<Card>
+		<Card className="shadow-none">
 			<CardContent className="space-y-2">
 				{/* Subtotal */}
-				<div className="flex items-center justify-between text-sm">
+				{/* <div className="flex items-center justify-between text-sm">
 					<span className="text-muted-foreground">{t("subtotal")}</span>
 					<span className="font-medium">${subtotal.toFixed(2)}</span>
-				</div>
+				</div> */}
 
 				{/* Taxes (Optional) */}
-				{taxes > 0 && (
+				{/* {taxes > 0 && (
 					<div className="flex items-center justify-between text-sm">
 						<span className="text-muted-foreground">{t("taxes")}</span>
 						<span className="font-medium">${taxes.toFixed(2)}</span>
 					</div>
-				)}
+				)} */}
 
 				{/* Separator */}
 				<Separator />

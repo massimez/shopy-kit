@@ -6,7 +6,7 @@ import {
 	AvatarImage,
 } from "@workspace/ui/components/avatar";
 import { Button } from "@workspace/ui/components/button";
-
+import { Card } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
 import {
 	LanguageSelector,
@@ -67,10 +67,10 @@ export function Navbar() {
 	};
 
 	return (
-		<header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-			<div className="container mx-auto flex h-20 items-center gap-4 px-4">
+		<header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+			<Card className="mx-auto flex h-20 flex-row items-center gap-4 px-4">
 				{/* Logo Section */}
-				<Link href="/" className="me-6 flex items-center gap-2">
+				<Link href="/" className="me-6 flex w-[236px] items-center gap-2">
 					<div className="flex items-center justify-center text-primary">
 						<Tornado className="h-8 w-8 rotate-180" />
 					</div>
@@ -80,7 +80,7 @@ export function Navbar() {
 				</Link>
 
 				{/* Search Bar */}
-				<div className="hidden flex-1 items-center justify-center px-8 lg:flex">
+				<div className="hidden w-full flex-1 items-center justify-center px-8 lg:flex">
 					<div className="flex w-full max-w-2xl items-center rounded-md border border-input bg-muted/30 focus-within:ring-1 focus-within:ring-ring">
 						<div className="relative flex-1">
 							<Input
@@ -100,7 +100,7 @@ export function Navbar() {
 				</div>
 
 				{/* Right Actions */}
-				<div className="flex flex-1 items-center justify-end gap-2 sm:gap-4 lg:flex-none">
+				<div className="flex w-[330px] flex-1 items-center justify-end gap-2 sm:gap-4 lg:flex-none">
 					{/* <Button variant="ghost" size="icon" className="text-foreground">
 						<Heart className="size-6 stroke-[1.5]" />
 					</Button> */}
@@ -147,7 +147,7 @@ export function Navbar() {
 						</Button>
 					)}
 				</div>
-			</div>
+			</Card>
 			<AuthModal
 				open={isAuthModalOpen}
 				onOpenChange={setIsAuthModalOpen}
