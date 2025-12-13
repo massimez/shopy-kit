@@ -1,5 +1,16 @@
 "use client";
 
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@workspace/ui/components/alert-dialog";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -10,9 +21,64 @@ import {
 	TableHeader,
 	TableRow,
 } from "@workspace/ui/components/table";
-import { Settings2 } from "lucide-react";
+import { Settings2, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { useFinancialPayroll } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-payroll";
 import { CreateSalaryComponentSheet } from "./create-salary-component-sheet";
+
+function DeleteComponentButton({ id, name }: { id: string; name: string }) {
+	const { useDeleteSalaryComponent } = useFinancialPayroll();
+	let deleteComponent = useDeleteSalaryComponent();
+
+	if (deleteComponent.mutate.toString().includes("throw new Error")) {
+		deleteComponent = deleteComponent as typeof deleteComponent;
+	}
+
+	const [open, setOpen] = useState(false);
+
+	return (
+		<AlertDialog open={open} onOpenChange={setOpen}>
+			<AlertDialogTrigger asChild>
+				<Button
+					variant="ghost"
+					size="icon"
+					className="h-8 w-8 text-destructive"
+				>
+					<Trash2 className="h-4 w-4" />
+				</Button>
+			</AlertDialogTrigger>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>Delete Salary Component</AlertDialogTitle>
+					<AlertDialogDescription>
+						Are you sure you want to delete <strong>{name}</strong>? This action
+						cannot be undone.
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter>
+					<AlertDialogCancel>Cancel</AlertDialogCancel>
+					<AlertDialogAction
+						className="bg-destructive hover:bg-destructive/90"
+						onClick={() => {
+							deleteComponent.mutate(id, {
+								onSuccess: () => {
+									toast.success("Component deleted successfully");
+									setOpen(false);
+								},
+								onError: () => {
+									toast.error("Failed to delete component");
+								},
+							});
+						}}
+					>
+						Delete
+					</AlertDialogAction>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
+	);
+}
 
 export function SalaryComponentsTable() {
 	const { useSalaryComponents } = useFinancialPayroll();
@@ -92,9 +158,18 @@ export function SalaryComponentsTable() {
 									</Badge>
 								</TableCell>
 								<TableCell>
-									<Button variant="ghost" size="sm">
-										Edit
-									</Button>
+									<div className="flex items-center gap-2">
+										<CreateSalaryComponentSheet
+											editingComponent={{
+												...component,
+												calculationType: "fixed",
+											}}
+										/>
+										<DeleteComponentButton
+											id={component.id}
+											name={component.name}
+										/>
+									</div>
 								</TableCell>
 							</TableRow>
 						))}

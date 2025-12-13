@@ -33,33 +33,55 @@ import { useRecordPayment } from "@/app/[locale]/dashboard/financial/_hooks/use-
 const formSchema = z.object({
 	amount: z.string().min(1, "Amount is required"),
 	paymentDate: z.string().min(1, "Payment date is required"),
-	paymentMethod: z.enum(["bank_transfer", "check", "cash", "card"]),
+	paymentMethod: z.enum(["bank_transfer", "check", "cash", "card", "online"]),
 	referenceNumber: z.string().optional(),
 });
 
 interface RecordPaymentDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	bill: {
+	type: "receivable" | "payable";
+	document: {
 		id: string;
-		supplierId: string;
 		invoiceNumber: string;
 		totalAmount: string;
 		netAmount: string;
+		// For bills logic
+		// biome-ignore lint/suspicious/noExplicitAny: <>
+		allocations?: any[];
+		// Entity IDs
+		supplierId?: string;
+		customerId?: string;
 	};
 }
 
 export function RecordPaymentDialog({
 	open,
 	onOpenChange,
-	bill,
+	type,
+	document,
 }: RecordPaymentDialogProps) {
 	const recordPayment = useRecordPayment();
+
+	const totalPaid =
+		document.allocations?.reduce(
+			// biome-ignore lint/suspicious/noExplicitAny: inference issue
+			(sum: number, a: any) => sum + Number(a.allocatedAmount),
+			0,
+		) || 0;
+
+	// If allocations exist (partial payments mostly on bills), subtract from total.
+	// Otherwise rely on netAmount or totalAmount if that logic is preferred.
+	// For simplicity and safety, we calculate remaining from total - paid if allocations present.
+	// If no allocations, we can default to netAmount (often same as total or remaining).
+	const remainingAmount = document.allocations
+		? Math.max(0, Number(document.totalAmount) - totalPaid)
+		: Number(document.netAmount);
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			amount: bill.netAmount, // Default to full amount. Ideally specific logic for remaining balance.
+			amount: remainingAmount.toFixed(2),
 			paymentDate: new Date().toISOString().split("T")[0],
 			paymentMethod: "bank_transfer",
 			referenceNumber: "",
@@ -67,17 +89,32 @@ export function RecordPaymentDialog({
 	});
 
 	function onSubmit(values: z.infer<typeof formSchema>) {
+		const paymentType = type === "payable" ? "sent" : "received";
+		// If payable -> supplierId is required. If receivable -> customerId is required.
+		const supplierId = type === "payable" ? document.supplierId : undefined;
+		const customerId = type === "receivable" ? document.customerId : undefined;
+
+		if (type === "payable" && !supplierId) {
+			toast.error("Supplier ID missing");
+			return;
+		}
+		if (type === "receivable" && !customerId) {
+			toast.error("Customer ID missing");
+			return;
+		}
+
 		recordPayment.mutate(
 			{
-				paymentType: "sent",
-				supplierId: bill.supplierId,
+				paymentType,
+				supplierId, // Mutation accepts both but only uses one based on type
+				customerId,
 				amount: Number(values.amount),
 				paymentDate: new Date(values.paymentDate),
 				paymentMethod: values.paymentMethod,
 				referenceNumber: values.referenceNumber,
 				allocations: [
 					{
-						invoiceId: bill.id,
+						invoiceId: document.id,
 						amount: Number(values.amount),
 					},
 				],
@@ -101,7 +138,15 @@ export function RecordPaymentDialog({
 				<DialogHeader>
 					<DialogTitle>Record Payment</DialogTitle>
 					<DialogDescription>
-						Record a payment for bill #{bill.invoiceNumber}
+						Record a payment for {type === "payable" ? "bill" : "invoice"} #
+						{document.invoiceNumber}
+						<span className="mt-1 block font-medium text-foreground">
+							Amount Due:{" "}
+							{new Intl.NumberFormat("en-US", {
+								style: "currency",
+								currency: "USD",
+							}).format(remainingAmount)}
+						</span>
 					</DialogDescription>
 				</DialogHeader>
 				<Form {...form}>
@@ -163,7 +208,8 @@ export function RecordPaymentDialog({
 											</SelectItem>
 											<SelectItem value="check">Check</SelectItem>
 											<SelectItem value="cash">Cash</SelectItem>
-											<SelectItem value="card">Credit Card</SelectItem>
+											<SelectItem value="card">Card</SelectItem>
+											<SelectItem value="online">Online</SelectItem>
 										</SelectContent>
 									</Select>
 									<FormMessage />

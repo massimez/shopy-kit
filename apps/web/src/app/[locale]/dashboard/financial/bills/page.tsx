@@ -1,4 +1,5 @@
 import { Separator } from "@workspace/ui/components/separator";
+import { FinancialList } from "../_components/financial-list";
 import { BillsStats } from "./_components/bills-stats";
 import { BillsTable } from "./_components/bills-table";
 import { CreateBillSheet } from "./_components/create-bill-sheet";
@@ -17,7 +18,7 @@ export default function FinancialBillsPage() {
 			</div>
 			<Separator />
 			<BillsStats />
-			<BillsTable />
+			<FinancialList type="payable" table={BillsTable} />
 		</div>
 	);
 }

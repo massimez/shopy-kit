@@ -20,6 +20,7 @@ import {
 	processPayrollPaymentsSchema,
 	requestSalaryAdvanceSchema,
 	updateEmployeeSchema,
+	updatePayrollEntrySchema,
 } from "./schema";
 
 export default createRouter()
@@ -282,6 +283,52 @@ export default createRouter()
 		}
 	})
 
+	.put(
+		"/salary-components/:id",
+		authMiddleware,
+		paramValidator(z.object({ id: z.string().uuid() })),
+		jsonValidator(createSalaryComponentSchema.partial()),
+		async (c) => {
+			try {
+				const activeOrgId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+				const { id } = c.req.valid("param");
+				const data = c.req.valid("json");
+				const component = await payrollService.updateSalaryComponent(
+					activeOrgId,
+					id,
+					data,
+				);
+				return c.json(createSuccessResponse(component));
+			} catch (error) {
+				return handleRouteError(c, error, "update salary component");
+			}
+		},
+	)
+
+	.delete(
+		"/salary-components/:id",
+		authMiddleware,
+		paramValidator(z.object({ id: z.string().uuid() })),
+		async (c) => {
+			try {
+				const activeOrgId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+				const { id } = c.req.valid("param");
+				await payrollService.deleteSalaryComponent(activeOrgId, id);
+				return c.json(
+					createSuccessResponse({
+						message: "Salary component deleted successfully",
+					}),
+				);
+			} catch (error) {
+				return handleRouteError(c, error, "delete salary component");
+			}
+		},
+	)
+
 	/**
 	 * SALARY STRUCTURES ROUTES
 	 */
@@ -419,6 +466,32 @@ export default createRouter()
 				return c.json(createSuccessResponse(result));
 			} catch (error) {
 				return handleRouteError(c, error, "process payroll payments");
+			}
+		},
+	)
+	.patch(
+		"/payroll-runs/:runId/entries/:entryId",
+		authMiddleware,
+		paramValidator(
+			z.object({ runId: z.string().uuid(), entryId: z.string().uuid() }),
+		),
+		jsonValidator(updatePayrollEntrySchema),
+		async (c) => {
+			try {
+				const activeOrgId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+				const { runId, entryId } = c.req.valid("param");
+				const { adjustments } = c.req.valid("json");
+				const result = await payrollService.updatePayrollEntry(
+					activeOrgId,
+					runId,
+					entryId,
+					adjustments,
+				);
+				return c.json(createSuccessResponse(result));
+			} catch (error) {
+				return handleRouteError(c, error, "update payroll entry");
 			}
 		},
 	);

@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, lte, ne, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
 	invoice,
@@ -213,6 +213,37 @@ export async function approveInvoice(
 	});
 }
 
+export async function deleteInvoice(organizationId: string, invoiceId: string) {
+	return await db.transaction(async (tx: TransactionDb) => {
+		// 1. Check if invoice exists and is in draft status
+		const existingInvoice = await tx.query.invoice.findFirst({
+			where: and(
+				eq(invoice.id, invoiceId),
+				eq(invoice.organizationId, organizationId),
+			),
+		});
+
+		if (!existingInvoice) {
+			throw new Error("Invoice not found");
+		}
+
+		if (existingInvoice.status !== "draft") {
+			throw new Error("Only draft invoices can be deleted");
+		}
+
+		// 2. Delete invoice lines
+		await tx.delete(invoiceLine).where(eq(invoiceLine.invoiceId, invoiceId));
+
+		// 3. Delete invoice
+		const [deletedInvoice] = await tx
+			.delete(invoice)
+			.where(eq(invoice.id, invoiceId))
+			.returning();
+
+		return deletedInvoice;
+	});
+}
+
 /**
  * ---------------------------------------------------------------------------
  * UNIFIED PAYMENT OPERATIONS
@@ -229,7 +260,6 @@ export async function recordPayment(
 		paymentDate: Date;
 		paymentMethod: "bank_transfer" | "check" | "cash" | "card" | "online";
 		referenceNumber?: string;
-		bankAccountId?: string;
 		allocations: {
 			invoiceId: string;
 			amount: number;
@@ -252,7 +282,6 @@ export async function recordPayment(
 				amount: data.amount.toString(),
 				paymentMethod: data.paymentMethod,
 				referenceNumber: data.referenceNumber,
-				bankAccountId: data.bankAccountId,
 				status: "cleared",
 				createdBy: data.createdBy,
 			})
@@ -279,17 +308,28 @@ export async function recordPayment(
 				});
 
 				if (invoiceRecord) {
-					const totalPaid =
-						invoiceRecord.allocations.reduce(
-							(sum: number, a) => sum + Number(a.allocatedAmount),
-							0,
-						) + alloc.amount;
-					const isPaid = totalPaid >= Number(invoiceRecord.totalAmount);
+					// Recalculate total paid from allocations table directly to ensure consistency
+					const [result] = await tx
+						.select({
+							total: sql<string>`sum(${paymentAllocation.allocatedAmount})`,
+						})
+						.from(paymentAllocation)
+						.where(eq(paymentAllocation.invoiceId, alloc.invoiceId));
+
+					const totalPaid = Number(result?.total || 0);
+					const totalAmount = Number(invoiceRecord.totalAmount);
+
+					let newStatus = invoiceRecord.status;
+					if (totalPaid >= totalAmount) {
+						newStatus = "paid";
+					} else if (totalPaid > 0) {
+						newStatus = "partial";
+					}
 
 					await tx
 						.update(invoice)
 						.set({
-							status: isPaid ? "paid" : invoiceRecord.status,
+							status: newStatus,
 						})
 						.where(eq(invoice.id, alloc.invoiceId));
 				}
@@ -313,7 +353,8 @@ export async function getPartyBalance(
 ) {
 	const invoices = await db
 		.select({
-			total: sql<string>`sum(${invoice.totalAmount})`,
+			total: sql<string>`;
+sum(${invoice.totalAmount})`,
 		})
 		.from(invoice)
 		.where(
@@ -322,7 +363,12 @@ export async function getPartyBalance(
 				partyType === "customer"
 					? eq(invoice.customerId, partyId)
 					: eq(invoice.supplierId, partyId),
-				sql`${invoice.status} != 'paid'`,
+				sql`
+$;
+{
+	invoice.status;
+}
+!= 'paid'`,
 			),
 		);
 
@@ -331,24 +377,59 @@ export async function getPartyBalance(
 
 export async function getInvoices(
 	organizationId: string,
-	options?: {
+	options: {
 		invoiceType?: "receivable" | "payable";
 		limit?: number;
-	},
+		offset?: number;
+		status?: string;
+		from?: string;
+		to?: string;
+	} = {},
 ) {
-	const { invoiceType, limit = 50 } = options || {};
+	const { invoiceType, limit = 50, offset = 0, status, from, to } = options;
 
-	return await db.query.invoice.findMany({
-		where: and(
-			eq(invoice.organizationId, organizationId),
-			invoiceType ? eq(invoice.invoiceType, invoiceType) : undefined,
-		),
+	const where = and(
+		eq(invoice.organizationId, organizationId),
+		invoiceType ? eq(invoice.invoiceType, invoiceType) : undefined,
+		status
+			? eq(
+					invoice.status,
+					// biome-ignore lint/suspicious/noExplicitAny: inference issue
+					status as any,
+				)
+			: undefined,
+		from ? gte(invoice.invoiceDate, new Date(from)) : undefined,
+		to ? lte(invoice.invoiceDate, new Date(to)) : undefined,
+	);
+
+	const [totalRes] = await db
+		.select({ count: count() })
+		.from(invoice)
+		.where(where);
+	const total = totalRes?.count ?? 0;
+
+	const data = await db.query.invoice.findMany({
+		where,
 		orderBy: [desc(invoice.invoiceDate)],
 		with: {
+			customer: true,
+			supplier: true,
 			lines: true,
+			allocations: true,
 		},
 		limit,
+		offset,
 	});
+
+	return {
+		data,
+		meta: {
+			total,
+			page: Math.floor(offset / limit) + 1,
+			pageSize: limit,
+			totalPages: Math.ceil(total / limit),
+		},
+	};
 }
 
 export async function getInvoice(organizationId: string, invoiceId: string) {
@@ -384,4 +465,67 @@ export async function getPayments(
 		},
 		limit,
 	});
+}
+
+export async function getInvoiceStats(
+	organizationId: string,
+	invoiceType: "receivable" | "payable",
+) {
+	const invoices = await db.query.invoice.findMany({
+		where: and(
+			eq(invoice.organizationId, organizationId),
+			eq(invoice.invoiceType, invoiceType),
+			ne(invoice.status, "cancelled"),
+		),
+		with: {
+			allocations: true,
+		},
+		columns: {
+			id: true,
+			totalAmount: true,
+			status: true,
+			dueDate: true,
+			invoiceDate: true,
+		},
+	});
+
+	const totalCount = invoices.length;
+	const draftCount = invoices.filter((i) => i.status === "draft").length;
+
+	const unpaidInvoices = invoices.filter((i) => i.status !== "paid");
+
+	const totalUnpaidAmount = unpaidInvoices.reduce((sum, i) => {
+		const paid =
+			i.allocations.reduce(
+				(acc, curr) => acc + Number(curr.allocatedAmount),
+				0,
+			) ?? 0;
+		return sum + Math.max(0, Number(i.totalAmount) - paid);
+	}, 0);
+
+	const unpaidCount = unpaidInvoices.length;
+
+	const overdueInvoices = unpaidInvoices.filter(
+		(i) => new Date(i.dueDate) < new Date(),
+	);
+
+	const totalOverdueAmount = overdueInvoices.reduce((sum, i) => {
+		const paid =
+			i.allocations.reduce(
+				(acc, curr) => acc + Number(curr.allocatedAmount),
+				0,
+			) ?? 0;
+		return sum + Math.max(0, Number(i.totalAmount) - paid);
+	}, 0);
+
+	const overdueCount = overdueInvoices.length;
+
+	return {
+		totalCount,
+		totalUnpaidAmount,
+		unpaidCount,
+		totalOverdueAmount,
+		overdueCount,
+		draftCount,
+	};
 }

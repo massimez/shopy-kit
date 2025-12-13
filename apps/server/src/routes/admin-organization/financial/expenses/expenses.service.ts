@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { expense, expenseCategory } from "@/lib/db/schema/financial/expenses";
 
@@ -59,16 +59,59 @@ export async function createExpense(
 	return newExpense;
 }
 
-export async function getExpenses(organizationId: string, limit = 50) {
-	return await db.query.expense.findMany({
-		where: eq(expense.organizationId, organizationId),
+export async function getExpenses(
+	organizationId: string,
+	options: {
+		limit?: number;
+		offset?: number;
+		status?: string;
+		from?: string;
+		to?: string;
+		categoryId?: string;
+	} = {},
+) {
+	const { limit = 50, offset = 0, status, from, to, categoryId } = options;
+
+	const where = and(
+		eq(expense.organizationId, organizationId),
+		status
+			? eq(
+					expense.status,
+					// biome-ignore lint/suspicious/noExplicitAny: inference issue
+					status as any,
+				)
+			: undefined,
+		categoryId ? eq(expense.categoryId, categoryId) : undefined,
+		from ? gte(expense.expenseDate, new Date(from)) : undefined,
+		to ? lte(expense.expenseDate, new Date(to)) : undefined,
+	);
+
+	const [totalRes] = await db
+		.select({ count: count() })
+		.from(expense)
+		.where(where);
+	const total = totalRes?.count ?? 0;
+
+	const data = await db.query.expense.findMany({
+		where,
 		orderBy: [desc(expense.expenseDate)],
 		with: {
 			category: true,
 			user: true,
 		},
 		limit,
+		offset,
 	});
+
+	return {
+		data,
+		meta: {
+			total,
+			page: Math.floor(offset / limit) + 1,
+			pageSize: limit,
+			totalPages: Math.ceil(total / limit),
+		},
+	};
 }
 export async function approveExpense(
 	organizationId: string,

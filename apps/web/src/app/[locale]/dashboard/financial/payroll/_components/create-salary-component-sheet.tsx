@@ -27,8 +27,8 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "@workspace/ui/components/sheet";
-import { Plus } from "lucide-react";
-import { useState } from "react";
+import { Pencil, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
@@ -43,30 +43,62 @@ const formSchema = z.object({
 	isTaxable: z.boolean(),
 });
 
-export function CreateSalaryComponentSheet() {
+interface CreateSalaryComponentSheetProps {
+	editingComponent?: {
+		id: string;
+		name: string;
+		componentType: "earning" | "deduction";
+		calculationType: "fixed" | "percentage" | "formula";
+		accountId: string;
+		isTaxable: boolean;
+	};
+}
+
+export function CreateSalaryComponentSheet({
+	editingComponent,
+}: CreateSalaryComponentSheetProps) {
 	const [open, setOpen] = useState(false);
-	const { useCreateSalaryComponent } = useFinancialPayroll();
+	const { useCreateSalaryComponent, useUpdateSalaryComponent } =
+		useFinancialPayroll();
 	const { useAccounts } = useFinancialAccounting();
 	const { data: accounts } = useAccounts();
 
-	// Get hook unconditionally to satisfy rules of hooks
+	// Get hooks unconditionally
 	let createComponent = useCreateSalaryComponent();
+	let updateComponent = useUpdateSalaryComponent();
 
-	// Handle HC client issues with fallback - but must do this after hook call
+	// Handle HC client issues with fallback
 	if (createComponent.mutate.toString().includes("throw new Error")) {
 		createComponent = createComponent as typeof createComponent;
+	}
+	if (updateComponent.mutate.toString().includes("throw new Error")) {
+		updateComponent = updateComponent as typeof updateComponent;
 	}
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			name: "",
-			componentType: "earning",
-			calculationType: "fixed",
-			accountId: "",
-			isTaxable: true,
+			name: editingComponent?.name || "",
+			componentType: editingComponent?.componentType || "earning",
+			calculationType: editingComponent?.calculationType || "fixed",
+			accountId: editingComponent?.accountId || "",
+			isTaxable: editingComponent?.isTaxable ?? true,
 		},
 	});
+
+	// Reset form when editingComponent changes or sheet opens
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	useEffect(() => {
+		if (open) {
+			form.reset({
+				name: editingComponent?.name || "",
+				componentType: editingComponent?.componentType || "earning",
+				calculationType: editingComponent?.calculationType || "fixed",
+				accountId: editingComponent?.accountId || "",
+				isTaxable: editingComponent?.isTaxable ?? true,
+			});
+		}
+	}, [open, editingComponent, form]);
 
 	// Group accounts by type for better organization
 	const groupedAccounts = accounts?.reduce(
@@ -94,32 +126,64 @@ export function CreateSalaryComponentSheet() {
 	);
 
 	function onSubmit(values: z.infer<typeof formSchema>) {
-		createComponent.mutate(values, {
-			onSuccess: () => {
-				toast.success("Salary component created successfully");
-				setOpen(false);
-				form.reset();
-			},
-			onError: () => {
-				toast.error("Failed to create salary component");
-			},
-		});
+		if (editingComponent) {
+			updateComponent.mutate(
+				{
+					id: editingComponent.id,
+					data: values,
+				},
+				{
+					onSuccess: () => {
+						toast.success("Salary component updated successfully");
+						setOpen(false);
+						form.reset();
+					},
+					onError: () => {
+						toast.error("Failed to update salary component");
+					},
+				},
+			);
+		} else {
+			createComponent.mutate(values, {
+				onSuccess: () => {
+					toast.success("Salary component created successfully");
+					setOpen(false);
+					form.reset();
+				},
+				onError: () => {
+					toast.error("Failed to create salary component");
+				},
+			});
+		}
 	}
+
+	const isPending = createComponent.isPending || updateComponent.isPending;
 
 	return (
 		<Sheet open={open} onOpenChange={setOpen}>
 			<SheetTrigger asChild>
-				<Button>
-					<Plus className="mr-2 h-4 w-4" />
-					Add Component
-				</Button>
+				{editingComponent ? (
+					<Button variant="ghost" size="icon" className="h-8 w-8">
+						<Pencil className="h-4 w-4" />
+					</Button>
+				) : (
+					<Button>
+						<Plus className="mr-2 h-4 w-4" />
+						Add Component
+					</Button>
+				)}
 			</SheetTrigger>
 			<SheetContent className="w-full sm:max-w-lg">
 				<SheetHeader>
-					<SheetTitle>Add Salary Component</SheetTitle>
+					<SheetTitle>
+						{editingComponent
+							? "Edit Salary Component"
+							: "Add Salary Component"}
+					</SheetTitle>
 					<SheetDescription>
-						Create allowances, deductions, or other salary components for
-						payroll calculation.
+						{editingComponent
+							? "Update details of the salary component."
+							: "Create allowances, deductions, or other salary components for payroll calculation."}
 					</SheetDescription>
 				</SheetHeader>
 				<Form {...form}>
@@ -253,12 +317,12 @@ export function CreateSalaryComponentSheet() {
 							)}
 						/>
 
-						<Button
-							type="submit"
-							className="w-full"
-							disabled={createComponent.isPending}
-						>
-							{createComponent.isPending ? "Creating..." : "Create Component"}
+						<Button type="submit" className="w-full" disabled={isPending}>
+							{isPending
+								? "Saving..."
+								: editingComponent
+									? "Update Component"
+									: "Create Component"}
 						</Button>
 					</form>
 				</Form>

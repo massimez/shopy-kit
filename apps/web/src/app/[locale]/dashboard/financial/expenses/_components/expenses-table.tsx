@@ -16,14 +16,6 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
-import { Input } from "@workspace/ui/components/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@workspace/ui/components/select";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import {
 	Table,
@@ -41,15 +33,12 @@ import {
 	Filter,
 	MoreHorizontal,
 	Pencil,
-	Search,
 	X,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
 	useApproveExpense,
-	useExpenseCategories,
-	useFinancialExpenses,
 	usePayExpense,
 	useRejectExpense,
 } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-expenses";
@@ -75,23 +64,22 @@ type Expense = {
 	} | null;
 };
 
-export function ExpensesTable() {
-	const { data: expenses, isLoading: isExpensesLoading } =
-		useFinancialExpenses(100);
-	const { data: categories, isLoading: isCategoriesLoading } =
-		useExpenseCategories();
+interface ExpensesTableProps {
+	data: Expense[];
+	isLoading: boolean;
+}
+
+export function ExpensesTable({
+	data: expenses,
+	isLoading,
+}: ExpensesTableProps) {
 	const approveMutation = useApproveExpense();
 	const rejectMutation = useRejectExpense();
 	const payMutation = usePayExpense();
 	const queryClient = useQueryClient();
 
-	const [searchQuery, setSearchQuery] = useState("");
-	const [statusFilter, setStatusFilter] = useState<string>("all");
-	const [categoryFilter, setCategoryFilter] = useState<string>("all");
 	const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
 	const [editOpen, setEditOpen] = useState(false);
-
-	const isLoading = isExpensesLoading || isCategoriesLoading;
 
 	const handleApprove = (id: string) => {
 		toast.promise(approveMutation.mutateAsync(id), {
@@ -126,34 +114,12 @@ export function ExpensesTable() {
 		});
 	};
 
-	const filteredExpenses = (
-		Array.isArray(expenses) ? (expenses as unknown as Expense[]) : []
-	).filter((expense) => {
-		const matchesSearch =
-			expense.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			expense.employee?.firstName
-				.toLowerCase()
-				.includes(searchQuery.toLowerCase()) ||
-			expense.employee?.lastName
-				.toLowerCase()
-				.includes(searchQuery.toLowerCase()) ||
-			expense.user?.name.toLowerCase().includes(searchQuery.toLowerCase());
-
-		const matchesStatus =
-			statusFilter === "all" || expense.status === statusFilter;
-
-		const matchesCategory =
-			categoryFilter === "all" || expense.category.id === categoryFilter;
-
-		return matchesSearch && matchesStatus && matchesCategory;
-	});
-
 	if (isLoading) {
 		return (
 			<Card>
 				<CardHeader>
 					<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-						<CardTitle>Expenses</CardTitle>
+						<CardTitle>Expenses List</CardTitle>
 					</div>
 				</CardHeader>
 				<CardContent>
@@ -180,59 +146,6 @@ export function ExpensesTable() {
 				<CardHeader>
 					<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 						<CardTitle>Expenses List</CardTitle>
-						<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-							<div className="relative">
-								<Search className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
-								<Input
-									placeholder="Search expenses..."
-									className="w-full pl-8 sm:w-[250px]"
-									value={searchQuery}
-									onChange={(e) => setSearchQuery(e.target.value)}
-								/>
-							</div>
-							<Select value={statusFilter} onValueChange={setStatusFilter}>
-								<SelectTrigger className="w-full sm:w-[150px]">
-									<SelectValue placeholder="Status" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="all">All Statuses</SelectItem>
-									<SelectItem value="pending">Pending</SelectItem>
-									<SelectItem value="approved">Approved</SelectItem>
-									<SelectItem value="paid">Paid</SelectItem>
-									<SelectItem value="rejected">Rejected</SelectItem>
-								</SelectContent>
-							</Select>
-							<Select value={categoryFilter} onValueChange={setCategoryFilter}>
-								<SelectTrigger className="w-full sm:w-[150px]">
-									<SelectValue placeholder="Category" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="all">All Categories</SelectItem>
-									{Array.isArray(categories) &&
-										categories.map((category: { id: string; name: string }) => (
-											<SelectItem key={category.id} value={category.id}>
-												{category.name}
-											</SelectItem>
-										))}
-								</SelectContent>
-							</Select>
-							{(searchQuery ||
-								statusFilter !== "all" ||
-								categoryFilter !== "all") && (
-								<Button
-									variant="ghost"
-									onClick={() => {
-										setSearchQuery("");
-										setStatusFilter("all");
-										setCategoryFilter("all");
-									}}
-									className="px-2 lg:px-3"
-								>
-									Reset
-									<X className="ml-2 h-4 w-4" />
-								</Button>
-							)}
-						</div>
 					</div>
 				</CardHeader>
 				<CardContent>
@@ -250,8 +163,8 @@ export function ExpensesTable() {
 								</TableRow>
 							</TableHeader>
 							<TableBody>
-								{filteredExpenses.length > 0 ? (
-									filteredExpenses.map((expense) => (
+								{(expenses as Expense[])?.length > 0 ? (
+									(expenses as Expense[]).map((expense) => (
 										<TableRow key={expense.id}>
 											<TableCell className="whitespace-nowrap">
 												{format(new Date(expense.expenseDate), "MMM dd, yyyy")}
@@ -360,23 +273,6 @@ export function ExpensesTable() {
 													<Filter className="h-8 w-8 text-muted-foreground/50" />
 												</div>
 												<p className="font-medium text-lg">No expenses found</p>
-												<p className="text-sm">
-													Try adjusting your filters or search query.
-												</p>
-												{(searchQuery ||
-													statusFilter !== "all" ||
-													categoryFilter !== "all") && (
-													<Button
-														variant="link"
-														onClick={() => {
-															setSearchQuery("");
-															setStatusFilter("all");
-															setCategoryFilter("all");
-														}}
-													>
-														Clear all filters
-													</Button>
-												)}
 											</div>
 										</TableCell>
 									</TableRow>

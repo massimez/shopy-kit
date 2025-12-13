@@ -32,17 +32,31 @@ export default createRouter()
 	.get(
 		"/expenses",
 		authMiddleware,
-		queryValidator(z.object({ limit: z.string().optional() })),
+		queryValidator(
+			z.object({
+				limit: z.string().optional(),
+				offset: z.string().optional(),
+				status: z.string().optional(),
+				from: z.string().optional(),
+				to: z.string().optional(),
+				categoryId: z.string().optional(),
+			}),
+		),
 		async (c) => {
 			try {
 				const activeOrgId = validateOrgId(
 					c.get("session")?.activeOrganizationId as string,
 				);
-				const { limit } = c.req.valid("query");
-				const expenses = await expensesService.getExpenses(
-					activeOrgId,
-					limit ? Number(limit) : 50,
-				);
+				const { limit, offset, status, from, to, categoryId } =
+					c.req.valid("query");
+				const expenses = await expensesService.getExpenses(activeOrgId, {
+					limit: limit ? Number(limit) : 50,
+					offset: offset ? Number(offset) : 0,
+					status,
+					from,
+					to,
+					categoryId,
+				});
 				return c.json(createSuccessResponse(expenses));
 			} catch (error) {
 				return handleRouteError(c, error, "fetch expenses");

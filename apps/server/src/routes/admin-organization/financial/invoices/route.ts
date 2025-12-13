@@ -20,7 +20,7 @@ import {
 } from "./schema";
 
 export default createRouter()
-	// Get all invoices (with optional type filter)
+	// Get all invoices (with pagination and filters)
 	.get(
 		"/",
 		authMiddleware,
@@ -28,6 +28,10 @@ export default createRouter()
 			z.object({
 				type: z.enum(["receivable", "payable"]).optional(),
 				limit: z.string().optional(),
+				offset: z.string().optional(),
+				status: z.string().optional(),
+				from: z.string().optional(),
+				to: z.string().optional(),
 			}),
 		),
 		async (c) => {
@@ -35,14 +39,41 @@ export default createRouter()
 				const activeOrgId = validateOrgId(
 					c.get("session")?.activeOrganizationId as string,
 				);
-				const { type, limit } = c.req.valid("query");
-				const invoices = await invoicesService.getInvoices(activeOrgId, {
+				const { type, limit, offset, status, from, to } = c.req.valid("query");
+				const result = await invoicesService.getInvoices(activeOrgId, {
 					invoiceType: type,
 					limit: limit ? Number(limit) : 50,
+					offset: offset ? Number(offset) : 0,
+					status,
+					from,
+					to,
 				});
-				return c.json(createSuccessResponse(invoices));
+				return c.json(createSuccessResponse(result));
 			} catch (error) {
 				return handleRouteError(c, error, "fetch invoices");
+			}
+		},
+	)
+
+	// Get invoice stats
+	.get(
+		"/stats",
+		authMiddleware,
+		queryValidator(
+			z.object({
+				type: z.enum(["receivable", "payable"]),
+			}),
+		),
+		async (c) => {
+			try {
+				const activeOrgId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+				const { type } = c.req.valid("query");
+				const stats = await invoicesService.getInvoiceStats(activeOrgId, type);
+				return c.json(createSuccessResponse(stats));
+			} catch (error) {
+				return handleRouteError(c, error, "fetch invoice stats");
 			}
 		},
 	)
@@ -143,6 +174,25 @@ export default createRouter()
 				return c.json(createSuccessResponse(invoice));
 			} catch (error) {
 				return handleRouteError(c, error, "approve invoice");
+			}
+		},
+	)
+
+	// Delete invoice
+	.delete(
+		"/:id",
+		authMiddleware,
+		paramValidator(z.object({ id: z.string().uuid() })),
+		async (c) => {
+			try {
+				const activeOrgId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+				const { id } = c.req.valid("param");
+				const invoice = await invoicesService.deleteInvoice(activeOrgId, id);
+				return c.json(createSuccessResponse(invoice));
+			} catch (error) {
+				return handleRouteError(c, error, "delete invoice");
 			}
 		},
 	)

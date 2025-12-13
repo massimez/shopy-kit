@@ -64,7 +64,6 @@ const baseNavMain = [
 		icon: Landmark,
 		isActive: false,
 		items: [
-			{ title: "Transactions", url: "/dashboard/financial/transactions" },
 			{ title: "Invoices", url: "/dashboard/financial/invoices" },
 			{ title: "Bills", url: "/dashboard/financial/bills" },
 			{ title: "Expenses", url: "/dashboard/financial/expenses" },

@@ -4,12 +4,52 @@ import { hc } from "@/lib/api-client";
 /**
  * Fetch invoices (receivables or payables)
  */
-export function useInvoices(type: "receivable" | "payable", limit = 50) {
+export function useInvoices(
+	type: "receivable" | "payable",
+	options: {
+		limit?: string;
+		offset?: string;
+		status?: string | null;
+		from?: string | null;
+		to?: string | null;
+		setTotal?: (total: number) => void;
+	} = {},
+) {
+	const { limit = "10", offset = "0", status, from, to, setTotal } = options;
+
 	return useQuery({
-		queryKey: ["financial", "invoices", type, limit],
+		queryKey: ["financial", "invoices", type, limit, offset, status, from, to],
 		queryFn: async () => {
 			const res = await hc.api.financial.invoices.$get({
-				query: { type, limit: limit.toString() },
+				query: {
+					type,
+					limit,
+					offset,
+					status: status || undefined,
+					from: from || undefined,
+					to: to || undefined,
+				},
+			});
+			const json = await res.json();
+
+			if (setTotal && json.data.meta) {
+				setTotal(json.data.meta.total);
+			}
+
+			return json.data;
+		},
+	});
+}
+
+/**
+ * Fetch invoice stats (receivables or payables)
+ */
+export function useInvoiceStats(type: "receivable" | "payable") {
+	return useQuery({
+		queryKey: ["financial", "invoices", "stats", type],
+		queryFn: async () => {
+			const res = await hc.api.financial.invoices.stats.$get({
+				query: { type },
 			});
 			const json = await res.json();
 			return json.data;
@@ -130,6 +170,32 @@ export function useUpdateInvoice() {
 }
 
 /**
+ * Delete invoice
+ */
+export function useDeleteInvoice() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async (id: string) => {
+			const res = await hc.api.financial.invoices[":id"].$delete({
+				param: { id },
+			});
+			if (!res.ok) {
+				const json = await res.json();
+				throw new Error(json.error?.message || "Failed to delete invoice");
+			}
+			const json = await res.json();
+			return json.data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["financial", "invoices"],
+			});
+		},
+	});
+}
+
+/**
  * Approve invoice
  */
 export function useApproveInvoice() {
@@ -170,7 +236,6 @@ export function useRecordPayment() {
 			paymentDate: Date;
 			paymentMethod: "bank_transfer" | "check" | "cash" | "card" | "online";
 			referenceNumber?: string;
-			bankAccountId?: string;
 			allocations: {
 				invoiceId: string;
 				amount: number;

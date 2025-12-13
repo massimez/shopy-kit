@@ -7,14 +7,60 @@ type ExpenseWithId = {
 	reject: { $post: () => Promise<Response> };
 };
 
-export function useFinancialExpenses(limit = 50) {
+export function useFinancialExpenses(
+	options: {
+		limit?: string;
+		offset?: string;
+		status?: string | null;
+		from?: string | null;
+		to?: string | null;
+		categoryId?: string | null;
+		setTotal?: (total: number) => void;
+	} = {},
+) {
+	const {
+		limit = "50",
+		offset = "0",
+		status,
+		from,
+		to,
+		categoryId,
+		setTotal,
+	} = options;
+
 	return useQuery({
-		queryKey: ["financial", "expenses", limit],
+		queryKey: [
+			"financial",
+			"expenses",
+			limit,
+			offset,
+			status,
+			from,
+			to,
+			categoryId,
+		],
 		queryFn: async () => {
 			const res = await hc.api.financial.expenses.expenses.$get({
-				query: { limit: limit.toString() },
+				query: {
+					limit,
+					offset,
+					status: status || undefined,
+					from: from || undefined,
+					to: to || undefined,
+					categoryId: categoryId || undefined,
+				} as any, // Cast to any to bypass current client type definition
 			});
-			const json = await res.json();
+			const json = (await res.json()) as unknown as {
+				data: {
+					data: any[];
+					meta: { total: number };
+				};
+			};
+
+			if (setTotal && json.data.meta) {
+				setTotal(json.data.meta.total);
+			}
+
 			return json.data;
 		},
 	});

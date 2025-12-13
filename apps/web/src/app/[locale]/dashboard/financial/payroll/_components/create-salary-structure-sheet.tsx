@@ -240,7 +240,7 @@ export function CreateSalaryStructureSheet({
 										<FormControl>
 											<Input
 												type="number"
-												placeholder="50000"
+												placeholder=""
 												{...field}
 												onChange={(e) => field.onChange(Number(e.target.value))}
 											/>
@@ -358,7 +358,7 @@ export function CreateSalaryStructureSheet({
 														<FormControl>
 															<Input
 																type="number"
-																placeholder="1000"
+																placeholder=""
 																className="h-9"
 																{...amountField}
 																onChange={(e) =>
@@ -386,7 +386,7 @@ export function CreateSalaryStructureSheet({
 														<FormControl>
 															<Input
 																type="number"
-																placeholder="10"
+																placeholder=""
 																min="0"
 																max="100"
 																className="h-9"

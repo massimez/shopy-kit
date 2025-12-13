@@ -62,7 +62,6 @@ export function useFinancialPayroll() {
 				position?: string;
 				hireDate: string;
 				employmentType: "full_time" | "part_time" | "contract";
-				bankAccountNumber?: string;
 				taxId?: string;
 				baseSalary?: string;
 				currency?: string;
@@ -95,7 +94,6 @@ export function useFinancialPayroll() {
 					phone?: string;
 					position?: string;
 					employmentType?: "full_time" | "part_time" | "contract";
-					bankAccountNumber?: string;
 					taxId?: string;
 					status?: "active" | "on_leave" | "terminated";
 				};
@@ -151,6 +149,55 @@ export function useFinancialPayroll() {
 			}) => {
 				const res = await hc.api.financial.payroll["salary-components"].$post({
 					json: data,
+				});
+				const json = await res.json();
+				return json.data;
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: ["financial", "salary-components"],
+				});
+			},
+		});
+	};
+
+	const useUpdateSalaryComponent = () => {
+		return useMutation({
+			mutationFn: async (data: {
+				id: string;
+				data: {
+					name?: string;
+					componentType?: "earning" | "deduction";
+					accountId?: string;
+					isTaxable?: boolean;
+				};
+			}) => {
+				// biome-ignore lint/suspicious/noExplicitAny: Hono RPC dynamic route workaround
+				const res = await (hc.api.financial.payroll as any)[
+					"salary-components"
+				][":id"].$put({
+					param: { id: data.id },
+					json: data.data,
+				});
+				const json = await res.json();
+				return json.data;
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: ["financial", "salary-components"],
+				});
+			},
+		});
+	};
+
+	const useDeleteSalaryComponent = () => {
+		return useMutation({
+			mutationFn: async (id: string) => {
+				// biome-ignore lint/suspicious/noExplicitAny: Hono RPC dynamic route workaround
+				const res = await (hc.api.financial.payroll as any)[
+					"salary-components"
+				][":id"].$delete({
+					param: { id },
 				});
 				const json = await res.json();
 				return json.data;
@@ -298,6 +345,119 @@ export function useFinancialPayroll() {
 		});
 	};
 
+	const useSalaryAdvances = (employeeId?: string) => {
+		return useQuery({
+			queryKey: ["financial", "salary-advances", employeeId],
+			queryFn: async () => {
+				const res = await hc.api.financial.payroll["salary-advances"].$get({
+					query: { employeeId },
+				});
+				const json = await res.json();
+				return json.data;
+			},
+		});
+	};
+
+	const useRequestSalaryAdvance = () => {
+		return useMutation({
+			mutationFn: async (data: {
+				employeeId: string;
+				amount: number;
+				installments: number;
+				notes?: string;
+			}) => {
+				const res = await hc.api.financial.payroll["salary-advances"].$post({
+					json: data,
+				});
+				const json = await res.json();
+				return json.data;
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: ["financial", "salary-advances"],
+				});
+			},
+		});
+	};
+
+	const useApproveSalaryAdvance = () => {
+		return useMutation({
+			mutationFn: async (data: { id: string; approvedAmount: number }) => {
+				const res = await hc.api.financial.payroll["salary-advances"][
+					":id"
+				].approve.$post({
+					param: { id: data.id },
+					json: { approvedAmount: data.approvedAmount },
+				});
+				const json = await res.json();
+				return json.data;
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: ["financial", "salary-advances"],
+				});
+				queryClient.invalidateQueries({
+					queryKey: ["financial", "payroll-runs"],
+				});
+			},
+		});
+	};
+
+	const useDisburseSalaryAdvance = () => {
+		return useMutation({
+			mutationFn: async (id: string) => {
+				const res = await hc.api.financial.payroll["salary-advances"][
+					":id"
+				].disburse.$post({
+					param: { id },
+				});
+				const json = await res.json();
+				return json.data;
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: ["financial", "salary-advances"],
+				});
+				queryClient.invalidateQueries({
+					queryKey: ["financial", "payroll-runs"],
+				});
+			},
+		});
+	};
+
+	const useUpdatePayrollEntry = (runId: string) => {
+		return useMutation({
+			mutationFn: async (data: {
+				entryId: string;
+				adjustments: Array<{
+					id: string;
+					name: string;
+					type: "earning" | "deduction";
+					amount: number;
+					notes?: string;
+				}>;
+			}) => {
+				// biome-ignore lint/suspicious/noExplicitAny: Hono RPC dynamic route workaround
+				const res = await (hc.api.financial.payroll["payroll-runs"] as any)[
+					":runId"
+				].entries[":entryId"].$patch({
+					param: { runId, entryId: data.entryId },
+					json: { adjustments: data.adjustments },
+				});
+				const json = await res.json();
+				return json.data;
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: ["financial", "payroll-run-details", runId],
+				});
+				queryClient.invalidateQueries({
+					queryKey: ["financial", "payroll-runs"],
+				});
+			},
+		});
+	};
+
 	return {
 		usePayrollRuns,
 		useEmployees,
@@ -309,9 +469,16 @@ export function useFinancialPayroll() {
 		useSalaryComponents,
 		useSalaryStructures,
 		useCreateSalaryComponent,
+		useUpdateSalaryComponent,
+		useDeleteSalaryComponent,
 		usePayrollRunDetails,
 		useCalculatePayroll,
 		useApprovePayrollRun,
 		useProcessPayrollPayments,
+		useSalaryAdvances,
+		useRequestSalaryAdvance,
+		useApproveSalaryAdvance,
+		useDisburseSalaryAdvance,
+		useUpdatePayrollEntry,
 	};
 }

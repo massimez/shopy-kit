@@ -1,4 +1,5 @@
 import { Separator } from "@workspace/ui/components/separator";
+import { FinancialExpensesList } from "../_components/financial-expenses-list";
 import { CreateExpenseCategorySheet } from "./_components/create-expense-category-sheet";
 import { CreateExpenseSheet } from "./_components/create-expense-sheet";
 import { ExpenseStats } from "./_components/expense-stats";
@@ -21,7 +22,7 @@ export default function FinancialExpensesPage() {
 			</div>
 			<ExpenseStats />
 			<Separator />
-			<ExpensesTable />
+			<FinancialExpensesList table={ExpensesTable} />
 		</div>
 	);
 }

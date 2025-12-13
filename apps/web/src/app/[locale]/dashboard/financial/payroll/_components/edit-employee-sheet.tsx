@@ -55,6 +55,7 @@ const formSchema = z.object({
 	bankAccountNumber: z.string().optional(),
 	taxId: z.string().optional(),
 	status: z.enum(["active", "on_leave", "terminated"]).optional(),
+	terminationDate: z.string().optional().or(z.literal("")),
 });
 
 interface EditEmployeeSheetProps {
@@ -73,6 +74,7 @@ interface EditEmployeeSheetProps {
 		bankAccountNumber?: string;
 		taxId?: string;
 		status: "active" | "on_leave" | "terminated";
+		terminationDate?: string | null;
 		hireDate: string;
 	};
 	open: boolean;
@@ -102,6 +104,9 @@ export function EditEmployeeSheet({
 			bankAccountNumber: employee.bankAccountNumber || "",
 			taxId: employee.taxId || "",
 			status: employee.status,
+			terminationDate: employee.terminationDate
+				? new Date(employee.terminationDate).toISOString().split("T")[0]
+				: "",
 		},
 	});
 
@@ -120,6 +125,9 @@ export function EditEmployeeSheet({
 			bankAccountNumber: employee.bankAccountNumber || "",
 			taxId: employee.taxId || "",
 			status: employee.status,
+			terminationDate: employee.terminationDate
+				? new Date(employee.terminationDate).toISOString().split("T")[0]
+				: "",
 		});
 	}, [employee, form]);
 
@@ -294,6 +302,22 @@ export function EditEmployeeSheet({
 									)}
 								/>
 							</div>
+
+							{form.watch("status") === "terminated" && (
+								<FormField
+									control={form.control}
+									name="terminationDate"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Termination Date</FormLabel>
+											<FormControl>
+												<Input type="date" {...field} />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							)}
 						</div>
 
 						<Separator />

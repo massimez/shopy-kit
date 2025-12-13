@@ -17,7 +17,7 @@ type Expense = {
 
 export function ExpenseStats() {
 	// Fetch a larger number for stats to be more accurate
-	const { data: expenses, isLoading } = useFinancialExpenses(100);
+	const { data: expenses, isLoading } = useFinancialExpenses({ limit: "100" });
 
 	if (isLoading) {
 		return (

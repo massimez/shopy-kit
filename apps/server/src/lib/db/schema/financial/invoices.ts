@@ -158,8 +158,6 @@ export const payment = pgTable(
 			.$type<"bank_transfer" | "check" | "cash" | "card" | "online">(), // Application-level validation
 		referenceNumber: varchar("reference_number", { length: 100 }),
 
-		bankAccountId: uuid("bank_account_id"), // Link to bank_account table
-
 		status: varchar("status", { length: 20 })
 			.default("pending")
 			.notNull()

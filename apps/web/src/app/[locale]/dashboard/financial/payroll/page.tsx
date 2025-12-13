@@ -6,10 +6,13 @@ import {
 	TabsTrigger,
 } from "@workspace/ui/components/tabs";
 import { CreatePayrollRunSheet } from "./_components/create-payroll-run-sheet";
+import { CreateSalaryAdvanceSheet } from "./_components/create-salary-advance-sheet";
 import { EmployeeTable } from "./_components/employee-table";
 import { PayrollStats } from "./_components/payroll-stats";
 import { PayrollTable } from "./_components/payroll-table";
+import { SalaryAdvanceTable } from "./_components/salary-advance-table";
 import { SalaryComponentsTable } from "./_components/salary-components-table";
+import { SalaryStructuresTable } from "./_components/salary-structures-table";
 
 export default function FinancialPayrollPage() {
 	return (
@@ -34,6 +37,10 @@ export default function FinancialPayrollPage() {
 						<TabsTrigger value="salary-components">
 							Salary Components
 						</TabsTrigger>
+						<TabsTrigger value="salary-structures">
+							Salary Structures
+						</TabsTrigger>
+						<TabsTrigger value="salary-advances">Salary Advances</TabsTrigger>
 						<TabsTrigger value="payroll-runs">Payroll Runs</TabsTrigger>
 					</TabsList>
 				</div>
@@ -44,6 +51,17 @@ export default function FinancialPayrollPage() {
 
 				<TabsContent value="salary-components" className="space-y-4">
 					<SalaryComponentsTable />
+				</TabsContent>
+
+				<TabsContent value="salary-advances" className="space-y-4">
+					<div className="flex items-center justify-end">
+						<CreateSalaryAdvanceSheet />
+					</div>
+					<SalaryAdvanceTable />
+				</TabsContent>
+
+				<TabsContent value="salary-structures" className="space-y-4">
+					<SalaryStructuresTable />
 				</TabsContent>
 
 				<TabsContent value="payroll-runs" className="space-y-4">

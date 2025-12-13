@@ -19,7 +19,7 @@ export const createEmployeeSchema = z.object({
 export const createSalaryStructureSchema = z.object({
 	employeeId: z.string().uuid(),
 	effectiveFrom: z.coerce.date(),
-	baseSalary: z.number().positive(),
+	baseSalary: z.string(),
 	currency: z.string().length(3),
 	paymentFrequency: z.enum(["monthly", "bi_weekly", "weekly"]),
 	components: z.array(
@@ -67,6 +67,19 @@ export const updateEmployeeSchema = z.object({
 	bankAccountNumber: z.string().optional(),
 	taxId: z.string().optional(),
 	status: z.enum(["active", "on_leave", "terminated"]).optional(),
+	baseSalary: z.string().optional(),
+	currency: z.string().length(3).optional(),
+	paymentFrequency: z.enum(["monthly", "bi_weekly", "weekly"]).optional(),
+	terminationDate: z.string().optional().nullable(),
+	salaryComponents: z
+		.array(
+			z.object({
+				componentId: z.string().uuid(),
+				amount: z.number(),
+				type: z.enum(["earning", "deduction"]),
+			}),
+		)
+		.optional(),
 });
 
 export const getPayrollRunDetailsSchema = z.object({
@@ -77,4 +90,16 @@ export const processPayrollPaymentsSchema = z.object({
 	entryIds: z
 		.array(z.string().uuid())
 		.min(1, "At least one entry must be selected"),
+});
+
+export const updatePayrollEntrySchema = z.object({
+	adjustments: z.array(
+		z.object({
+			id: z.string().uuid(),
+			name: z.string().min(1, "Name is required"),
+			type: z.enum(["earning", "deduction"]),
+			amount: z.number().min(0),
+			notes: z.string().optional(),
+		}),
+	),
 });

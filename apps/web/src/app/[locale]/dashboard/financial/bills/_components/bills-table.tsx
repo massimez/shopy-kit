@@ -26,14 +26,24 @@ import {
 	TableRow,
 } from "@workspace/ui/components/table";
 import { format } from "date-fns";
-import { Copy, DollarSign, Edit, MoreHorizontal } from "lucide-react";
+import {
+	CheckCheck,
+	Copy,
+	DollarSign,
+	Edit,
+	MoreHorizontal,
+	Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useInvoices } from "@/app/[locale]/dashboard/financial/_hooks/use-invoices";
+import {
+	useApproveInvoice,
+	useDeleteInvoice,
+} from "@/app/[locale]/dashboard/financial/_hooks/use-invoices";
+import { RecordPaymentDialog } from "../../_components/record-payment-dialog";
 import { CreateBillSheet } from "./create-bill-sheet";
-import { RecordPaymentDialog } from "./record-payment-dialog";
 
-interface Bill {
+export interface Bill {
 	id: string;
 	supplierId: string;
 	invoiceNumber: string;
@@ -47,11 +57,34 @@ interface Bill {
 	};
 }
 
-export function BillsTable() {
-	const { data: bills, isLoading } = useInvoices("payable", 50);
+interface BillsTableProps {
+	data: Bill[];
+	isLoading: boolean;
+}
+
+export function BillsTable({ data: bills, isLoading }: BillsTableProps) {
 	const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
 	const [editOpen, setEditOpen] = useState(false);
 	const [paymentOpen, setPaymentOpen] = useState(false);
+
+	const deleteBill = useDeleteInvoice();
+	const approveBill = useApproveInvoice();
+
+	const handleDelete = (id: string) => {
+		toast.promise(deleteBill.mutateAsync(id), {
+			loading: "Deleting bill...",
+			success: "Bill deleted successfully",
+			error: "Failed to delete bill",
+		});
+	};
+
+	const handleApprove = (id: string) => {
+		toast.promise(approveBill.mutateAsync(id), {
+			loading: "Approving bill...",
+			success: "Bill approved successfully",
+			error: "Failed to approve bill",
+		});
+	};
 
 	if (isLoading) {
 		return (
@@ -144,17 +177,32 @@ export function BillsTable() {
 												</DropdownMenuItem>
 												<DropdownMenuSeparator />
 												{bill.status === "draft" && (
-													<DropdownMenuItem
-														onClick={() => {
-															setSelectedBill(bill);
-															setEditOpen(true);
-														}}
-													>
-														<Edit className="mr-2 h-4 w-4" />
-														Edit
-													</DropdownMenuItem>
+													<>
+														<DropdownMenuItem
+															onClick={() => {
+																setSelectedBill(bill);
+																setEditOpen(true);
+															}}
+														>
+															<Edit className="mr-2 h-4 w-4" />
+															Edit
+														</DropdownMenuItem>
+														<DropdownMenuItem
+															onClick={() => handleApprove(bill.id)}
+														>
+															<CheckCheck className="mr-2 h-4 w-4" />
+															Approve
+														</DropdownMenuItem>
+														<DropdownMenuItem
+															className="text-destructive focus:text-destructive"
+															onClick={() => handleDelete(bill.id)}
+														>
+															<Trash2 className="mr-2 h-4 w-4" />
+															Delete
+														</DropdownMenuItem>
+													</>
 												)}
-												{bill.status !== "paid" && (
+												{bill.status !== "paid" && bill.status !== "draft" && (
 													<DropdownMenuItem
 														onClick={() => {
 															setSelectedBill(bill);
@@ -197,14 +245,15 @@ export function BillsTable() {
 						}}
 					/>
 
-					{paymentOpen && (
+					{paymentOpen && selectedBill && (
 						<RecordPaymentDialog
 							open={paymentOpen}
 							onOpenChange={(open) => {
 								setPaymentOpen(open);
 								if (!open) setSelectedBill(null);
 							}}
-							bill={selectedBill}
+							type="payable"
+							document={selectedBill}
 						/>
 					)}
 				</>

@@ -10,8 +10,8 @@ import { Skeleton } from "@workspace/ui/components/skeleton";
 import { AlertCircle, CheckCircle2, DollarSign, FileText } from "lucide-react";
 import { useInvoiceStats } from "@/app/[locale]/dashboard/financial/_hooks/use-invoices";
 
-export function BillsStats() {
-	const { data: stats, isLoading } = useInvoiceStats("payable");
+export function InvoiceStats() {
+	const { data: stats, isLoading } = useInvoiceStats("receivable");
 
 	if (isLoading) {
 		return (
@@ -37,19 +37,19 @@ export function BillsStats() {
 		<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 			<Card className="border-l-4 border-l-blue-500">
 				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-					<CardTitle className="font-medium text-sm">Total Bills</CardTitle>
+					<CardTitle className="font-medium text-sm">Total Invoices</CardTitle>
 					<FileText className="h-4 w-4 text-blue-600" />
 				</CardHeader>
 				<CardContent>
 					<div className="font-bold text-2xl">{stats?.totalCount ?? 0}</div>
-					<p className="text-muted-foreground text-xs">All vendor bills</p>
+					<p className="text-muted-foreground text-xs">All customer invoices</p>
 				</CardContent>
 			</Card>
 
-			<Card className="border-l-4 border-l-amber-500">
+			<Card className="border-l-4 border-l-green-500">
 				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-					<CardTitle className="font-medium text-sm">Unpaid Amount</CardTitle>
-					<DollarSign className="h-4 w-4 text-amber-600" />
+					<CardTitle className="font-medium text-sm">Receivables</CardTitle>
+					<DollarSign className="h-4 w-4 text-green-600" />
 				</CardHeader>
 				<CardContent>
 					<div className="font-bold text-2xl">
@@ -59,7 +59,7 @@ export function BillsStats() {
 						}).format(stats?.totalUnpaidAmount ?? 0)}
 					</div>
 					<p className="text-muted-foreground text-xs">
-						{stats?.unpaidCount ?? 0} unpaid bills
+						{stats?.unpaidCount ?? 0} unpaid invoices
 					</p>
 				</CardContent>
 			</Card>
@@ -77,7 +77,7 @@ export function BillsStats() {
 						}).format(stats?.totalOverdueAmount ?? 0)}
 					</div>
 					<p className="text-muted-foreground text-xs">
-						{stats?.overdueCount ?? 0} overdue bills
+						{stats?.overdueCount ?? 0} overdue invoices
 					</p>
 				</CardContent>
 			</Card>
@@ -89,7 +89,7 @@ export function BillsStats() {
 				</CardHeader>
 				<CardContent>
 					<div className="font-bold text-2xl">{stats?.draftCount ?? 0}</div>
-					<p className="text-muted-foreground text-xs">Bills in draft</p>
+					<p className="text-muted-foreground text-xs">Invoices in draft</p>
 				</CardContent>
 			</Card>
 		</div>

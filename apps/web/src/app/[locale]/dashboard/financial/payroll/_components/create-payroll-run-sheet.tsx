@@ -40,9 +40,30 @@ export function CreatePayrollRunSheet() {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			periodStart: "",
-			periodEnd: "",
-			paymentDate: "",
+			periodStart: new Date(
+				new Date().getFullYear(),
+				new Date().getMonth(),
+				1,
+				12, // Noon to avoid timezone issues when converting to YYYY-MM-DD for input
+			)
+				.toISOString()
+				.split("T")[0],
+			periodEnd: new Date(
+				new Date().getFullYear(),
+				new Date().getMonth() + 1,
+				0,
+				12,
+			)
+				.toISOString()
+				.split("T")[0],
+			paymentDate: new Date(
+				new Date().getFullYear(),
+				new Date().getMonth() + 1,
+				0,
+				12,
+			)
+				.toISOString()
+				.split("T")[0],
 		},
 	});
 

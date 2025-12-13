@@ -85,17 +85,17 @@ export function SalaryStructuresTable() {
 									<div className="flex items-center gap-1">
 										{new Intl.NumberFormat("en-US", {
 											style: "currency",
-											currency: structure.currency,
+											currency: structure.currency || "USD",
 											minimumFractionDigits: 0,
 										}).format(Number(structure.baseSalary))}
 									</div>
 								</TableCell>
 								<TableCell>
-									<Badge variant="outline">{structure.currency}</Badge>
+									<Badge variant="outline">{structure.currency || "USD"}</Badge>
 								</TableCell>
 								<TableCell>
 									<Badge variant="secondary">
-										{structure.paymentFrequency.replace("_", " ")}
+										{structure.paymentFrequency?.replace("_", " ")}
 									</Badge>
 								</TableCell>
 								<TableCell>

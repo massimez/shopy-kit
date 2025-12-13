@@ -1,5 +1,7 @@
 import { Separator } from "@workspace/ui/components/separator";
+import { FinancialList } from "../_components/financial-list";
 import { CreateInvoiceSheet } from "./_components/create-invoice-sheet";
+import { InvoiceStats } from "./_components/invoice-stats";
 import { InvoicesTable } from "./_components/invoices-table";
 
 export default function FinancialInvoicesPage() {
@@ -15,7 +17,8 @@ export default function FinancialInvoicesPage() {
 				<CreateInvoiceSheet />
 			</div>
 			<Separator />
-			<InvoicesTable />
+			<InvoiceStats />
+			<FinancialList type="receivable" table={InvoicesTable} />
 		</div>
 	);
 }

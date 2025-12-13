@@ -1,5 +1,4 @@
 export * from "./financial/accounts";
-export * from "./financial/banking";
 export * from "./financial/expenses";
 export * from "./financial/invoices";
 export * from "./financial/journal";

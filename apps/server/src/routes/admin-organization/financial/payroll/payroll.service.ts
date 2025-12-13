@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
 	employee,
@@ -8,6 +8,7 @@ import {
 	salaryComponent,
 } from "@/lib/db/schema/financial/payroll";
 import type { TransactionDb } from "@/types/db";
+import { calculateTotals, updatePayrollRunTotals } from "./helpers";
 
 /**
  * ---------------------------------------------------------------------------
@@ -43,7 +44,7 @@ export async function updateEmployee(
 		bankAccountNumber?: string;
 		taxId?: string;
 		status?: "active" | "on_leave" | "terminated";
-		baseSalary?: number;
+		baseSalary?: string;
 		currency?: string;
 		paymentFrequency?: "monthly" | "bi_weekly" | "weekly";
 		salaryComponents?: Array<{
@@ -51,14 +52,20 @@ export async function updateEmployee(
 			amount: number;
 			type: "earning" | "deduction";
 		}>;
+		terminationDate?: string | Date | null;
 	},
 ) {
 	// biome-ignore lint/suspicious/noExplicitAny: <>
 	const updateData: any = { ...data };
 
-	// Convert baseSalary number to string for database
 	if (data.baseSalary !== undefined) {
 		updateData.baseSalary = data.baseSalary.toString();
+	}
+
+	if (data.terminationDate) {
+		updateData.terminationDate = new Date(data.terminationDate);
+	} else if (data.terminationDate === null) {
+		updateData.terminationDate = null;
 	}
 
 	const [updated] = await db
@@ -137,11 +144,30 @@ export async function deletePayrollRun(organizationId: string, runId: string) {
 }
 
 export async function calculatePayroll(organizationId: string, runId: string) {
-	// 1. Fetch active employees with their salary info
+	// 1. Get run details to know the period
+	const run = await db.query.payrollRun.findFirst({
+		where: and(
+			eq(payrollRun.id, runId),
+			eq(payrollRun.organizationId, organizationId),
+		),
+	});
+
+	if (!run) throw new Error("Payroll run not found");
+
+	const periodStart = run.payrollPeriodStart;
+	const periodEnd = run.payrollPeriodEnd;
+
+	// 2. Fetch active employees AND relevant terminated employees
 	const employees = await db.query.employee.findMany({
 		where: and(
 			eq(employee.organizationId, organizationId),
-			eq(employee.status, "active"),
+			or(
+				eq(employee.status, "active"),
+				and(
+					eq(employee.status, "terminated"),
+					gte(employee.terminationDate, periodStart),
+				),
+			),
 		),
 	});
 
@@ -153,7 +179,69 @@ export async function calculatePayroll(organizationId: string, runId: string) {
 		for (const emp of employees) {
 			if (!emp.baseSalary) continue; // Skip employees without salary configured
 
-			const baseSalary = Number(emp.baseSalary);
+			let baseSalary = Number(emp.baseSalary);
+			let prorated = false;
+			let prorationFactor = 1;
+
+			// Unified Proration Logic
+			// Determine effective start and end dates for the pay period
+			const periodStartDate = new Date(periodStart);
+			const periodEndDate = new Date(periodEnd);
+
+			let effectiveStartDate = periodStartDate;
+			let effectiveEndDate = periodEndDate;
+
+			// Check for new hire (Joined after period start)
+			if (emp.hireDate && emp.hireDate > periodStartDate) {
+				effectiveStartDate = new Date(emp.hireDate);
+			}
+
+			// Check for termination (Left before period end)
+			if (emp.terminationDate && emp.terminationDate < periodEndDate) {
+				const termDate = new Date(emp.terminationDate);
+				// If termination is before effective start, pay is 0 (shouldn't happen if query is correct)
+				if (termDate < effectiveStartDate) {
+					effectiveEndDate = effectiveStartDate; // Results in 0 days
+				} else {
+					effectiveEndDate = termDate;
+				}
+			}
+
+			// Check if proration is needed
+			// Prorate if effective dates differ from full period dates
+			// Note: We compare times or just date strings. Here using getTime() simplified.
+			// To be precise:
+			// If effectiveStart > periodStart OR effectiveEnd < periodEnd => Prorate
+			if (
+				effectiveStartDate.getTime() > periodStartDate.getTime() ||
+				effectiveEndDate.getTime() < periodEndDate.getTime()
+			) {
+				const totalDaysInPeriod =
+					Math.floor(
+						(periodEndDate.getTime() - periodStartDate.getTime()) /
+							(1000 * 60 * 60 * 24),
+					) + 1;
+
+				const daysWorked =
+					Math.floor(
+						(effectiveEndDate.getTime() - effectiveStartDate.getTime()) /
+							(1000 * 60 * 60 * 24),
+					) + 1;
+
+				if (totalDaysInPeriod > 0 && daysWorked > 0) {
+					prorationFactor = daysWorked / totalDaysInPeriod;
+					// Clamp between 0 and 1 just in case
+					prorationFactor = Math.max(0, Math.min(1, prorationFactor));
+
+					baseSalary = baseSalary * prorationFactor;
+					prorated = true;
+				} else if (daysWorked <= 0) {
+					prorationFactor = 0;
+					baseSalary = 0;
+					prorated = true;
+				}
+			}
+
 			let grossSalary = baseSalary;
 			let deductions = 0;
 			const components: Array<{
@@ -166,7 +254,13 @@ export async function calculatePayroll(organizationId: string, runId: string) {
 			// Process salary components from JSONB
 			if (emp.salaryComponents && Array.isArray(emp.salaryComponents)) {
 				for (const comp of emp.salaryComponents) {
-					const amount = comp.amount || 0;
+					let amount = comp.amount || 0;
+
+					// Optional: Prorate fixed components too?
+					// Usually fixed allowances are prorated
+					if (prorated) {
+						amount = amount * prorationFactor;
+					}
 
 					// Fetch component details for name
 					const componentDetails = await tx.query.salaryComponent.findFirst({
@@ -200,10 +294,11 @@ export async function calculatePayroll(organizationId: string, runId: string) {
 			});
 
 			for (const advance of activeAdvances) {
-				// Calculate monthly deduction (outstanding balance divided by remaining months)
-				const deductionAmount = Math.min(
-					Number(advance.outstandingBalance) / 3, // Simple: divide by 3 months
+				// Calculate monthly deduction based on approved amount and installments
+				const deductionAmount = calculateAdvanceDeduction(
 					Number(advance.outstandingBalance),
+					Number(advance.approvedAmount || advance.requestedAmount),
+					Number(advance.installments || 1),
 				);
 
 				if (deductionAmount > 0) {
@@ -244,10 +339,20 @@ export async function calculatePayroll(organizationId: string, runId: string) {
 				totalGross: totalGross.toString(),
 				totalDeductions: totalDeductions.toString(),
 				totalNet: totalNet.toString(),
-				status: "approved", // Move directly to approved after calculation
+				status: "calculated",
 			})
 			.where(eq(payrollRun.id, runId));
 	});
+}
+
+function calculateAdvanceDeduction(
+	outstandingBalance: number,
+	approvedAmount: number,
+	installments: number,
+) {
+	if (installments <= 0) return Math.min(outstandingBalance, approvedAmount);
+	const monthlyDeduction = approvedAmount / installments;
+	return Math.min(monthlyDeduction, outstandingBalance);
 }
 
 export async function approvePayrollRun(runId: string, userId: string) {
@@ -269,33 +374,44 @@ export async function approvePayrollRun(runId: string, userId: string) {
 		});
 
 		for (const entry of entries) {
-			const activeAdvances = await tx.query.salaryAdvance.findMany({
-				where: and(
-					eq(salaryAdvance.employeeId, entry.employeeId),
-					eq(salaryAdvance.status, "active"),
-					sql`${salaryAdvance.outstandingBalance} > 0`,
-				),
-			});
+			// Find advance repayment components in the stored JSON
+			// We look for components with type 'deduction' and a name indicating it's an advance repayment
+			// OR we could check if componentId exists in salary_advance table (more robust but costlier per row if not batched)
+			// Given the current structure, we'll try to match by ID if possible or rely on the fact that we push { componentId: advance.id }
+			if (!entry.components || !Array.isArray(entry.components)) continue;
 
-			for (const advance of activeAdvances) {
-				// Calculate monthly deduction
-				const deductionAmount = Math.min(
-					Number(advance.outstandingBalance) / 3,
-					Number(advance.outstandingBalance),
-				);
+			for (const comp of entry.components) {
+				// We need to know if this component is a salary advance repayment.
+				// In calculatePayroll, we set:
+				// componentId: advance.id
+				// name: "Salary Advance Repayment"
+				// type: "deduction"
 
-				if (deductionAmount > 0) {
-					const newBalance =
-						Number(advance.outstandingBalance) - deductionAmount;
+				if (
+					comp.type === "deduction" &&
+					comp.name === "Salary Advance Repayment"
+				) {
+					const advanceId = comp.componentId;
+					const deductionAmount = comp.amount;
 
-					// Update advance balance (no separate repayment table)
-					await tx
-						.update(salaryAdvance)
-						.set({
-							outstandingBalance: newBalance.toString(),
-							status: newBalance <= 0 ? "fully_repaid" : "active",
-						})
-						.where(eq(salaryAdvance.id, advance.id));
+					// Verify this is actually a valid advance
+					const advance = await tx.query.salaryAdvance.findFirst({
+						where: eq(salaryAdvance.id, advanceId),
+					});
+
+					if (advance) {
+						const newBalance =
+							Number(advance.outstandingBalance) - deductionAmount;
+
+						// Update advance balance
+						await tx
+							.update(salaryAdvance)
+							.set({
+								outstandingBalance: newBalance.toString(),
+								status: newBalance <= 0 ? "fully_repaid" : "active",
+							})
+							.where(eq(salaryAdvance.id, advanceId));
+					}
 				}
 			}
 		}
@@ -315,6 +431,7 @@ export async function requestSalaryAdvance(
 	data: {
 		employeeId: string;
 		amount: number;
+		installments: number;
 		notes?: string;
 		createdBy?: string;
 	},
@@ -325,6 +442,7 @@ export async function requestSalaryAdvance(
 			organizationId,
 			employeeId: data.employeeId,
 			requestedAmount: data.amount.toString(),
+			installments: data.installments.toString(),
 			status: "pending",
 			notes: data.notes,
 			createdBy: data.createdBy,
@@ -442,6 +560,108 @@ export async function getSalaryComponents(organizationId: string) {
 	});
 }
 
+export async function updateSalaryComponent(
+	organizationId: string,
+	componentId: string,
+	data: {
+		name?: string;
+		componentType?: "earning" | "deduction";
+		accountId?: string;
+		isTaxable?: boolean;
+	},
+) {
+	const [updated] = await db
+		.update(salaryComponent)
+		.set({ ...data, updatedAt: new Date() })
+		.where(
+			and(
+				eq(salaryComponent.id, componentId),
+				eq(salaryComponent.organizationId, organizationId),
+			),
+		)
+		.returning();
+
+	if (!updated) {
+		throw new Error("Salary component not found");
+	}
+
+	return updated;
+}
+
+export async function deleteSalaryComponent(
+	organizationId: string,
+	componentId: string,
+) {
+	// Soft delete
+	const [deleted] = await db
+		.update(salaryComponent)
+		.set({ isActive: false, deletedAt: new Date() })
+		.where(
+			and(
+				eq(salaryComponent.id, componentId),
+				eq(salaryComponent.organizationId, organizationId),
+			),
+		)
+		.returning();
+
+	if (!deleted) {
+		throw new Error("Salary component not found");
+	}
+
+	return deleted;
+}
+
+export async function updatePayrollEntry(
+	organizationId: string,
+	runId: string,
+	entryId: string,
+	adjustments: Array<{
+		id: string;
+		name: string;
+		type: "earning" | "deduction";
+		amount: number;
+		notes?: string;
+	}>,
+) {
+	return await db.transaction(async (tx: TransactionDb) => {
+		// 1. Get and validate entry
+		const entry = await tx.query.payrollEntry.findFirst({
+			where: and(
+				eq(payrollEntry.id, entryId),
+				eq(payrollEntry.payrollRunId, runId),
+			),
+		});
+
+		if (!entry) throw new Error("Payroll entry not found");
+		if (entry.status === "paid")
+			throw new Error("Cannot update paid payroll entry");
+
+		// 2. Calculate totals
+		const { grossSalary, totalDeductions } = calculateTotals(
+			Number(entry.baseSalary),
+			entry.components,
+			adjustments,
+		);
+
+		// 3. Update entry
+		await tx
+			.update(payrollEntry)
+			.set({
+				adjustments,
+				grossSalary: grossSalary.toString(),
+				totalDeductions: totalDeductions.toString(),
+				netSalary: (grossSalary - totalDeductions).toString(),
+				updatedAt: new Date(),
+			})
+			.where(eq(payrollEntry.id, entryId));
+
+		// 4. Update payroll run totals
+		await updatePayrollRunTotals(tx, runId, organizationId);
+
+		return { success: true };
+	});
+}
+
 /**
  * ---------------------------------------------------------------------------
  * PAYROLL QUERY OPERATIONS
@@ -493,7 +713,7 @@ export async function getPayrollRunDetails(
 export async function processPayrollPayments(entryIds: string[]) {
 	return await db.transaction(async (tx: TransactionDb) => {
 		const entries = await tx.query.payrollEntry.findMany({
-			where: eq(payrollEntry.id, sql`ANY(${entryIds})`),
+			where: inArray(payrollEntry.id, entryIds),
 			with: {
 				run: true,
 			},
@@ -506,7 +726,7 @@ export async function processPayrollPayments(entryIds: string[]) {
 				status: "paid",
 				updatedAt: new Date(),
 			})
-			.where(eq(payrollEntry.id, sql`ANY(${entryIds})`));
+			.where(inArray(payrollEntry.id, entryIds));
 
 		// Update payroll run status to paid if all entries are paid
 		for (const entry of entries) {

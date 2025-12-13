@@ -140,7 +140,7 @@ export const payrollRun = pgTable(
 		status: varchar("status", { length: 20 })
 			.default("draft")
 			.notNull()
-			.$type<"draft" | "approved" | "paid">(), // Application-level validation
+			.$type<"draft" | "calculated" | "approved" | "paid">(), // Application-level validation
 
 		// Totals
 		totalGross: numeric("total_gross", { precision: 12, scale: 2 }).default(
@@ -203,6 +203,18 @@ export const payrollEntry = pgTable(
 				}>
 			>(),
 
+		// Adjustments (one-off additions/deductions for this run)
+		adjustments:
+			jsonb("adjustments").$type<
+				Array<{
+					id: string;
+					name: string;
+					type: "earning" | "deduction";
+					amount: number;
+					notes?: string;
+				}>
+			>(),
+
 		paymentMethod: varchar("payment_method", { length: 20 })
 			.notNull()
 			.$type<"bank_transfer" | "cash" | "check">(), // Application-level validation
@@ -244,6 +256,10 @@ export const salaryAdvance = pgTable(
 			scale: 2,
 		}).notNull(),
 		approvedAmount: numeric("approved_amount", { precision: 12, scale: 2 }),
+
+		installments: numeric("installments", { precision: 12, scale: 0 })
+			.default("1")
+			.notNull(),
 
 		// Tracking
 		outstandingBalance: numeric("outstanding_balance", {

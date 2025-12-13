@@ -89,7 +89,6 @@ export function CreateEmployeeSheet() {
 				email: values.email || undefined,
 				phone: values.phone || undefined,
 				position: values.position || undefined,
-				bankAccountNumber: values.bankAccountNumber || undefined,
 				taxId: values.taxId || undefined,
 				hireDate: new Date(values.hireDate).toISOString(),
 				baseSalary: values.baseSalary,

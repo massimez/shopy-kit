@@ -34,10 +34,10 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { useFinancialAccounting } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-accounting";
 import {
-	useBill,
-	useCreateBill,
-	useUpdateBill,
-} from "@/app/[locale]/dashboard/financial/_hooks/use-financial-bills";
+	useCreateInvoice,
+	useInvoice,
+	useUpdateInvoice,
+} from "@/app/[locale]/dashboard/financial/_hooks/use-invoices";
 import { useSuppliers } from "@/app/[locale]/dashboard/store/suppliers/hooks/use-suppliers";
 
 const billItemSchema = z.object({
@@ -93,12 +93,12 @@ export function CreateBillSheet({
 	const { data: suppliersData } = useSuppliers();
 
 	// Fetch bill details if editing
-	const { data: existingBill, isLoading: isLoadingBill } = useBill(
+	const { data: existingBill, isLoading: isLoadingBill } = useInvoice(
 		billId || "",
 	);
 
-	const createBill = useCreateBill();
-	const updateBill = useUpdateBill();
+	const createBill = useCreateInvoice();
+	const updateBill = useUpdateInvoice();
 	const isEditing = !!billId;
 
 	const suppliers = (suppliersData?.data as Supplier[]) || [];
@@ -157,6 +157,7 @@ export function CreateBillSheet({
 
 	function onSubmit(values: z.infer<typeof formSchema>) {
 		const payload = {
+			invoiceType: "payable" as const,
 			supplierId: values.supplierId,
 			invoiceNumber: values.invoiceNumber,
 			invoiceDate: new Date(values.date),
@@ -179,7 +180,7 @@ export function CreateBillSheet({
 						setOpen(false);
 						if (!isEditing) form.reset(); // Don't reset heavily on edit close immediately?
 					},
-					onError: (error) => toast.error(error.message),
+					onError: (error: Error) => toast.error(error.message),
 				},
 			);
 		} else {
@@ -189,7 +190,7 @@ export function CreateBillSheet({
 					setOpen(false);
 					form.reset();
 				},
-				onError: (error) => toast.error(error.message),
+				onError: (error: Error) => toast.error(error.message),
 			});
 		}
 	}

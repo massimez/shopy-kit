@@ -1,6 +1,5 @@
 import { relations } from "drizzle-orm";
 import { glAccount } from "../financial/accounts";
-import { bankAccount, bankTransaction } from "../financial/banking";
 import {
 	invoice,
 	invoiceLine,
@@ -30,7 +29,6 @@ export const glAccountRelations = relations(glAccount, ({ one, many }) => ({
 	}),
 	journalLines: many(journalEntryLine),
 	invoiceLines: many(invoiceLine),
-	bankAccounts: many(bankAccount),
 }));
 
 /**
@@ -113,10 +111,6 @@ export const paymentRelations = relations(payment, ({ one, many }) => ({
 		references: [supplier.id],
 	}),
 	allocations: many(paymentAllocation),
-	bankAccount: one(bankAccount, {
-		fields: [payment.bankAccountId],
-		references: [bankAccount.id],
-	}),
 }));
 
 export const paymentAllocationRelations = relations(
@@ -204,33 +198,3 @@ export const salaryAdvanceRelations = relations(salaryAdvance, ({ one }) => ({
 		references: [user.id],
 	}),
 }));
-
-/**
- * Banking Relations - Simplified
- */
-export const bankAccountRelations = relations(bankAccount, ({ one, many }) => ({
-	organization: one(organization, {
-		fields: [bankAccount.organizationId],
-		references: [organization.id],
-	}),
-	glAccount: one(glAccount, {
-		fields: [bankAccount.glAccountId],
-		references: [glAccount.id],
-	}),
-	transactions: many(bankTransaction),
-	payments: many(payment),
-}));
-
-export const bankTransactionRelations = relations(
-	bankTransaction,
-	({ one }) => ({
-		organization: one(organization, {
-			fields: [bankTransaction.organizationId],
-			references: [organization.id],
-		}),
-		bankAccount: one(bankAccount, {
-			fields: [bankTransaction.bankAccountId],
-			references: [bankAccount.id],
-		}),
-	}),
-);
