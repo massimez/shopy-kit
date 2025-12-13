@@ -9,6 +9,7 @@ import {
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { CheckCircle2, Clock, DollarSign, Receipt } from "lucide-react";
 import { useFinancialExpenses } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-expenses";
+import { useCurrency } from "@/app/providers/currency-provider";
 
 type Expense = {
 	status: "pending" | "approved" | "rejected" | "paid";
@@ -18,6 +19,7 @@ type Expense = {
 export function ExpenseStats() {
 	// Fetch a larger number for stats to be more accurate
 	const { data: expenses, isLoading } = useFinancialExpenses({ limit: "100" });
+	const { formatCurrency } = useCurrency();
 
 	if (isLoading) {
 		return (
@@ -54,13 +56,6 @@ export function ExpenseStats() {
 	const pendingAmount = expensesList
 		.filter((e) => e.status === "pending")
 		.reduce((acc, curr) => acc + Number(curr.amount), 0);
-
-	// Format currency (assuming generic USD for summary or mixed, simply showing number for now)
-	const formatCurrency = (amount: number) =>
-		new Intl.NumberFormat("en-US", {
-			style: "currency",
-			currency: "USD",
-		}).format(amount);
 
 	return (
 		<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

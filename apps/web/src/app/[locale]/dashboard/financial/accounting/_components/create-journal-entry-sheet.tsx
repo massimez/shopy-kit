@@ -33,6 +33,7 @@ import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 import { useFinancialAccounting } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-accounting";
+import { useCurrency } from "@/app/providers/currency-provider";
 
 const lineSchema = z.object({
 	accountId: z.string().min(1, "Account is required"),
@@ -53,6 +54,7 @@ function BalanceIndicator({
 	control: import("react-hook-form").Control<z.infer<typeof formSchema>>;
 }) {
 	const lines = useWatch({ control, name: "lines" });
+	const { formatCurrency } = useCurrency();
 
 	const totalDebit = lines?.reduce(
 		(sum: number, line: { debitAmount: string }) =>
@@ -90,18 +92,18 @@ function BalanceIndicator({
 				<div>
 					<span className="text-muted-foreground">Debit: </span>
 					<span className="font-medium text-green-600">
-						${totalDebit.toFixed(2)}
+						{formatCurrency(totalDebit)}
 					</span>
 				</div>
 				<div>
 					<span className="text-muted-foreground">Credit: </span>
 					<span className="font-medium text-red-600">
-						${totalCredit.toFixed(2)}
+						{formatCurrency(totalCredit)}
 					</span>
 				</div>
 				{!isBalanced && difference > 0 && (
 					<Badge variant="outline" className="border-amber-300 text-amber-600">
-						Diff: ${difference.toFixed(2)}
+						Diff: {formatCurrency(difference)}
 					</Badge>
 				)}
 			</div>

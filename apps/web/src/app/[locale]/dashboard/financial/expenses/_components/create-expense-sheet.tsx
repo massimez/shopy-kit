@@ -36,6 +36,7 @@ import {
 	useExpenseCategories,
 	useUpdateExpense,
 } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-expenses";
+import { useCurrency } from "@/app/providers/currency-provider";
 
 const formSchema = z.object({
 	categoryId: z.string().min(1, "Category is required"),
@@ -73,6 +74,8 @@ export function CreateExpenseSheet({
 	const createExpenseMutation = useCreateExpense();
 	const updateExpenseMutation = useUpdateExpense();
 
+	const { currency } = useCurrency(); // Get global currency
+
 	const [localOpen, setLocalOpen] = useState(false);
 
 	const isOpen = controlledOpen !== undefined ? controlledOpen : localOpen;
@@ -85,7 +88,7 @@ export function CreateExpenseSheet({
 		defaultValues: {
 			categoryId: "",
 			amount: "",
-			currency: "USD",
+			currency: currency, // Use global currency
 			date: new Date().toISOString().split("T")[0],
 			description: "",
 		},
@@ -106,13 +109,13 @@ export function CreateExpenseSheet({
 				form.reset({
 					categoryId: "",
 					amount: "",
-					currency: "USD",
+					currency: currency, // Reset to global currency for new expense
 					date: new Date().toISOString().split("T")[0],
 					description: "",
 				});
 			}
 		}
-	}, [isOpen, expenseToEdit, form]);
+	}, [isOpen, expenseToEdit, form, currency]);
 
 	function onSubmit(values: z.infer<typeof formSchema>) {
 		const commonData = {
@@ -203,7 +206,7 @@ export function CreateExpenseSheet({
 									</FormItem>
 								)}
 							/>
-							<div className="grid grid-cols-2 gap-4">
+							<div className="grid grid-cols-1 gap-4">
 								<FormField
 									control={form.control}
 									name="amount"
@@ -217,19 +220,6 @@ export function CreateExpenseSheet({
 													placeholder="0.00"
 													{...field}
 												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={form.control}
-									name="currency"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Currency</FormLabel>
-											<FormControl>
-												<Input {...field} />
 											</FormControl>
 											<FormMessage />
 										</FormItem>

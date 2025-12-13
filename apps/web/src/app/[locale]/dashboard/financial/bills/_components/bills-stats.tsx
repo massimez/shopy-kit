@@ -9,9 +9,12 @@ import {
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { AlertCircle, CheckCircle2, DollarSign, FileText } from "lucide-react";
 import { useInvoiceStats } from "@/app/[locale]/dashboard/financial/_hooks/use-invoices";
+import { useCurrency } from "@/app/providers/currency-provider";
+import { formatCurrency } from "@/lib/helpers";
 
 export function BillsStats() {
 	const { data: stats, isLoading } = useInvoiceStats("payable");
+	const { currency } = useCurrency();
 
 	if (isLoading) {
 		return (
@@ -53,10 +56,7 @@ export function BillsStats() {
 				</CardHeader>
 				<CardContent>
 					<div className="font-bold text-2xl">
-						{new Intl.NumberFormat("en-US", {
-							style: "currency",
-							currency: "USD",
-						}).format(stats?.totalUnpaidAmount ?? 0)}
+						{formatCurrency(stats?.totalUnpaidAmount ?? 0, currency)}
 					</div>
 					<p className="text-muted-foreground text-xs">
 						{stats?.unpaidCount ?? 0} unpaid bills
@@ -71,10 +71,7 @@ export function BillsStats() {
 				</CardHeader>
 				<CardContent>
 					<div className="font-bold text-2xl">
-						{new Intl.NumberFormat("en-US", {
-							style: "currency",
-							currency: "USD",
-						}).format(stats?.totalOverdueAmount ?? 0)}
+						{formatCurrency(stats?.totalOverdueAmount ?? 0, currency)}
 					</div>
 					<p className="text-muted-foreground text-xs">
 						{stats?.overdueCount ?? 0} overdue bills

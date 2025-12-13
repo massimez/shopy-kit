@@ -43,7 +43,7 @@ import {
 	XCircle,
 } from "lucide-react";
 import { useState } from "react";
-import { formatCurrency } from "@/lib/helpers";
+import { useCurrency } from "@/app/providers/currency-provider";
 import type { Order } from "./types";
 
 interface OrderCardProps {
@@ -64,6 +64,7 @@ export const OrderCard = ({
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [isExpanded, setIsExpanded] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+	const { formatCurrency } = useCurrency();
 
 	const getStatusConfig = (status: Order["status"]) => {
 		switch (status) {
@@ -282,10 +283,7 @@ export const OrderCard = ({
 								Total Amount
 							</p>
 							<p className="font-bold text-lg">
-								{formatCurrency(
-									Number.parseFloat(order.totalAmount),
-									order.currency,
-								)}
+								{formatCurrency(Number.parseFloat(order.totalAmount))}
 							</p>
 						</div>
 						<div className="space-y-1">
@@ -386,7 +384,6 @@ export const OrderCard = ({
 											<span className="whitespace-nowrap font-semibold text-sm">
 												{formatCurrency(
 													Number.parseFloat(item.unitPrice) * item.quantity,
-													order.currency,
 												)}
 											</span>
 										</div>
@@ -419,10 +416,7 @@ export const OrderCard = ({
 							</p>
 							<p className="font-medium">
 								• {itemCount} item{itemCount !== 1 ? "s" : ""} worth{" "}
-								{formatCurrency(
-									Number.parseFloat(order.totalAmount),
-									order.currency,
-								)}
+								{formatCurrency(Number.parseFloat(order.totalAmount))}
 							</p>
 						</AlertDialogDescription>
 					</AlertDialogHeader>

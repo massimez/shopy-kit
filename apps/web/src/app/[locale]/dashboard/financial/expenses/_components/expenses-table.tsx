@@ -42,6 +42,7 @@ import {
 	usePayExpense,
 	useRejectExpense,
 } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-expenses";
+import { formatCurrency } from "@/lib/helpers";
 import { CreateExpenseSheet } from "./create-expense-sheet";
 
 type Expense = {
@@ -199,10 +200,10 @@ export function ExpensesTable({
 												</Badge>
 											</TableCell>
 											<TableCell className="text-right font-medium">
-												{new Intl.NumberFormat("en-US", {
-													style: "currency",
-													currency: expense.currency,
-												}).format(Number(expense.amount))}
+												{formatCurrency(
+													Number(expense.amount),
+													expense.currency,
+												)}
 											</TableCell>
 											<TableCell className="text-right">
 												<DropdownMenu>

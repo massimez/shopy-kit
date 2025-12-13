@@ -96,6 +96,7 @@ export const organizationInfo = pgTable("organization_info", {
 		.default("0.00")
 		.notNull(),
 	defaultLanguage: varchar("default_language", { length: 20 }),
+	currency: varchar("currency", { length: 10 }).default("USD").notNull(),
 	activeLanguages: jsonb("active_languages").$type<string[]>(),
 	images: jsonb("images").$type<TImage[]>(),
 

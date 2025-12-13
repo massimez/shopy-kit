@@ -9,6 +9,7 @@ import { cn } from "@workspace/ui/lib/utils";
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { CurrencyProvider } from "@/app/providers/currency-provider";
 import QueryProvider from "@/app/providers/query";
 import { ThemeProvider } from "@/app/providers/theme";
 import { ModalProvider } from "@/components/modals/modal-context";
@@ -50,15 +51,17 @@ export default async function MainLayout({ children, params }: LayoutProps) {
 							<ModalProvider>
 								<ModalRenderer />
 								<Toaster position="top-center" richColors />
-								<SidebarProvider>
-									<NextIntlClientProvider>
-										<AppSidebar />
-										<SidebarInset>
-											<HeaderDashboard />
-											<div className="p-4">{children}</div>
-										</SidebarInset>
-									</NextIntlClientProvider>
-								</SidebarProvider>
+								<CurrencyProvider>
+									<SidebarProvider>
+										<NextIntlClientProvider>
+											<AppSidebar />
+											<SidebarInset>
+												<HeaderDashboard />
+												<div className="p-4">{children}</div>
+											</SidebarInset>
+										</NextIntlClientProvider>
+									</SidebarProvider>
+								</CurrencyProvider>
 							</ModalProvider>
 						</ThemeProvider>
 					</QueryProvider>

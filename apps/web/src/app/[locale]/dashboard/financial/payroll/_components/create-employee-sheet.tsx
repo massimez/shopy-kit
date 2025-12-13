@@ -29,11 +29,12 @@ import {
 	SheetTrigger,
 } from "@workspace/ui/components/sheet";
 import { UserPlus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 import { useFinancialPayroll } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-payroll";
+import { useCurrency } from "@/app/providers/currency-provider";
 
 const formSchema = z.object({
 	// Basic Info
@@ -62,6 +63,7 @@ export function CreateEmployeeSheet() {
 	const [open, setOpen] = useState(false);
 	const { useCreateEmployee } = useFinancialPayroll();
 	const createEmployee = useCreateEmployee();
+	const { currency } = useCurrency();
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -77,10 +79,16 @@ export function CreateEmployeeSheet() {
 			bankAccountNumber: "",
 			taxId: "",
 			baseSalary: "",
-			currency: "USD",
+			currency: currency,
 			paymentFrequency: "monthly",
 		},
 	});
+
+	useEffect(() => {
+		if (open) {
+			form.setValue("currency", currency);
+		}
+	}, [open, currency, form]);
 
 	function onSubmit(values: z.infer<typeof formSchema>) {
 		createEmployee.mutate(
@@ -97,7 +105,21 @@ export function CreateEmployeeSheet() {
 				onSuccess: () => {
 					toast.success("Employee created successfully");
 					setOpen(false);
-					form.reset();
+					form.reset({
+						employeeCode: "",
+						firstName: "",
+						lastName: "",
+						email: "",
+						phone: "",
+						position: "",
+						hireDate: "",
+						employmentType: "full_time",
+						bankAccountNumber: "",
+						taxId: "",
+						baseSalary: "",
+						currency: currency,
+						paymentFrequency: "monthly",
+					});
 				},
 				onError: () => {
 					toast.error("Failed to create employee");
@@ -266,7 +288,7 @@ export function CreateEmployeeSheet() {
 						<div className="space-y-4">
 							<h3 className="font-medium text-sm">Salary Information</h3>
 
-							<div className="grid grid-cols-2 gap-4">
+							<div className="grid grid-cols-1 gap-4">
 								<FormField
 									control={form.control}
 									name="baseSalary"
@@ -282,29 +304,6 @@ export function CreateEmployeeSheet() {
 												/>
 											</FormControl>
 											<FormDescription>Annual salary amount</FormDescription>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={form.control}
-									name="currency"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Currency*</FormLabel>
-											<FormControl>
-												<Input
-													placeholder="USD"
-													maxLength={3}
-													{...field}
-													onChange={(e) =>
-														field.onChange(e.target.value.toUpperCase())
-													}
-												/>
-											</FormControl>
-											<FormDescription>
-												3-letter code (e.g., USD, EUR)
-											</FormDescription>
 											<FormMessage />
 										</FormItem>
 									)}

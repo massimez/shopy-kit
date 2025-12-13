@@ -12,6 +12,7 @@ import {
 } from "@workspace/ui/components/table";
 import { User } from "lucide-react";
 import { useFinancialPayroll } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-payroll";
+import { formatCurrency } from "@/lib/helpers";
 import { CreateSalaryStructureSheet } from "./create-salary-structure-sheet";
 
 interface SalaryStructure {
@@ -67,7 +68,6 @@ export function SalaryStructuresTable() {
 							<TableHead>Employee</TableHead>
 							<TableHead>Code</TableHead>
 							<TableHead>Base Salary</TableHead>
-							<TableHead>Currency</TableHead>
 							<TableHead>Payment Frequency</TableHead>
 							<TableHead>Effective Date</TableHead>
 							<TableHead>Status</TableHead>
@@ -83,15 +83,11 @@ export function SalaryStructuresTable() {
 								<TableCell>{structure.employee.employeeCode}</TableCell>
 								<TableCell>
 									<div className="flex items-center gap-1">
-										{new Intl.NumberFormat("en-US", {
-											style: "currency",
-											currency: structure.currency || "USD",
-											minimumFractionDigits: 0,
-										}).format(Number(structure.baseSalary))}
+										{formatCurrency(
+											Number(structure.baseSalary),
+											structure.currency,
+										)}
 									</div>
-								</TableCell>
-								<TableCell>
-									<Badge variant="outline">{structure.currency || "USD"}</Badge>
 								</TableCell>
 								<TableCell>
 									<Badge variant="secondary">

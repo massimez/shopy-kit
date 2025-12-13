@@ -20,6 +20,7 @@ import {
 	ShoppingCart,
 } from "lucide-react";
 import { use } from "react";
+import { useCurrency } from "@/app/providers/currency-provider";
 import { Link } from "@/i18n/navigation";
 import { useClient, useClientOrders } from "../hooks";
 
@@ -37,6 +38,7 @@ const ClientDetailPage = ({ params }: ClientDetailPageProps) => {
 	const { data: ordersData, isLoading: ordersLoading } = useClientOrders(
 		client?.userId ?? undefined,
 	);
+	const { formatCurrency } = useCurrency();
 
 	if (isLoading) {
 		return <div className="p-4">Loading client details...</div>;
@@ -71,15 +73,6 @@ const ClientDetailPage = ({ params }: ClientDetailPageProps) => {
 			</div>
 		);
 	}
-
-	const formatCurrency = (value?: string | null) => {
-		if (!value) return "$0.00";
-		const num = Number.parseFloat(value);
-		return new Intl.NumberFormat("en-US", {
-			style: "currency",
-			currency: "USD",
-		}).format(num);
-	};
 
 	const formatDate = (date?: string | null) => {
 		if (!date) return "-";
@@ -160,7 +153,7 @@ const ClientDetailPage = ({ params }: ClientDetailPageProps) => {
 							<div className="text-white">
 								<p className="font-medium text-xs opacity-90">Total Spent</p>
 								<p className="mt-1 font-bold text-2xl">
-									{formatCurrency(client.totalSpent)}
+									{formatCurrency(Number(client.totalSpent))}
 								</p>
 							</div>
 							<div className="rounded-full bg-white/20 p-2 backdrop-blur-sm">
@@ -278,7 +271,7 @@ const ClientDetailPage = ({ params }: ClientDetailPageProps) => {
 												</Badge>
 											</td>
 											<td className="px-2 py-3 text-right font-semibold text-sm">
-												{formatCurrency(order.totalAmount)}
+												{formatCurrency(Number(order.totalAmount))}
 											</td>
 										</tr>
 									))}

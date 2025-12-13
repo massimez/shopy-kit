@@ -9,6 +9,7 @@ import {
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { CalendarCheck, Clock, DollarSign, Users } from "lucide-react";
 import { useFinancialPayroll } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-payroll";
+import { useCurrency } from "@/app/providers/currency-provider";
 
 export function PayrollStats() {
 	const { usePayrollRuns, useEmployees } = useFinancialPayroll();
@@ -34,14 +35,7 @@ export function PayrollStats() {
 	) as { totalNet?: string | null } | undefined;
 	const monthlyPayroll = latestRun?.totalNet ? Number(latestRun.totalNet) : 0;
 
-	const formatCurrency = (amount: number) => {
-		return new Intl.NumberFormat("en-US", {
-			style: "currency",
-			currency: "USD",
-			minimumFractionDigits: 0,
-			maximumFractionDigits: 0,
-		}).format(amount);
-	};
+	const { formatCurrency } = useCurrency();
 
 	if (isLoading) {
 		return (

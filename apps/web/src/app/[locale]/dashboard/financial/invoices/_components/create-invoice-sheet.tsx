@@ -39,6 +39,8 @@ import {
 	useUpdateInvoice,
 } from "@/app/[locale]/dashboard/financial/_hooks/use-invoices";
 import { useClients } from "@/app/[locale]/dashboard/store/clients/hooks/use-clients";
+import { useCurrency } from "@/app/providers/currency-provider";
+import { formatCurrency } from "@/lib/helpers";
 
 const invoiceItemSchema = z.object({
 	description: z.string().min(1, "Description is required"),
@@ -83,6 +85,7 @@ export function CreateInvoiceSheet({
 	const [internalOpen, setInternalOpen] = useState(false);
 	const open = controlledOpen ?? internalOpen;
 	const setOpen = controlledOnOpenChange ?? setInternalOpen;
+	const { currency } = useCurrency();
 
 	const { useAccounts } = useFinancialAccounting();
 	const { data: accounts } = useAccounts();
@@ -158,7 +161,7 @@ export function CreateInvoiceSheet({
 			invoiceNumber: values.invoiceNumber,
 			invoiceDate: new Date(values.date),
 			dueDate: new Date(values.dueDate),
-			currency: "USD",
+			currency: currency,
 			items: values.items.map((item) => ({
 				accountId: item.accountId,
 				description: item.description,
@@ -462,10 +465,7 @@ export function CreateInvoiceSheet({
 											Total Amount
 										</p>
 										<p className="font-bold text-3xl">
-											{new Intl.NumberFormat("en-US", {
-												style: "currency",
-												currency: "USD",
-											}).format(calculateTotal())}
+											{formatCurrency(calculateTotal(), currency)}
 										</p>
 									</div>
 								</div>

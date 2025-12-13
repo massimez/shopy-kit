@@ -15,12 +15,14 @@ import {
 import { format } from "date-fns";
 import { CalendarDays, Trash2 } from "lucide-react";
 import { useFinancialPayroll } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-payroll";
+import { useCurrency } from "@/app/providers/currency-provider";
 import { PayrollRunDetails } from "./payroll-run-details";
 
 export function PayrollTable() {
 	const { usePayrollRuns, useDeletePayrollRun } = useFinancialPayroll();
 	const { data: runs, isLoading } = usePayrollRuns();
 	const deletePayrollRun = useDeletePayrollRun();
+	const { formatCurrency } = useCurrency();
 
 	if (isLoading) {
 		return (
@@ -56,17 +58,9 @@ export function PayrollTable() {
 								{format(new Date(run.paymentDate), "MMM d, yyyy")}
 							</TableCell>
 							<TableCell>
-								{new Intl.NumberFormat("en-US", {
-									style: "currency",
-									currency: "USD",
-								}).format(Number(run.totalGross || 0))}
+								{formatCurrency(Number(run.totalGross || 0))}
 							</TableCell>
-							<TableCell>
-								{new Intl.NumberFormat("en-US", {
-									style: "currency",
-									currency: "USD",
-								}).format(Number(run.totalNet || 0))}
-							</TableCell>
+							<TableCell>{formatCurrency(Number(run.totalNet || 0))}</TableCell>
 							<TableCell>
 								<Badge
 									variant={

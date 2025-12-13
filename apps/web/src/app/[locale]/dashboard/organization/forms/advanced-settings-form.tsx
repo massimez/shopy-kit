@@ -25,6 +25,7 @@ const formSchema = z.object({
 		.optional()
 		.or(z.literal("")),
 	defaultLanguage: z.string().optional(),
+	currency: z.string().optional(),
 	activeLanguages: z.array(z.string()),
 	images: z
 		.array(
@@ -50,6 +51,15 @@ const LANGUAGE_OPTIONS = [
 	{ value: "fr", label: "French" },
 	{ value: "ar", label: "Arabic" },
 	{ value: "kab", label: "Kabyle" },
+];
+
+const CURRENCY_OPTIONS = [
+	{ value: "USD", label: "USD ($)" },
+	{ value: "EUR", label: "EUR (€)" },
+	{ value: "GBP", label: "GBP (£)" },
+	{ value: "JPY", label: "JPY (¥)" },
+	{ value: "AUD", label: "AUD (A$)" },
+	{ value: "CAD", label: "CAD (C$)" },
 ];
 
 // Slot component for organization images that integrates with form state
@@ -139,6 +149,15 @@ export function AdvancedSettingsForm() {
 					options: LANGUAGE_OPTIONS,
 				},
 				{
+					name: "currency",
+					itemType: "field",
+					type: "select",
+					labelKey: "Currency",
+					placeholderKey: "Select currency",
+					gridCols: 6,
+					options: CURRENCY_OPTIONS,
+				},
+				{
 					name: "activeLanguages",
 					itemType: "field",
 					type: "multiselect",
@@ -160,6 +179,7 @@ export function AdvancedSettingsForm() {
 	const initialValues = {
 		taxRate: organizationInfo?.taxRate ?? "",
 		defaultLanguage: organizationInfo?.defaultLanguage?.toString() ?? "",
+		currency: organizationInfo?.currency ?? "USD",
 		activeLanguages: (organizationInfo?.activeLanguages ?? []) as string[],
 		images: organizationInfo?.images ?? [],
 	};

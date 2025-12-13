@@ -215,7 +215,7 @@ export function useFinancialPayroll() {
 			mutationFn: async (data: {
 				employeeId: string;
 				effectiveFrom: string;
-				baseSalary: number;
+				baseSalary: number | string;
 				currency: string;
 				paymentFrequency: "monthly" | "bi_weekly" | "weekly";
 				components: {
@@ -229,9 +229,13 @@ export function useFinancialPayroll() {
 				const res = await (hc.api.financial.payroll as any)[
 					"salary-structures"
 				].$post({
-					json: data as typeof data & {
+					json: {
+						...data,
+						baseSalary: String(data.baseSalary),
+					} as typeof data & {
+						baseSalary: string;
 						effectiveFrom: Date;
-					}, // Type assertion needed due to z.coerce.date() inference
+					}, // Type assertion to satisfy RPC if it wasn't any, but keeping for safety/consistency
 				});
 				const json = await res.json();
 				return json.data;

@@ -52,6 +52,7 @@ import {
 } from "lucide-react";
 import { Fragment, useState } from "react";
 import { useFinancialPayroll } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-payroll";
+import { useCurrency } from "@/app/providers/currency-provider";
 
 interface PayrollEntryDetail {
 	id: string;
@@ -217,12 +218,7 @@ export function PayrollRunDetails({ payrollRun }: PayrollRunDetailsProps) {
 		}
 	};
 
-	const formatCurrency = (amount: string | number | null | undefined) => {
-		return new Intl.NumberFormat("en-US", {
-			style: "currency",
-			currency: "USD",
-		}).format(Number(amount || 0));
-	};
+	const { formatCurrency } = useCurrency();
 
 	return (
 		<>
@@ -366,14 +362,14 @@ export function PayrollRunDetails({ payrollRun }: PayrollRunDetailsProps) {
 						<div className="grid grid-cols-3 gap-4">
 							<div className="rounded border p-4 text-center">
 								<div className="font-bold text-2xl">
-									{formatCurrency(payrollRun.totalGross)}
+									{formatCurrency(Number(payrollRun.totalGross))}
 								</div>
 								<div className="text-muted-foreground text-sm">Total Gross</div>
 							</div>
 
 							<div className="rounded border p-4 text-center">
 								<div className="font-bold text-2xl">
-									{formatCurrency(payrollRun.totalNet)}
+									{formatCurrency(Number(payrollRun.totalNet))}
 								</div>
 								<div className="text-muted-foreground text-sm">Total Net</div>
 							</div>
@@ -437,16 +433,16 @@ export function PayrollRunDetails({ payrollRun }: PayrollRunDetailsProps) {
 															{entry.employee?.employeeCode}
 														</TableCell>
 														<TableCell>
-															{formatCurrency(entry.baseSalary)}
+															{formatCurrency(Number(entry.baseSalary))}
 														</TableCell>
 														<TableCell>
-															{formatCurrency(entry.grossSalary)}
+															{formatCurrency(Number(entry.grossSalary))}
 														</TableCell>
 														<TableCell>
-															{formatCurrency(entry.totalDeductions)}
+															{formatCurrency(Number(entry.totalDeductions))}
 														</TableCell>
 														<TableCell>
-															{formatCurrency(entry.netSalary)}
+															{formatCurrency(Number(entry.netSalary))}
 														</TableCell>
 														<TableCell>
 															<Badge
@@ -488,7 +484,9 @@ export function PayrollRunDetails({ payrollRun }: PayrollRunDetailsProps) {
 																								{detail.component.name}
 																							</span>
 																							<span>
-																								{formatCurrency(detail.amount)}
+																								{formatCurrency(
+																									Number(detail.amount),
+																								)}
 																							</span>
 																						</div>
 																					))}
@@ -516,7 +514,9 @@ export function PayrollRunDetails({ payrollRun }: PayrollRunDetailsProps) {
 																				<div className="flex justify-between border-t pt-1 font-medium text-sm">
 																					<span>Total Earnings</span>
 																					<span>
-																						{formatCurrency(entry.grossSalary)}
+																						{formatCurrency(
+																							Number(entry.grossSalary),
+																						)}
 																					</span>
 																				</div>
 																			</div>
@@ -541,7 +541,10 @@ export function PayrollRunDetails({ payrollRun }: PayrollRunDetailsProps) {
 																								{detail.component.name}
 																							</span>
 																							<span className="text-destructive">
-																								-{formatCurrency(detail.amount)}
+																								-
+																								{formatCurrency(
+																									Number(detail.amount),
+																								)}
 																							</span>
 																						</div>
 																					))}
@@ -573,7 +576,7 @@ export function PayrollRunDetails({ payrollRun }: PayrollRunDetailsProps) {
 																					<span className="text-destructive">
 																						-
 																						{formatCurrency(
-																							entry.totalDeductions,
+																							Number(entry.totalDeductions),
 																						)}
 																					</span>
 																				</div>

@@ -132,8 +132,8 @@ export function formatCurrency(
 ): string {
 	return new Intl.NumberFormat(locale, {
 		style: "currency",
-		currency,
-	}).format(amount);
+		currency: currency || "USD",
+	}).format(amount || 0);
 }
 
 /**

@@ -29,6 +29,7 @@ export const insertOrganizationInfoSchema = createInsertSchema(
 			.regex(/^\d+(\.\d{1,2})?$/, "Tax rate must be a valid monetary value")
 			.optional(),
 		defaultLanguage: z.string().optional(),
+		currency: z.string().optional(),
 		activeLanguages: z.array(z.string()).optional(),
 		images: z
 			.array(
@@ -85,6 +86,7 @@ export const updateOrganizationInfoSchema = createSelectSchema(
 			.string()
 			.regex(/^\d+(\.\d{1,2})?$/, "Tax rate must be a valid monetary value")
 			.optional(),
+		currency: z.string().optional(),
 		activeLanguages: z.array(z.string()).optional(),
 		images: z
 			.array(

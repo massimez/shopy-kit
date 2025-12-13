@@ -23,6 +23,7 @@ import { CheckCircle, ChevronDown, FileText, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useFinancialAccounting } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-accounting";
+import { useCurrency } from "@/app/providers/currency-provider";
 
 interface JournalEntryLine {
 	id: string;
@@ -58,6 +59,7 @@ function JournalEntryRow({
 		useFinancialAccounting();
 	const postEntry = usePostJournalEntry();
 	const deleteEntry = useDeleteJournalEntry();
+	const { formatCurrency } = useCurrency();
 
 	const totalDebit =
 		entry.lines?.reduce((sum, line) => sum + Number(line.debitAmount), 0) ?? 0;
@@ -117,10 +119,10 @@ function JournalEntryRow({
 					{entry.description}
 				</TableCell>
 				<TableCell className="text-right font-medium text-green-600">
-					${totalDebit.toFixed(2)}
+					{formatCurrency(totalDebit)}
 				</TableCell>
 				<TableCell className="text-right font-medium text-red-600">
-					${totalCredit.toFixed(2)}
+					{formatCurrency(totalCredit)}
 				</TableCell>
 				<TableCell>
 					<Badge
@@ -208,14 +210,14 @@ function JournalEntryRow({
 												<TableCell className="text-right text-sm">
 													{Number(line.debitAmount) > 0 && (
 														<span className="text-green-600">
-															${Number(line.debitAmount).toFixed(2)}
+															{formatCurrency(Number(line.debitAmount))}
 														</span>
 													)}
 												</TableCell>
 												<TableCell className="text-right text-sm">
 													{Number(line.creditAmount) > 0 && (
 														<span className="text-red-600">
-															${Number(line.creditAmount).toFixed(2)}
+															{formatCurrency(Number(line.creditAmount))}
 														</span>
 													)}
 												</TableCell>

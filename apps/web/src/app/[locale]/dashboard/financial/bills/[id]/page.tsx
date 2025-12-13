@@ -24,6 +24,7 @@ import { ArrowLeft, Download, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useInvoice } from "@/app/[locale]/dashboard/financial/_hooks/use-invoices";
+import { formatCurrency } from "@/lib/helpers";
 
 export default function BillDetailsPage() {
 	const params = useParams();
@@ -130,22 +131,16 @@ export default function BillDetailsPage() {
 												{line.quantity}
 											</TableCell>
 											<TableCell className="text-right">
-												{new Intl.NumberFormat("en-US", {
-													style: "currency",
-													currency: bill.currency,
-												}).format(Number(line.unitPrice))}
+												{formatCurrency(Number(line.unitPrice), bill.currency)}
 											</TableCell>
 											<TableCell className="text-right">
-												{new Intl.NumberFormat("en-US", {
-													style: "currency",
-													currency: bill.currency,
-												}).format(Number(line.taxAmount))}
+												{formatCurrency(Number(line.taxAmount), bill.currency)}
 											</TableCell>
 											<TableCell className="text-right font-medium">
-												{new Intl.NumberFormat("en-US", {
-													style: "currency",
-													currency: bill.currency,
-												}).format(Number(line.totalAmount))}
+												{formatCurrency(
+													Number(line.totalAmount),
+													bill.currency,
+												)}
 											</TableCell>
 										</TableRow>
 									))}
@@ -164,29 +159,20 @@ export default function BillDetailsPage() {
 							<div className="flex justify-between text-sm">
 								<span className="text-muted-foreground">Subtotal</span>
 								<span>
-									{new Intl.NumberFormat("en-US", {
-										style: "currency",
-										currency: bill.currency,
-									}).format(Number(bill.netAmount))}
+									{formatCurrency(Number(bill.netAmount), bill.currency)}
 								</span>
 							</div>
 							<div className="flex justify-between text-sm">
 								<span className="text-muted-foreground">Tax</span>
 								<span>
-									{new Intl.NumberFormat("en-US", {
-										style: "currency",
-										currency: bill.currency,
-									}).format(Number(bill.taxAmount))}
+									{formatCurrency(Number(bill.taxAmount), bill.currency)}
 								</span>
 							</div>
 							<Separator />
 							<div className="flex justify-between font-medium text-lg">
 								<span>Total</span>
 								<span>
-									{new Intl.NumberFormat("en-US", {
-										style: "currency",
-										currency: bill.currency,
-									}).format(Number(bill.totalAmount))}
+									{formatCurrency(Number(bill.totalAmount), bill.currency)}
 								</span>
 							</div>
 							<div className="pt-4">

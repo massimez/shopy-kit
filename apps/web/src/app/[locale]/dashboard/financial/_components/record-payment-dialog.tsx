@@ -29,6 +29,8 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useRecordPayment } from "@/app/[locale]/dashboard/financial/_hooks/use-invoices";
+import { useCurrency } from "@/app/providers/currency-provider";
+import { formatCurrency } from "@/lib/helpers";
 
 const formSchema = z.object({
 	amount: z.string().min(1, "Amount is required"),
@@ -62,6 +64,7 @@ export function RecordPaymentDialog({
 	document,
 }: RecordPaymentDialogProps) {
 	const recordPayment = useRecordPayment();
+	const { currency } = useCurrency();
 
 	const totalPaid =
 		document.allocations?.reduce(
@@ -141,11 +144,7 @@ export function RecordPaymentDialog({
 						Record a payment for {type === "payable" ? "bill" : "invoice"} #
 						{document.invoiceNumber}
 						<span className="mt-1 block font-medium text-foreground">
-							Amount Due:{" "}
-							{new Intl.NumberFormat("en-US", {
-								style: "currency",
-								currency: "USD",
-							}).format(remainingAmount)}
+							Amount Due: {formatCurrency(remainingAmount, currency)}
 						</span>
 					</DialogDescription>
 				</DialogHeader>

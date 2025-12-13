@@ -27,11 +27,12 @@ import {
 	SheetTrigger,
 } from "@workspace/ui/components/sheet";
 import { Coins } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 import { useFinancialPayroll } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-payroll";
+import { useCurrency } from "@/app/providers/currency-provider";
 
 const formSchema = z.object({
 	employeeId: z.string().min(1, "Employee is required"),
@@ -66,6 +67,8 @@ export function CreateSalaryStructureSheet({
 	const { data: salaryComponents } = useSalaryComponents();
 	const createSalaryStructure = useCreateSalaryStructure();
 
+	const { currency } = useCurrency(); // Added useCurrency hook
+
 	const isEditing = !!editingStructure;
 
 	const form = useForm<FormData>({
@@ -74,7 +77,7 @@ export function CreateSalaryStructureSheet({
 			employeeId: editingStructure?.employee?.id || "",
 			effectiveFrom: editingStructure?.effectiveFrom?.split("T")[0] || "",
 			baseSalary: Number(editingStructure?.baseSalary) || 0,
-			currency: editingStructure?.currency || "USD",
+			currency: editingStructure?.currency || currency, // Changed default currency to use the hook's value
 			paymentFrequency: editingStructure?.paymentFrequency || "monthly",
 			components:
 				editingStructure?.components?.map(
@@ -98,6 +101,12 @@ export function CreateSalaryStructureSheet({
 		name: "components",
 	});
 
+	useEffect(() => {
+		if (open) {
+			form.setValue("currency", currency);
+		}
+	}, [open, currency, form]);
+
 	function onSubmit(values: FormData) {
 		createSalaryStructure.mutate(
 			{
@@ -112,7 +121,14 @@ export function CreateSalaryStructureSheet({
 							: "Salary structure created successfully",
 					);
 					setOpen(false);
-					form.reset();
+					form.reset({
+						employeeId: "",
+						effectiveFrom: "",
+						baseSalary: 0,
+						currency: currency,
+						paymentFrequency: "monthly",
+						components: [],
+					});
 				},
 				onError: () => {
 					toast.error(
@@ -189,7 +205,7 @@ export function CreateSalaryStructureSheet({
 						/>
 
 						{/* Basic Salary Info */}
-						<div className="grid grid-cols-2 gap-4">
+						<div className="grid grid-cols-1 gap-4">
 							<FormField
 								control={form.control}
 								name="effectiveFrom"
@@ -230,7 +246,7 @@ export function CreateSalaryStructureSheet({
 							/>
 						</div>
 
-						<div className="grid grid-cols-2 gap-4">
+						<div className="grid grid-cols-1 gap-4">
 							<FormField
 								control={form.control}
 								name="baseSalary"
@@ -249,6 +265,8 @@ export function CreateSalaryStructureSheet({
 									</FormItem>
 								)}
 							/>
+						</div>
+						<div className="grid grid-cols-1 gap-4">
 							<FormField
 								control={form.control}
 								name="currency"

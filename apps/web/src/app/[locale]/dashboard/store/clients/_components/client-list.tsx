@@ -21,6 +21,7 @@ import {
 import { MoreHorizontal, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useCurrency } from "@/app/providers/currency-provider";
 import { useDeleteClient } from "../hooks";
 
 interface Client {
@@ -59,14 +60,7 @@ export const ClientList = ({ clients, onEditClient }: ClientListProps) => {
 		deleteClient(clientId);
 	};
 
-	const formatCurrency = (value?: string | null) => {
-		if (!value) return "$0.00";
-		const num = Number.parseFloat(value);
-		return new Intl.NumberFormat("en-US", {
-			style: "currency",
-			currency: "USD",
-		}).format(num);
-	};
+	const { formatCurrency } = useCurrency();
 
 	const formatDate = (date?: string | null) => {
 		if (!date) return "-";
@@ -134,7 +128,9 @@ export const ClientList = ({ clients, onEditClient }: ClientListProps) => {
 								<TableCell>{client.email || "-"}</TableCell>
 								<TableCell>{client.phone || "-"}</TableCell>
 								<TableCell>{client.totalOrders ?? 0}</TableCell>
-								<TableCell>{formatCurrency(client.totalSpent)}</TableCell>
+								<TableCell>
+									{formatCurrency(Number(client.totalSpent))}
+								</TableCell>
 								<TableCell>{formatDate(client.lastPurchaseDate)}</TableCell>
 								<TableCell>
 									{client.isActive ? (
