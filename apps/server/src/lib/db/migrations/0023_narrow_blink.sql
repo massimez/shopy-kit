@@ -1,1 +1,0 @@
-ALTER TABLE "payroll_entry" ADD COLUMN "adjustments" jsonb;

@@ -1,1 +1,0 @@
-ALTER TABLE "order" ADD COLUMN "customer_full_name" varchar(255);
