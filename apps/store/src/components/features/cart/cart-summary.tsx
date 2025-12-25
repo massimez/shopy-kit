@@ -1,7 +1,6 @@
 "use client";
 
 import { Card, CardContent } from "@workspace/ui/components/card";
-import { Separator } from "@workspace/ui/components/separator";
 import { useTranslations } from "next-intl";
 
 interface CartSummaryProps {
@@ -31,7 +30,7 @@ export function CartSummary({ total }: CartSummaryProps) {
 				)} */}
 
 				{/* Separator */}
-				<Separator />
+				{/* <Separator /> */}
 
 				{/* Total */}
 				<div className="flex items-center justify-between font-semibold text-base">

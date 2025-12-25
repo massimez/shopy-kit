@@ -3,7 +3,7 @@
 import { Button } from "@workspace/ui/components/button";
 import { ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/routing";
+import { useRouter } from "@/i18n/routing";
 import { useSession } from "@/lib/auth-client";
 import { useCartStore } from "@/store/use-cart-store";
 import { CartItem } from "./cart-item";
@@ -11,10 +11,12 @@ import { CartSummary } from "./cart-summary";
 
 interface CartContentProps {
 	onCartClose?: () => void;
+	onCheckout?: () => void;
 }
 
-export function CartContent({ onCartClose }: CartContentProps) {
+export function CartContent({ onCartClose, onCheckout }: CartContentProps) {
 	const t = useTranslations("Cart");
+	const router = useRouter();
 	const {
 		items,
 		clearCart,
@@ -31,7 +33,6 @@ export function CartContent({ onCartClose }: CartContentProps) {
 
 	const _handleClearCart = () => {
 		clearCart();
-		// Could show a toast notification here
 	};
 
 	if (isEmpty) {
@@ -64,17 +65,25 @@ export function CartContent({ onCartClose }: CartContentProps) {
 
 				<div className="mt-4 mb-3 space-y-3">
 					{session ? (
-						<Link href="/checkout" onClick={() => onCartClose?.()}>
-							<Button className="w-full" size="lg">
-								{t("checkout")}
-							</Button>
-						</Link>
+						<Button
+							className="w-full"
+							size="lg"
+							onClick={() => {
+								if (onCheckout) {
+									onCheckout();
+								}
+							}}
+						>
+							{t("checkout")}
+						</Button>
 					) : (
-						<Link href="/login" onClick={() => onCartClose?.()}>
-							<Button className="w-full" size="lg">
-								{t("checkout")}
-							</Button>
-						</Link>
+						<Button
+							className="w-full"
+							size="lg"
+							onClick={() => router.push("/login")}
+						>
+							{t("checkout")}
+						</Button>
 					)}
 				</div>
 			</div>

@@ -4,6 +4,7 @@ export interface CheckoutFormProps {
 	organizationId: string;
 	locationId: string;
 	currency?: string;
+	onClose?: () => void;
 }
 
 export interface Address {

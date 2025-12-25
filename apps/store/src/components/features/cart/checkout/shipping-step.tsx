@@ -33,7 +33,8 @@ export function ShippingStep({
 	saveAddress,
 	onAddressSelect,
 	onSaveAddressChange,
-}: ShippingStepProps) {
+	isProfileLoaded,
+}: ShippingStepProps & { isProfileLoaded: boolean }) {
 	return (
 		<div className="space-y-4">
 			<CardTitle className="flex items-center gap-3 text-xl">
@@ -165,6 +166,7 @@ export function ShippingStep({
 				)}
 
 				{session?.user &&
+					isProfileLoaded &&
 					(selectedAddressIndex === "new" ||
 						selectedAddressIndex === undefined) && (
 						<div className="flex items-center space-x-3 rounded-lg bg-muted/30 p-4 pt-4">

@@ -12,12 +12,12 @@ import { AlertCircle, Check, CreditCard, Truck, X } from "lucide-react";
 import { useState } from "react";
 import { type Path, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useRouter } from "@/i18n/routing";
 import { useSession } from "@/lib/auth-client";
 import { useProfile } from "@/lib/hooks/use-profile";
 import { StorefrontError, storefrontClient } from "@/lib/storefront";
 import { useCartStore } from "@/store/use-cart-store";
 import { NavigationButtons } from "./navigation-buttons";
+import { OrderStatusSheet } from "./order-status-sheet";
 import { PaymentStep } from "./payment-step";
 import { ReviewStep } from "./review-step";
 import { ShippingStep } from "./shipping-step";
@@ -33,11 +33,11 @@ export function CheckoutForm({
 	organizationId,
 	locationId,
 	currency = "USD",
+	onClose,
 }: CheckoutFormProps) {
 	const { items, total, appliedCoupon, clearCart } = useCartStore();
 	const { data: session } = useSession();
-	const { profile, updateProfile } = useProfile();
-	const router = useRouter();
+	const { profile, updateProfile, loading: profileLoading } = useProfile();
 	const [currentStep, setCurrentStep] = useState<CheckoutStep>("shipping");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [apiErrors, setApiErrors] = useState<Record<string, string>>({});
@@ -45,6 +45,13 @@ export function CheckoutForm({
 	const [selectedAddressIndex, setSelectedAddressIndex] = useState<
 		string | undefined
 	>(undefined);
+
+	/* State for order success sheet */
+	const [successOrder, setSuccessOrder] = useState<{
+		id: string;
+		orderNumber: string;
+	} | null>(null);
+	const [showSuccessSheet, setShowSuccessSheet] = useState(false);
 
 	const form = useForm<CheckoutFormValues>({
 		resolver: zodResolver(checkoutSchema),
@@ -165,7 +172,6 @@ export function CheckoutForm({
 			return;
 		}
 
-		console.log("Proceeding with order creation");
 		setIsSubmitting(true);
 		setApiErrors({});
 
@@ -199,7 +205,7 @@ export function CheckoutForm({
 			}
 
 			// Save address if requested
-			if (saveAddress && session?.user && data.shippingAddress) {
+			if (saveAddress && session?.user && data.shippingAddress && profile) {
 				try {
 					await updateProfile({
 						addresses: [
@@ -246,14 +252,11 @@ export function CheckoutForm({
 			// Clear cart on success
 			clearCart();
 
-			toast.success(
-				`Order placed successfully! Order number: ${order.orderNumber}`,
-			);
+			// Set order details and show sheet
+			setSuccessOrder({ id: order.id, orderNumber: order.orderNumber });
+			setShowSuccessSheet(true);
 
-			// Redirect to order success page
-			router.push(
-				`/checkout/success?orderId=${order.id}&orderNumber=${order.orderNumber}`,
-			);
+			/* Removed router.push, using sheet instead */
 		} catch (error) {
 			console.error("Error creating order:", error);
 			if (error instanceof StorefrontError && error.issues) {
@@ -376,6 +379,7 @@ export function CheckoutForm({
 									saveAddress={saveAddress}
 									onAddressSelect={handleAddressSelect}
 									onSaveAddressChange={setSaveAddress}
+									isProfileLoaded={!!profile && !profileLoading}
 								/>
 							)}
 							{currentStep === "payment" && <PaymentStep form={form} />}
@@ -395,14 +399,17 @@ export function CheckoutForm({
 						</form>
 					</Form>
 				</div>
-
-				{/* Sidebar
-				<OrderSummarySidebar
-					items={items}
-					total={total()}
-					subtotal={subtotal()}
-					discount={appliedCoupon?.discountAmount || 0}
-				/> */}
+				<OrderStatusSheet
+					open={showSuccessSheet}
+					onOpenChange={(open) => {
+						setShowSuccessSheet(open);
+						if (!open && successOrder && onClose) {
+							onClose();
+						}
+					}}
+					orderId={successOrder?.id || null}
+					orderNumber={successOrder?.orderNumber || null}
+				/>
 			</div>
 		</div>
 	);
