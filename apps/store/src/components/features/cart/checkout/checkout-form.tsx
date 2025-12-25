@@ -9,7 +9,7 @@ import {
 import { Button } from "@workspace/ui/components/button";
 import { Form } from "@workspace/ui/components/form";
 import { AlertCircle, Check, CreditCard, Truck, X } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { type Path, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useSession } from "@/lib/auth-client";
@@ -52,7 +52,6 @@ export function CheckoutForm({
 		orderNumber: string;
 	} | null>(null);
 	const [showSuccessSheet, setShowSuccessSheet] = useState(false);
-
 	const form = useForm<CheckoutFormValues>({
 		resolver: zodResolver(checkoutSchema),
 		defaultValues: {
@@ -130,41 +129,59 @@ export function CheckoutForm({
 	};
 
 	// Handle address selection from saved addresses
-	const handleAddressSelect = (addressIndex: string | undefined) => {
-		setSelectedAddressIndex(addressIndex);
+	const handleAddressSelect = useCallback(
+		(addressIndex: string | undefined) => {
+			setSelectedAddressIndex(addressIndex);
 
-		if (addressIndex === "new") {
-			setSaveAddress(true);
-			form.setValue("shippingAddress.street", "");
-			form.setValue("shippingAddress.city", "");
-			form.setValue("shippingAddress.state", "");
-			form.setValue("shippingAddress.postalCode", "");
-			form.setValue("shippingAddress.country", "");
-			return;
-		}
-
-		setSaveAddress(false);
-
-		if (addressIndex && profile?.addresses) {
-			const index = Number.parseInt(addressIndex, 10);
-			const selectedAddress = profile.addresses[index];
-
-			if (selectedAddress) {
-				// Auto-fill the shipping address fields
-				form.setValue("shippingAddress.street", selectedAddress.street || "");
-				form.setValue("shippingAddress.city", selectedAddress.city || "");
-				form.setValue("shippingAddress.state", selectedAddress.state || "");
-				form.setValue(
-					"shippingAddress.postalCode",
-					selectedAddress.postalCode || "",
-				);
-				form.setValue("shippingAddress.country", selectedAddress.country || "");
-
-				// Clear any validation errors for these fields
-				form.clearErrors("shippingAddress");
+			if (addressIndex === "new") {
+				setSaveAddress(true);
+				form.setValue("shippingAddress.street", "");
+				form.setValue("shippingAddress.city", "");
+				form.setValue("shippingAddress.state", "");
+				form.setValue("shippingAddress.postalCode", "");
+				form.setValue("shippingAddress.country", "");
+				return;
 			}
+
+			setSaveAddress(false);
+
+			if (addressIndex && profile?.addresses) {
+				const index = Number.parseInt(addressIndex, 10);
+				const selectedAddress = profile.addresses[index];
+
+				if (selectedAddress) {
+					// Auto-fill the shipping address fields
+					form.setValue("shippingAddress.street", selectedAddress.street || "");
+					form.setValue("shippingAddress.city", selectedAddress.city || "");
+					form.setValue("shippingAddress.state", selectedAddress.state || "");
+					form.setValue(
+						"shippingAddress.postalCode",
+						selectedAddress.postalCode || "",
+					);
+					form.setValue(
+						"shippingAddress.country",
+						selectedAddress.country || "",
+					);
+
+					// Clear any validation errors for these fields
+					form.clearErrors("shippingAddress");
+				}
+			}
+		},
+		[profile, form],
+	);
+
+	// Auto-select first address if available
+	useEffect(() => {
+		if (
+			!profileLoading &&
+			profile?.addresses &&
+			profile.addresses.length > 0 &&
+			selectedAddressIndex === undefined
+		) {
+			handleAddressSelect("0");
 		}
-	};
+	}, [profileLoading, profile, selectedAddressIndex, handleAddressSelect]);
 
 	const onSubmit = async (data: CheckoutFormValues) => {
 		// Only create order when on the review step

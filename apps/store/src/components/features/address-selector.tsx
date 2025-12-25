@@ -81,9 +81,6 @@ export function AddressSelector({
 							</div>
 							<div className="flex-1 space-y-1">
 								<div className="flex items-center gap-2">
-									<p className="font-semibold text-sm capitalize">
-										{address.type}
-									</p>
 									{address.isDefault && (
 										<span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary text-xs">
 											Default
