@@ -1,4 +1,5 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
 import { idAndAuditFields } from "@/helpers/constant/fields";
 import {
 	shippingMethod,
@@ -8,22 +9,20 @@ import {
 
 // Shipping Method schemas
 export const insertShippingMethodSchema = createInsertSchema(shippingMethod, {
-	minOrderAmount: (schema) =>
-		schema.transform((val: unknown) => (val === "" ? null : val)),
-	maxOrderAmount: (schema) =>
-		schema.transform((val: unknown) => (val === "" ? null : val)),
-	freeShippingThreshold: (schema) =>
-		schema.transform((val: unknown) => (val === "" ? null : val)),
+	basePrice: (s) => z.preprocess((v: unknown) => (v === "" ? "0" : v), s),
+	minOrderAmount: (s) => z.preprocess((v: unknown) => (v === "" ? null : v), s),
+	maxOrderAmount: (s) => z.preprocess((v: unknown) => (v === "" ? null : v), s),
+	freeShippingThreshold: (s) =>
+		z.preprocess((v: unknown) => (v === "" ? null : v), s),
 }).omit({
 	organizationId: true,
 });
 export const updateShippingMethodSchema = createInsertSchema(shippingMethod, {
-	minOrderAmount: (schema) =>
-		schema.transform((val: unknown) => (val === "" ? null : val)),
-	maxOrderAmount: (schema) =>
-		schema.transform((val: unknown) => (val === "" ? null : val)),
-	freeShippingThreshold: (schema) =>
-		schema.transform((val: unknown) => (val === "" ? null : val)),
+	basePrice: (s) => z.preprocess((v: unknown) => (v === "" ? "0" : v), s),
+	minOrderAmount: (s) => z.preprocess((v: unknown) => (v === "" ? null : v), s),
+	maxOrderAmount: (s) => z.preprocess((v: unknown) => (v === "" ? null : v), s),
+	freeShippingThreshold: (s) =>
+		z.preprocess((v: unknown) => (v === "" ? null : v), s),
 })
 	.omit(idAndAuditFields)
 	.partial();
@@ -37,9 +36,17 @@ export const updateShippingZoneSchema = createSelectSchema(shippingZone)
 // Shipping Method Zone schemas
 export const insertShippingMethodZoneSchema = createInsertSchema(
 	shippingMethodZone,
+	{
+		priceOverride: (s) =>
+			z.preprocess((v: unknown) => (v === "" ? null : v), s),
+	},
 ).omit({ organizationId: true });
 export const updateShippingMethodZoneSchema = createSelectSchema(
 	shippingMethodZone,
+	{
+		priceOverride: (s) =>
+			z.preprocess((v: unknown) => (v === "" ? null : v), s),
+	},
 )
 	.omit(idAndAuditFields)
 	.partial();

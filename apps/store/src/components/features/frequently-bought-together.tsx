@@ -9,7 +9,7 @@ interface FrequentlyBoughtTogetherProps {
 export function FrequentlyBoughtTogether({
 	currentProductId,
 }: FrequentlyBoughtTogetherProps) {
-	// Filter out the current product if it's in the related products
+	console.log(currentProductId);
 
 	return (
 		<ProductCarousel

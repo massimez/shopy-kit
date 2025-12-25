@@ -5,9 +5,9 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
 import { secureHeaders } from "hono/secure-headers";
+import { envData } from "@/env";
 import { errorHandler } from "@/middleware/error-handler";
 import { rateLimiter } from "@/middleware/rate-limiter";
-import env from "../env";
 import type { auth } from "../lib/auth";
 
 export function createRouter() {
@@ -35,8 +35,8 @@ export default function createApp() {
 		"*",
 		cors({
 			origin:
-				process.env.NODE_ENV === "production"
-					? [env?.FRONTEND_URL || "http://localhost:3000"]
+				envData.NODE_ENV === "production"
+					? [envData?.FRONTEND_URL]
 					: [
 							"http://localhost:3000",
 							"http://localhost:3002",
@@ -44,7 +44,12 @@ export default function createApp() {
 						],
 			credentials: true,
 			allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-			allowHeaders: ["Content-Type", "Authorization", "X-Request-ID"],
+			allowHeaders: [
+				"Content-Type",
+				"Authorization",
+				"X-Request-ID",
+				"User-Agent",
+			],
 		}),
 	);
 

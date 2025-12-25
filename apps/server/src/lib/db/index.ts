@@ -1,11 +1,9 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { envData } from "@/env";
 import * as schema from "./schema";
 
-// Disable prefetch as it is not supported for "Transaction" pool mode
-console.log("DATABASE_URL is d", process.env.DATABASE_URL);
-// biome-ignore lint/style/noNonNullAssertion: <res>
-const client = postgres(process.env.DATABASE_URL!, {
+const client = postgres(envData.DATABASE_URL, {
 	prepare: false,
 	max: process.env.NODE_ENV === "production" ? 20 : 10,
 	idle_timeout: 20,

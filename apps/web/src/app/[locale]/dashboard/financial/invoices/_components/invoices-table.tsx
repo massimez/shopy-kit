@@ -25,7 +25,6 @@ import {
 	TableHeader,
 	TableRow,
 } from "@workspace/ui/components/table";
-import { format } from "date-fns";
 import {
 	CheckCheck,
 	Copy,
@@ -40,6 +39,7 @@ import {
 	useApproveInvoice,
 	useDeleteInvoice,
 } from "@/app/[locale]/dashboard/financial/_hooks/use-invoices";
+import { formatDate } from "@/lib/date";
 import { RecordPaymentDialog } from "../../_components/record-payment-dialog";
 import { CreateInvoiceSheet } from "./create-invoice-sheet";
 
@@ -133,7 +133,7 @@ export function InvoicesTable({
 										{invoice.invoiceNumber}
 									</TableCell>
 									<TableCell>
-										{format(new Date(invoice.invoiceDate), "MMM dd, yyyy")}
+										{formatDate(invoice.invoiceDate, "MMM dd, yyyy")}
 									</TableCell>
 									<TableCell>
 										{[invoice.customer?.firstName, invoice.customer?.lastName]

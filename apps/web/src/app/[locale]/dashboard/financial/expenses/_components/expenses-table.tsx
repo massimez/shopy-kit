@@ -25,7 +25,6 @@ import {
 	TableHeader,
 	TableRow,
 } from "@workspace/ui/components/table";
-import { format } from "date-fns";
 import {
 	Check,
 	Copy,
@@ -42,6 +41,7 @@ import {
 	usePayExpense,
 	useRejectExpense,
 } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-expenses";
+import { formatDate } from "@/lib/date";
 import { formatCurrency } from "@/lib/helpers";
 import { CreateExpenseSheet } from "./create-expense-sheet";
 
@@ -168,7 +168,7 @@ export function ExpensesTable({
 									(expenses as Expense[]).map((expense) => (
 										<TableRow key={expense.id}>
 											<TableCell className="whitespace-nowrap">
-												{format(new Date(expense.expenseDate), "MMM dd, yyyy")}
+												{formatDate(expense.expenseDate, "MMM dd, yyyy")}
 											</TableCell>
 											<TableCell className="font-medium">
 												{expense.description}

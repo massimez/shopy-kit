@@ -48,16 +48,11 @@ export function useFinancialExpenses(
 					from: from || undefined,
 					to: to || undefined,
 					categoryId: categoryId || undefined,
-				} as any, // Cast to any to bypass current client type definition
+				},
 			});
-			const json = (await res.json()) as unknown as {
-				data: {
-					data: any[];
-					meta: { total: number };
-				};
-			};
+			const json = await res.json();
 
-			if (setTotal && json.data.meta) {
+			if (setTotal && json?.data?.meta) {
 				setTotal(json.data.meta.total);
 			}
 

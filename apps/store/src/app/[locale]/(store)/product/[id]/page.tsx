@@ -7,14 +7,7 @@ import {
 	AccordionTrigger,
 } from "@workspace/ui/components/accordion";
 import { Badge } from "@workspace/ui/components/badge";
-import {
-	Breadcrumb,
-	BreadcrumbItem,
-	BreadcrumbLink,
-	BreadcrumbList,
-	BreadcrumbPage,
-	BreadcrumbSeparator,
-} from "@workspace/ui/components/breadcrumb";
+
 import { Button } from "@workspace/ui/components/button";
 import {
 	Carousel,

@@ -1,9 +1,9 @@
 import Redis from "ioredis";
-import env from "../../env";
+import { envData } from "@/env";
 import { redis as publisher } from "./client";
 
 // Subscriber needs a dedicated connection
-const subscriber = new Redis(env.REDIS_URL);
+const subscriber = new Redis(envData.REDIS_URL);
 
 export const pubsub = {
 	// biome-ignore lint/suspicious/noExplicitAny: <>

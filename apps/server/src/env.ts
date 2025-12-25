@@ -30,12 +30,12 @@ const EnvSchema = z.object({
 
 export type env = z.infer<typeof EnvSchema>;
 
-const result = EnvSchema.safeParse(process.env);
+const envResult = EnvSchema.safeParse(process.env);
 
-if (!result.success) {
+if (!envResult.success) {
 	console.error("❌ Invalid env:");
-	console.error(JSON.stringify(result.error.flatten().fieldErrors, null, 2));
+	console.error(JSON.stringify(envResult.error.flatten().fieldErrors, null, 2));
 	process.exit(1);
 }
 
-export default result.data;
+export const envData = envResult.data;

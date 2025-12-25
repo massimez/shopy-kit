@@ -1,9 +1,4 @@
-import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-} from "@workspace/ui/components/card";
+import { CardTitle } from "@workspace/ui/components/card";
 import { CreditCard, Truck } from "lucide-react";
 import type { CheckoutFormValues } from "./validation";
 

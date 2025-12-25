@@ -20,10 +20,10 @@ import {
 	TableRow,
 } from "@workspace/ui/components/table";
 import { cn } from "@workspace/ui/lib/utils";
-import { format } from "date-fns";
 import { FileText } from "lucide-react";
 import { useState } from "react";
 import { useFinancialAccounting } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-accounting";
+import { formatDate } from "@/lib/date";
 
 export function TrialBalanceReport() {
 	const [asOfDate, setAsOfDate] = useState<Date>(new Date());
@@ -70,7 +70,9 @@ export function TrialBalanceReport() {
 				<div className="flex items-center justify-between">
 					<div>
 						<CardTitle>Trial Balance</CardTitle>
-						<CardDescription>As of {format(asOfDate, "PPP")}</CardDescription>
+						<CardDescription>
+							As of {formatDate(asOfDate, "PPP")}
+						</CardDescription>
 					</div>
 					<div className="flex items-center gap-2">
 						<Label htmlFor="asOf" className="text-muted-foreground text-sm">
@@ -79,7 +81,7 @@ export function TrialBalanceReport() {
 						<Input
 							id="asOf"
 							type="date"
-							value={format(asOfDate, "yyyy-MM-dd")}
+							value={formatDate(asOfDate, "yyyy-MM-dd")}
 							onChange={handleDateChange}
 							className="w-[180px]"
 						/>

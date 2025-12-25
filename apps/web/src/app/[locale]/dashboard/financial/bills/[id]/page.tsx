@@ -19,11 +19,11 @@ import {
 	TableHeader,
 	TableRow,
 } from "@workspace/ui/components/table";
-import { format } from "date-fns";
 import { ArrowLeft, Download, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useInvoice } from "@/app/[locale]/dashboard/financial/_hooks/use-invoices";
+import { formatDate } from "@/lib/date";
 import { formatCurrency } from "@/lib/helpers";
 
 export default function BillDetailsPage() {
@@ -83,11 +83,9 @@ export default function BillDetailsPage() {
 							{bill.invoiceNumber}
 						</h1>
 						<div className="flex items-center gap-2 text-muted-foreground text-sm">
-							<span>
-								Issued: {format(new Date(bill.invoiceDate), "MMM d, yyyy")}
-							</span>
+							<span>Issued: {formatDate(bill.invoiceDate)}</span>
 							<span>•</span>
-							<span>Due: {format(new Date(bill.dueDate), "MMM d, yyyy")}</span>
+							<span>Due: {formatDate(bill.dueDate)}</span>
 						</div>
 					</div>
 				</div>

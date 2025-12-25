@@ -48,7 +48,7 @@ async function runTests() {
 		console.log("Processing Job:", job.name, job.data);
 	});
 
-	await queue.add("my-job", { some: "data" });
+	await queue.add("testqueue", { some: "data" });
 	// Give it a moment to process
 	await new Promise((r) => setTimeout(r, 1000));
 

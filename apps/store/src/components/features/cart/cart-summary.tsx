@@ -5,12 +5,12 @@ import { Separator } from "@workspace/ui/components/separator";
 import { useTranslations } from "next-intl";
 
 interface CartSummaryProps {
-	subtotal: number;
-	taxes: number;
+	subtotal?: number;
+	taxes?: number;
 	total: number;
 }
 
-export function CartSummary({ subtotal, taxes, total }: CartSummaryProps) {
+export function CartSummary({ total }: CartSummaryProps) {
 	const t = useTranslations("Cart");
 
 	return (

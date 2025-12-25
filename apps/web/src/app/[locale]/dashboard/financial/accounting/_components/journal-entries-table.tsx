@@ -18,12 +18,12 @@ import {
 	TableHeader,
 	TableRow,
 } from "@workspace/ui/components/table";
-import { format } from "date-fns";
 import { CheckCircle, ChevronDown, FileText, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useFinancialAccounting } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-accounting";
 import { useCurrency } from "@/app/providers/currency-provider";
+import { formatDate } from "@/lib/date";
 
 interface JournalEntryLine {
 	id: string;
@@ -109,9 +109,7 @@ function JournalEntryRow({
 						/>
 					</Button>
 				</TableCell>
-				<TableCell>
-					{format(new Date(entry.entryDate), "MMM d, yyyy")}
-				</TableCell>
+				<TableCell>{formatDate(entry.entryDate)}</TableCell>
 				<TableCell className="font-medium font-mono">
 					{entry.entryNumber}
 				</TableCell>

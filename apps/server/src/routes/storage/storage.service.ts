@@ -2,7 +2,7 @@ import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { and, eq, inArray, lt, sql } from "drizzle-orm";
 
-import env from "@/env";
+import { envData } from "@/env";
 import type { User } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { organizationStorageLimits, uploads } from "@/lib/db/schema";
@@ -55,7 +55,7 @@ export async function presignUpload(
 	const safeName = fileName.replace(/[^\w.-]+/g, "_");
 	const key = `${tenantId}/${visibility}/uploads/${crypto.randomUUID()}-${safeName}`;
 
-	if (!env.CF_BUCKET_NAME) {
+	if (!envData.CF_BUCKET_NAME) {
 		throw new Error("CF_BUCKET_NAME is undefined");
 	}
 
@@ -64,7 +64,7 @@ export async function presignUpload(
 		.insert(uploads)
 		.values({
 			fileKey: key,
-			bucket: env.CF_BUCKET_NAME,
+			bucket: envData.CF_BUCKET_NAME,
 			contentType,
 			size,
 			status: "pending",
@@ -78,7 +78,7 @@ export async function presignUpload(
 	const url = await getSignedUrl(
 		r2,
 		new PutObjectCommand({
-			Bucket: env.CF_BUCKET_NAME,
+			Bucket: envData.CF_BUCKET_NAME,
 			Key: key,
 			ContentType: contentType,
 			CacheControl:
@@ -90,7 +90,7 @@ export async function presignUpload(
 	);
 
 	const publicUrl =
-		visibility === "public" ? `${process.env.CDN_BASE_URL}${key}` : null;
+		visibility === "public" ? `${envData.CDN_BASE_URL}${key}` : null;
 
 	return {
 		uploadId: upload.id,
@@ -164,7 +164,7 @@ export async function deleteUploadedFile(
 
 	await r2.send(
 		new DeleteObjectCommand({
-			Bucket: env.CF_BUCKET_NAME,
+			Bucket: envData.CF_BUCKET_NAME,
 			Key: key,
 		}),
 	);
@@ -217,7 +217,7 @@ export async function cleanupOrphanFiles() {
 		try {
 			await r2.send(
 				new DeleteObjectCommand({
-					Bucket: env.CF_BUCKET_NAME,
+					Bucket: envData.CF_BUCKET_NAME,
 					Key: upload.fileKey,
 				}),
 			);

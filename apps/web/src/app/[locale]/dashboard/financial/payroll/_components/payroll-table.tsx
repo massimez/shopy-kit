@@ -12,10 +12,10 @@ import {
 	TableHeader,
 	TableRow,
 } from "@workspace/ui/components/table";
-import { format } from "date-fns";
 import { CalendarDays, Trash2 } from "lucide-react";
 import { useFinancialPayroll } from "@/app/[locale]/dashboard/financial/_hooks/use-financial-payroll";
 import { useCurrency } from "@/app/providers/currency-provider";
+import { formatDate } from "@/lib/date";
 import { PayrollRunDetails } from "./payroll-run-details";
 
 export function PayrollTable() {
@@ -51,12 +51,10 @@ export function PayrollTable() {
 					{runs?.map((run) => (
 						<TableRow key={run.id}>
 							<TableCell>
-								{format(new Date(run.payrollPeriodStart), "MMM d, yyyy")} -{" "}
-								{format(new Date(run.payrollPeriodEnd), "MMM d, yyyy")}
+								{formatDate(run.payrollPeriodStart)} -{" "}
+								{formatDate(run.payrollPeriodEnd)}
 							</TableCell>
-							<TableCell>
-								{format(new Date(run.paymentDate), "MMM d, yyyy")}
-							</TableCell>
+							<TableCell>{formatDate(run.paymentDate)}</TableCell>
 							<TableCell>
 								{formatCurrency(Number(run.totalGross || 0))}
 							</TableCell>

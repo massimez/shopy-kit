@@ -18,7 +18,6 @@ import { useProfile } from "@/lib/hooks/use-profile";
 import { StorefrontError, storefrontClient } from "@/lib/storefront";
 import { useCartStore } from "@/store/use-cart-store";
 import { NavigationButtons } from "./navigation-buttons";
-import { OrderSummarySidebar } from "./order-summary-sidebar";
 import { PaymentStep } from "./payment-step";
 import { ReviewStep } from "./review-step";
 import { ShippingStep } from "./shipping-step";
@@ -35,7 +34,7 @@ export function CheckoutForm({
 	locationId,
 	currency = "USD",
 }: CheckoutFormProps) {
-	const { items, total, subtotal, appliedCoupon, clearCart } = useCartStore();
+	const { items, total, appliedCoupon, clearCart } = useCartStore();
 	const { data: session } = useSession();
 	const { profile, updateProfile } = useProfile();
 	const router = useRouter();

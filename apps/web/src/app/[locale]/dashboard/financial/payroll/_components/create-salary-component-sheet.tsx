@@ -87,7 +87,6 @@ export function CreateSalaryComponentSheet({
 	});
 
 	// Reset form when editingComponent changes or sheet opens
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		if (open) {
 			form.reset({

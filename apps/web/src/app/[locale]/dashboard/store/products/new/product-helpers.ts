@@ -26,15 +26,12 @@ export async function processImages(values: ProductFormValues) {
 
 	const { uploadPublic } = await import("@/lib/storage");
 
-	// Upload each temp image individually and collect results
-	// biome-ignore lint/suspicious/noExplicitAny: <>
-	const uploadResults: any[] = [];
+	const uploadResults: NonNullable<ProductFormValues["images"]> = [];
 
 	for (const img of imageFilesToUpload) {
 		if (!img) continue;
 
-		// biome-ignore lint/suspicious/noExplicitAny: <>
-		const file = (img as any).file;
+		const file = img.file;
 
 		console.log(`Processing ${img.name}:`, {
 			key: img.key,
@@ -98,29 +95,21 @@ export async function createVariants(
 	if (!variants || !Array.isArray(variants) || variants.length === 0) {
 		return;
 	}
-
-	console.log("Creating variants for new product...");
 	try {
 		await Promise.all(
-			// biome-ignore lint/suspicious/noExplicitAny: <>
-			variants.map(async (variant: any) => {
-				// Build translations array from displayName and optionValues
+			variants.map(async (variant) => {
 				const variantTranslations = variant.translations || [];
 
-				// Only update attributes (optionValues) in translations, preserve user-edited names
 				if (variant.optionValues) {
-					// Get all unique language codes from existing translations or use a default
 					const languageCodes =
 						variantTranslations.length > 0
-							? // biome-ignore lint/suspicious/noExplicitAny: <>
-								variantTranslations.map((t: any) => t.languageCode)
-							: ["en"]; // fallback to English
+							? variantTranslations.map((t) => t.languageCode)
+							: ["en"];
 
 					// Update or create translation for each language
 					for (const langCode of languageCodes) {
 						const existingTranslation = variantTranslations.find(
-							// biome-ignore lint/suspicious/noExplicitAny: <>
-							(t: any) => t.languageCode === langCode,
+							(t) => t.languageCode === langCode,
 						);
 
 						if (existingTranslation) {
@@ -139,12 +128,12 @@ export async function createVariants(
 
 				const cleanVariant = {
 					...variant,
-					price: Number(variant.price),
-					cost: Number(variant.cost || 0),
-					compareAtPrice: Number(variant.compareAtPrice || 0),
-					reorderPoint: Number(variant.reorderPoint || 0),
-					reorderQuantity: Number(variant.reorderQuantity || 0),
-					weightKg: variant.weightKg ? Number(variant.weightKg) : undefined,
+					price: variant.price.toString(),
+					cost: variant.cost?.toString(),
+					compareAtPrice: variant.compareAtPrice?.toString(),
+					reorderPoint: variant.reorderPoint || 0,
+					reorderQuantity: variant.reorderQuantity || 0,
+					weightKg: variant.weightKg?.toString(),
 					translations:
 						variantTranslations.length > 0 ? variantTranslations : undefined,
 				};

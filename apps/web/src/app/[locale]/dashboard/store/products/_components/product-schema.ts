@@ -7,12 +7,17 @@ export type ProductVariantFormValues = {
 	price: number;
 	cost?: number;
 	compareAtPrice?: number;
+	reorderPoint?: number;
+	reorderQuantity?: number;
 	maxStock: number;
 	weightKg?: number;
 	barcode?: string;
 	isActive: boolean;
-	// biome-ignore lint/suspicious/noExplicitAny: < // Keeping as any for now as it's not fully used in the form yet>
-	translations: any[];
+	translations: {
+		languageCode: string;
+		name?: string;
+		attributes?: Record<string, string>;
+	}[];
 	displayName?: string;
 	optionValues?: Record<string, string>;
 };
@@ -27,6 +32,7 @@ export type ProductFormValues = {
 		name: string;
 		size: number;
 		type: string;
+		file?: File;
 	}>;
 	thumbnailImage?: {
 		key: string;
@@ -152,11 +158,21 @@ export const productFormSchema = insertProductSchema
 						.number()
 						.min(0, "Compare at price must be positive")
 						.optional(),
+					reorderPoint: z.coerce.number().min(0).optional(),
+					reorderQuantity: z.coerce.number().min(0).optional(),
 					maxStock: z.coerce.number().min(0, "Stock must be positive"),
 					weightKg: z.coerce.number().optional(),
 					barcode: z.string().optional(),
 					isActive: z.boolean().default(true),
-					translations: z.array(z.any()).optional(),
+					translations: z
+						.array(
+							z.object({
+								languageCode: z.string(),
+								name: z.string().optional(),
+								attributes: z.record(z.string(), z.string()).optional(),
+							}),
+						)
+						.optional(),
 					displayName: z.string().optional(),
 					optionValues: z.record(z.string(), z.string()).optional(),
 				}),

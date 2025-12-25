@@ -25,7 +25,6 @@ import {
 	TableHeader,
 	TableRow,
 } from "@workspace/ui/components/table";
-import { format } from "date-fns";
 import {
 	CheckCheck,
 	Copy,
@@ -40,6 +39,7 @@ import {
 	useApproveInvoice,
 	useDeleteInvoice,
 } from "@/app/[locale]/dashboard/financial/_hooks/use-invoices";
+import { formatDate } from "@/lib/date";
 import { RecordPaymentDialog } from "../../_components/record-payment-dialog";
 import { CreateBillSheet } from "./create-bill-sheet";
 
@@ -129,7 +129,7 @@ export function BillsTable({ data: bills, isLoading }: BillsTableProps) {
 										{bill.invoiceNumber}
 									</TableCell>
 									<TableCell>
-										{format(new Date(bill.invoiceDate), "MMM dd, yyyy")}
+										{formatDate(bill.invoiceDate, "MMM dd, yyyy")}
 									</TableCell>
 									<TableCell>
 										{bill.supplier?.name || "Unknown Supplier"}

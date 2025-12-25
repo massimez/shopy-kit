@@ -4,6 +4,7 @@ import type { TransactionDb } from "@/types/db";
 
 export function calculateTotals(
 	baseSalary: number,
+	// biome-ignore lint/suspicious/noExplicitAny: <>
 	components: any,
 	adjustments: Array<{ type: string; amount: number }>,
 ) {

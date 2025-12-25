@@ -1,12 +1,12 @@
-import env from "./env";
+import { envData } from "@/env";
 import { honoApp } from "./lib/app";
 import { emailWorker } from "./lib/email";
 
-const port = env?.PORT || "3001";
+const port = envData.PORT || "3001";
 
 console.log(`🚀 Server starting on port ${port}`);
 console.log(`📧 Email worker started: ${emailWorker.name}`);
-console.log(`🌍 Environment: ${env?.NODE_ENV}`);
+console.log(`🌍 Environment: ${envData.NODE_ENV}`);
 console.log(`📡 Health check: http://localhost:${port}/api/health`);
 
 export default {

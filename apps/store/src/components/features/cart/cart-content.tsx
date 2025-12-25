@@ -15,7 +15,7 @@ interface CartContentProps {
 
 export function CartContent({ onCartClose }: CartContentProps) {
 	const t = useTranslations("Cart");
-	const { items, clearCart, itemCount } = useCartStore();
+	const { items, clearCart } = useCartStore();
 	const { data: session } = useSession();
 
 	const isEmpty = items.length === 0;

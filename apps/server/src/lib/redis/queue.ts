@@ -5,10 +5,10 @@ import {
 	Worker,
 	type WorkerOptions,
 } from "bullmq";
-import env from "../../env";
+import { envData } from "@/env";
 import { redis } from "./client";
 
-const queuePrefix = `{${env.REDIS_PREFIX}}`;
+const queuePrefix = `{${envData.REDIS_PREFIX}}`;
 
 export const createQueue = <
 	DataType = unknown,

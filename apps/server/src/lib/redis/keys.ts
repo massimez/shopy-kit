@@ -1,7 +1,7 @@
-import env from "../../env";
+import { envData } from "@/env";
 
 export const KeyFactory = {
-	prefix: env.REDIS_PREFIX,
+	prefix: envData.REDIS_PREFIX,
 
 	/**
 	 * Generates a namespaced key.
