@@ -40,7 +40,7 @@ export function CartModal({
 		<Sheet open={open} onOpenChange={handleOpenChange}>
 			<SheetContent
 				side="right"
-				className={`flex w-full flex-col ${view === "checkout" ? "sm:max-w-xl" : "sm:max-w-lg"}`}
+				className={`flex w-full flex-col ${view === "checkout" ? "sm:max-w-xl [&>button]:hidden" : "sm:max-w-lg"}`}
 			>
 				{view === "cart" ? (
 					<>

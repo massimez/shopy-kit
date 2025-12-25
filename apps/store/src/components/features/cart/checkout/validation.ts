@@ -3,11 +3,13 @@ import { z } from "zod";
 // Main checkout form validation schema
 export const checkoutSchema = z.object({
 	shippingAddress: z.object({
-		street: z.string(),
+		street: z.string().optional(),
 		city: z.string(),
 		state: z.string(),
-		country: z.string(),
-		postalCode: z.string(),
+		country: z.string().optional(),
+		postalCode: z.string().optional(),
+		lat: z.number().optional(),
+		lng: z.number().optional(),
 	}),
 	billingAddress: z.object({
 		street: z.string().optional(),
@@ -26,11 +28,13 @@ export const checkoutSchema = z.object({
 
 // Step-specific validation schemas
 export const shippingAddressSchema = z.object({
-	street: z.string().min(1, "Street address is required"),
+	street: z.string().optional(),
 	city: z.string().min(1, "City is required"),
 	state: z.string().min(1, "State/Province is required"),
-	country: z.string().min(1, "Country is required"),
-	postalCode: z.string().min(1, "Postal code is required"),
+	country: z.string().optional(),
+	postalCode: z.string().optional(),
+	lat: z.number().optional(),
+	lng: z.number().optional(),
 });
 
 export const customerInfoSchema = z.object({

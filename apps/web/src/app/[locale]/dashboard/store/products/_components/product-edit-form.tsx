@@ -211,7 +211,7 @@ export function ProductEditForm({
 															{ shouldValidate: true },
 														);
 													}}
-													value={field.value ?? ""}
+													value={(field.value as string) ?? ""}
 												/>
 											</FormControl>
 											<FormMessage />
@@ -232,7 +232,7 @@ export function ProductEditForm({
 													placeholder="Detailed product description..."
 													className="min-h-[120px]"
 													{...field}
-													value={field.value ?? ""}
+													value={(field.value as string) ?? ""}
 												/>
 											</FormControl>
 											<FormMessage />
@@ -253,7 +253,7 @@ export function ProductEditForm({
 													placeholder="Brief summary..."
 													className="min-h-[40px]"
 													{...field}
-													value={field.value ?? ""}
+													value={(field.value as string) ?? ""}
 												/>
 											</FormControl>
 											<FormMessage />
@@ -632,7 +632,7 @@ export function ProductEditForm({
 												<Input
 													placeholder="comma, separated, tags"
 													{...field}
-													value={field.value ?? ""}
+													value={(field.value as string) ?? ""}
 												/>
 											</FormControl>
 											<FormMessage />
@@ -661,7 +661,7 @@ export function ProductEditForm({
 												<Input
 													placeholder="premium-t-shirt"
 													{...field}
-													value={field.value ?? ""}
+													value={(field.value as string) ?? ""}
 												/>
 											</FormControl>
 											<FormDescription>
@@ -684,7 +684,7 @@ export function ProductEditForm({
 												<Input
 													placeholder=""
 													{...field}
-													value={field.value ?? ""}
+													value={(field.value as string) ?? ""}
 												/>
 											</FormControl>
 											<FormMessage />
@@ -704,7 +704,7 @@ export function ProductEditForm({
 												<Textarea
 													placeholder=""
 													{...field}
-													value={field.value ?? ""}
+													value={(field.value as string) ?? ""}
 												/>
 											</FormControl>
 											<FormMessage />

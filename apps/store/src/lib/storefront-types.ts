@@ -118,10 +118,12 @@ export interface Product {
 
 export interface Address {
 	type: "billing" | "shipping";
-	street: string;
+	street?: string;
 	city: string;
-	country: string;
+	country?: string;
 	state?: string;
 	postalCode?: string;
 	isDefault?: boolean;
+	lat?: number;
+	lng?: number;
 }

@@ -84,12 +84,13 @@ export function CheckoutSheetContent({
 
 	return (
 		<div className="flex h-full flex-col">
-			<div className="flex-1 overflow-y-auto px-1">
+			<div className="min-h-0 flex-1">
 				<CheckoutForm
 					organizationId={organizationId}
 					locationId={defaultLocation.id}
 					currency="USD"
 					onClose={onClose}
+					onBack={onBack}
 				/>
 			</div>
 		</div>

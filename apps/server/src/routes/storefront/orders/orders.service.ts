@@ -10,11 +10,11 @@ import type { TransactionDb } from "@/types/db";
 type CreateOrderInput = {
 	organizationId: string;
 	shippingAddress: {
-		street: string;
+		street?: string;
 		city: string;
 		state: string;
-		country: string;
-		postalCode: string;
+		country?: string;
+		postalCode?: string;
 	};
 	items: Array<{
 		productVariantId: string;

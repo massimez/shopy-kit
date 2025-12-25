@@ -5,14 +5,17 @@ export interface CheckoutFormProps {
 	locationId: string;
 	currency?: string;
 	onClose?: () => void;
+	onBack?: () => void;
 }
 
 export interface Address {
-	street: string;
+	street?: string;
 	city: string;
 	state: string;
-	country: string;
-	postalCode: string;
+	country?: string;
+	postalCode?: string;
+	lat?: number;
+	lng?: number;
 }
 
 export interface CustomerInfo {

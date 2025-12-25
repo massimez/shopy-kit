@@ -32,7 +32,7 @@ export function useInvoices(
 			});
 			const json = await res.json();
 
-			if (setTotal && json.data.meta) {
+			if (setTotal && json?.data?.meta) {
 				setTotal(json.data.meta.total);
 			}
 

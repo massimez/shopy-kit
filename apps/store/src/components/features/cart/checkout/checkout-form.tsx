@@ -34,6 +34,7 @@ export function CheckoutForm({
 	locationId,
 	currency = "USD",
 	onClose,
+	onBack,
 }: CheckoutFormProps) {
 	const { items, total, appliedCoupon, clearCart } = useCartStore();
 	const { data: session } = useSession();
@@ -41,7 +42,7 @@ export function CheckoutForm({
 	const [currentStep, setCurrentStep] = useState<CheckoutStep>("shipping");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [apiErrors, setApiErrors] = useState<Record<string, string>>({});
-	const [saveAddress, setSaveAddress] = useState(false);
+	const [saveAddress, setSaveAddress] = useState(true);
 	const [selectedAddressIndex, setSelectedAddressIndex] = useState<
 		string | undefined
 	>(undefined);
@@ -140,6 +141,8 @@ export function CheckoutForm({
 				form.setValue("shippingAddress.state", "");
 				form.setValue("shippingAddress.postalCode", "");
 				form.setValue("shippingAddress.country", "");
+				form.setValue("shippingAddress.lat", undefined);
+				form.setValue("shippingAddress.lng", undefined);
 				return;
 			}
 
@@ -162,6 +165,8 @@ export function CheckoutForm({
 						"shippingAddress.country",
 						selectedAddress.country || "",
 					);
+					form.setValue("shippingAddress.lat", selectedAddress.lat);
+					form.setValue("shippingAddress.lng", selectedAddress.lng);
 
 					// Clear any validation errors for these fields
 					form.clearErrors("shippingAddress");
@@ -347,10 +352,10 @@ export function CheckoutForm({
 	};
 
 	return (
-		<div className="mx-auto max-w-6xl">
-			<div className="grid gap-8">
+		<div className="mx-auto flex h-full max-w-6xl flex-col">
+			<div className="grid h-full gap-8">
 				{/* Main checkout form */}
-				<div>
+				<div className="flex h-full min-h-0 flex-col">
 					{/* API Error Summary */}
 					{Object.keys(apiErrors).length > 0 && (
 						<Alert variant="destructive" className="mb-6">
@@ -386,33 +391,41 @@ export function CheckoutForm({
 					)}
 
 					<Form {...form}>
-						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-							{currentStep === "shipping" && (
-								<ShippingStep
-									form={form}
-									session={session}
-									profile={profile}
-									selectedAddressIndex={selectedAddressIndex}
-									saveAddress={saveAddress}
-									onAddressSelect={handleAddressSelect}
-									onSaveAddressChange={setSaveAddress}
-									isProfileLoaded={!!profile && !profileLoading}
-								/>
-							)}
-							{currentStep === "payment" && <PaymentStep form={form} />}
-							{currentStep === "review" && (
-								<ReviewStep formValues={form.getValues()} total={total()} />
-							)}
+						<form
+							onSubmit={form.handleSubmit(onSubmit)}
+							className="flex h-full min-h-0 flex-col"
+						>
+							<div className="flex-1 space-y-6 overflow-y-auto px-1">
+								{currentStep === "shipping" && (
+									<ShippingStep
+										form={form}
+										session={session}
+										profile={profile}
+										selectedAddressIndex={selectedAddressIndex}
+										saveAddress={saveAddress}
+										onAddressSelect={handleAddressSelect}
+										onSaveAddressChange={setSaveAddress}
+										isProfileLoaded={!!profile && !profileLoading}
+										onBack={onBack}
+									/>
+								)}
+								{currentStep === "payment" && <PaymentStep form={form} />}
+								{currentStep === "review" && (
+									<ReviewStep formValues={form.getValues()} total={total()} />
+								)}
+							</div>
 
-							<NavigationButtons
-								currentStep={currentStep}
-								steps={steps}
-								isSubmitting={isSubmitting}
-								itemCount={items.length}
-								total={total()}
-								onNext={nextStep}
-								onBack={prevStep}
-							/>
+							<div className="sticky bottom-0 z-10 mt-auto border-t bg-background p-4">
+								<NavigationButtons
+									currentStep={currentStep}
+									steps={steps}
+									isSubmitting={isSubmitting}
+									itemCount={items.length}
+									total={total()}
+									onNext={nextStep}
+									onBack={prevStep}
+								/>
+							</div>
 						</form>
 					</Form>
 				</div>

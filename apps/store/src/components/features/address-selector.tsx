@@ -38,29 +38,6 @@ export function AddressSelector({
 				onValueChange={onSelect}
 				className="space-y-3"
 			>
-				{/* New Address Option */}
-				<div className="relative">
-					<RadioGroupItem
-						value="new"
-						id="address-new"
-						className="peer sr-only"
-					/>
-					<Label
-						htmlFor="address-new"
-						className="flex cursor-pointer items-start gap-4 rounded-xl border-2 border-dashed p-4 transition-all hover:bg-muted/50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
-					>
-						<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-							<MapPin className="h-5 w-5 text-primary" />
-						</div>
-						<div className="flex-1 space-y-1">
-							<p className="font-semibold text-sm">Enter new address</p>
-							<p className="text-muted-foreground text-xs">
-								Manually enter a new shipping address
-							</p>
-						</div>
-					</Label>
-				</div>
-
 				{/* Saved Addresses */}
 				{addresses.map((address, index) => (
 					<div
@@ -87,14 +64,39 @@ export function AddressSelector({
 										</span>
 									)}
 								</div>
-								<p className="text-foreground text-sm">{address.street}</p>
-								<p className="text-muted-foreground text-xs">
+								<p className="text-foreground text-sm">
 									{formatAddress(address)}, {address.country}
+								</p>
+								<p className="text-muted-foreground text-xs">
+									{address.street}
 								</p>
 							</div>
 						</Label>
 					</div>
 				))}
+
+				{/* New Address Option */}
+				<div className="relative">
+					<RadioGroupItem
+						value="new"
+						id="address-new"
+						className="peer sr-only"
+					/>
+					<Label
+						htmlFor="address-new"
+						className="flex cursor-pointer items-start gap-4 rounded-xl border-2 border-dashed p-4 transition-all hover:bg-muted/50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
+					>
+						<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+							<MapPin className="h-5 w-5 text-primary" />
+						</div>
+						<div className="flex-1 space-y-1">
+							<p className="font-semibold text-sm">Enter new address</p>
+							<p className="text-muted-foreground text-xs">
+								Manually enter a new shipping address
+							</p>
+						</div>
+					</Label>
+				</div>
 			</RadioGroup>
 		</div>
 	);

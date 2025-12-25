@@ -13,12 +13,14 @@ export interface ClientProfile {
 	phone: string | null;
 	addresses: Array<{
 		type: "billing" | "shipping";
-		street: string;
+		street?: string;
 		city: string;
-		country: string;
+		country?: string;
 		state?: string;
 		postalCode?: string;
 		isDefault?: boolean;
+		lat?: number;
+		lng?: number;
 	}> | null;
 	preferredContactMethod: string | null;
 	language: string | null;

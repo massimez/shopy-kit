@@ -118,11 +118,11 @@ export const storefrontClient = {
 	createOrder: async (params: {
 		organizationId: string;
 		shippingAddress: {
-			street: string;
+			street?: string;
 			city: string;
 			state: string;
-			country: string;
-			postalCode: string;
+			country?: string;
+			postalCode?: string;
 		};
 		items: Array<{
 			productVariantId: string;
@@ -224,12 +224,14 @@ export const storefrontClient = {
 		phone?: string;
 		addresses?: Array<{
 			type: "billing" | "shipping";
-			street: string;
+			street?: string;
 			city: string;
-			country: string;
+			country?: string;
 			state?: string;
 			postalCode?: string;
 			isDefault?: boolean;
+			lat?: number;
+			lng?: number;
 		}>;
 		preferredContactMethod?: "email" | "phone" | "sms";
 		language?: string;

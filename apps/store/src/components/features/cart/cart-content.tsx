@@ -66,8 +66,7 @@ export function CartContent({ onCartClose, onCheckout }: CartContentProps) {
 				<div className="mt-4 mb-3 space-y-3">
 					{session ? (
 						<Button
-							className="w-full"
-							size="lg"
+							className="h-14 w-full rounded-xl font-bold text-base shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl"
 							onClick={() => {
 								if (onCheckout) {
 									onCheckout();
@@ -78,8 +77,7 @@ export function CartContent({ onCartClose, onCheckout }: CartContentProps) {
 						</Button>
 					) : (
 						<Button
-							className="w-full"
-							size="lg"
+							className="h-14 w-full rounded-xl font-bold text-base shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl"
 							onClick={() => router.push("/login")}
 						>
 							{t("checkout")}
