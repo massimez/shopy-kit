@@ -210,18 +210,34 @@ export function useEntityImageUpload({
 	);
 
 	// Handle file removal
-	const handleRemove = async (key: string) => {
-		if (!key) {
+	const handleRemove = async (inputKey: string) => {
+		if (!inputKey) {
 			toast.error(t(keys.idMissing));
 			return;
 		}
 
+		let keyToDelete = inputKey;
+
+		// If key seems to be a URL, extract the path
+		if (inputKey.startsWith("http://") || inputKey.startsWith("https://")) {
+			try {
+				const url = new URL(inputKey);
+				// Remove leading slash if present
+				const pathname = url.pathname.startsWith("/")
+					? url.pathname.slice(1)
+					: url.pathname;
+				keyToDelete = pathname;
+			} catch {
+				console.warn("Failed to parse URL key", inputKey);
+			}
+		}
+
 		try {
-			await deleteFile(key);
-			actions.removeFile(key);
+			await deleteFile(keyToDelete);
+			actions.removeFile(inputKey);
 
 			// Update parent with remaining files
-			const remainingFiles = stateImages.files.filter((f) => f.id !== key);
+			const remainingFiles = stateImages.files.filter((f) => f.id !== inputKey);
 			await notifyImageUpdate(remainingFiles);
 
 			toast.success("Image deleted successfully");
