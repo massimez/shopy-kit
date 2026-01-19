@@ -10,11 +10,7 @@ import {
 
 import { ProductCard } from "@/components/features/product-card";
 import { Link } from "@/i18n/routing";
-import {
-	useDefaultLocation,
-	useOrganization,
-	useProducts,
-} from "@/lib/hooks/use-storefront";
+import { useDefaultLocation, useProducts } from "@/lib/hooks/use-storefront";
 import { cn } from "@/lib/utils";
 
 interface SubcategoryRowProps {
@@ -30,25 +26,16 @@ export function SubcategoryRow({
 	slug,
 	className,
 }: SubcategoryRowProps) {
-	// Fetch organization to be safe, though usually provided by parent context
-	const { data: org } = useOrganization("yam"); // Or pass from parent
-	const organizationId =
-		org?.id || process.env.NEXT_PUBLIC_ORGANIZATION_ID || "";
-
-	const { data: location } = useDefaultLocation(
-		organizationId,
-		!!organizationId,
-	);
+	const { data: location } = useDefaultLocation();
 
 	const { data: products = [], isLoading } = useProducts(
 		{
-			organizationId,
 			collectionId,
 			limit: 10,
 			sort: "newest", // Default sort
 			...(location?.id ? { locationId: location.id } : {}),
 		},
-		!!organizationId && !!collectionId,
+		!!collectionId,
 	);
 
 	if (isLoading) {

@@ -184,7 +184,7 @@ export function ProductCard({ product }: ProductCardProps) {
 								value={selectedVariantId}
 								onValueChange={(val) => setSelectedVariantId(val)}
 							>
-								<SelectTrigger className="pointer-events-auto h-7 w-full border border-transparent bg-muted/30 px-2 py-0 font-semibold text-foreground text-xs shadow-none transition-colors hover:border-primary/20 hover:bg-muted/50 focus:border-primary/20 focus:ring-0">
+								<SelectTrigger className="bold pointer-events-auto h-7 w-full border border-transparent bg-muted/30 px-2 py-0 font-semi text-foreground text-xs shadow-none transition-colors hover:border-primary/20 hover:bg-muted/50 focus:border-primary/20 focus:ring-0">
 									<SelectValue placeholder="Select variant" />
 								</SelectTrigger>
 								<SelectContent>

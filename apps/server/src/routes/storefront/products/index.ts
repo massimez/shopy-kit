@@ -16,7 +16,6 @@ export const productsRoutes = createRouter()
 		"/",
 		queryValidator(
 			z.object({
-				organizationId: z.string().min(1),
 				collectionId: z.string().optional(),
 				minPrice: z.coerce.number().optional(),
 				maxPrice: z.coerce.number().optional(),
@@ -32,7 +31,13 @@ export const productsRoutes = createRouter()
 		async (c) => {
 			try {
 				const query = c.req.valid("query");
-				const products = await getStorefrontProducts(query);
+				const organizationId = c.var.tenantId;
+				if (!organizationId) throw new Error("Organization ID required");
+
+				const products = await getStorefrontProducts({
+					...query,
+					organizationId,
+				});
 				return c.json(createSuccessResponse(products));
 			} catch (error) {
 				return handleRouteError(c, error, "fetch storefront products");
@@ -48,14 +53,16 @@ export const productsRoutes = createRouter()
 		),
 		queryValidator(
 			z.object({
-				organizationId: z.string().min(1),
 				locationId: z.string().optional(),
 			}),
 		),
 		async (c) => {
 			try {
 				const { productId } = c.req.valid("param");
-				const { organizationId, locationId } = c.req.valid("query");
+				const query = c.req.valid("query");
+				const organizationId = c.var.tenantId;
+				if (!organizationId) throw new Error("Organization ID required");
+				const { locationId } = query;
 				const product = await getStorefrontProduct({
 					organizationId,
 					productId,

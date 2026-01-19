@@ -20,9 +20,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
-import { useSession } from "@/lib/auth-client";
 import { useFormatPrice } from "@/lib/hooks/use-format-price";
-import { useOrder, useOrganization } from "@/lib/hooks/use-storefront";
+import { useOrder } from "@/lib/hooks/use-storefront";
 import { useCartStore } from "@/store/use-cart-store";
 
 interface OrderStatusSheetProps {
@@ -88,20 +87,16 @@ export function OrderStatusSheet({
 	orderId,
 	orderNumber,
 }: OrderStatusSheetProps) {
-	const { data: session } = useSession();
-	const { data: org } = useOrganization("yam");
-	const organizationId = org?.id;
-	const userId = session?.user?.id;
+	// const { data: org } = useOrganization();
+	// const organizationId = org?.id;
 	const { addItem } = useCartStore();
 	const { formatPrice } = useFormatPrice();
 
 	const { data: orderDetails, isLoading } = useOrder(
 		{
-			organizationId: organizationId || "",
 			orderId: orderId || "",
-			userId: userId,
 		},
-		!!organizationId && !!orderId && !!userId && open,
+		!!orderId && open,
 	);
 
 	if (!orderId || !orderNumber) return null;
@@ -130,7 +125,7 @@ export function OrderStatusSheet({
 					quantity: item.quantity,
 					image: item.imageUrl,
 					productVariantId: item.productVariantId,
-					locationId: item.locationId || organizationId || "",
+					locationId: item.locationId || "", // organizationId removed
 					variantName: undefined,
 					variantSku: item.sku,
 				});

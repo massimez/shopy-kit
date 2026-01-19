@@ -4,21 +4,16 @@ import { ProductCard } from "@/components/features/product-card";
 import { useDefaultLocation, useProducts } from "@/lib/hooks/use-storefront";
 
 export function LeafCategoryGrid({ collectionId }: { collectionId: string }) {
-	const organizationId = process.env.NEXT_PUBLIC_ORGANIZATION_ID || "";
-	const { data: location } = useDefaultLocation(
-		organizationId,
-		!!organizationId,
-	);
+	const { data: location } = useDefaultLocation(true);
 
 	const { data: products = [], isLoading } = useProducts(
 		{
-			organizationId,
 			collectionId,
-			limit: 50,
-			sort: "newest",
-			...(location?.id ? { locationId: location.id } : {}),
+			locationId: location?.id,
+			limit: 100,
+			offset: 0,
 		},
-		!!organizationId && !!collectionId,
+		!!collectionId,
 	);
 
 	if (isLoading)

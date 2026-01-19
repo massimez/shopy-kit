@@ -2,17 +2,21 @@
 
 import Image from "next/image";
 import { useLocale } from "next-intl";
+import { useEffect, useState } from "react";
 import { Link } from "@/i18n/routing";
 import { useCollections } from "@/lib/hooks/use-storefront";
 import type { Collection } from "@/lib/storefront-types";
 
 export function CategoryGrid() {
 	const locale = useLocale();
-	const organizationId = process.env.NEXT_PUBLIC_ORGANIZATION_ID || "";
+	const [mounted, setMounted] = useState(false);
 	const { data: collections = [], isLoading } = useCollections(
-		organizationId,
-		Boolean(organizationId),
+		true, // enabled
 	);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	// Helper to get the translation for the current locale
 	const getTranslation = (item: Collection) =>
@@ -20,10 +24,17 @@ export function CategoryGrid() {
 		item.translations?.find((t) => t.languageCode === "en") ||
 		item.translations?.[0];
 
-	if (isLoading) {
+	// Show loading only after component has mounted to prevent hydration mismatch
+	if (!mounted || isLoading) {
 		return (
-			<div className="flex min-h-[50vh] items-center justify-center">
-				<div className="h-32 w-32 animate-spin rounded-full border-violet-500 border-t-2 border-b-2" />
+			<div className="grid grid-cols-1 gap-8">
+				<div className="min-w-0 space-y-16">
+					{mounted && isLoading && (
+						<div className="flex min-h-[50vh] items-center justify-center">
+							<div className="h-32 w-32 animate-spin rounded-full border-violet-500 border-t-2 border-b-2" />
+						</div>
+					)}
+				</div>
 			</div>
 		);
 	}
@@ -63,7 +74,7 @@ export function CategoryGrid() {
 														{childName}
 													</h3>
 
-													<div className="absolute inset-0 transform transition-transform duration-300 group-hover:scale-110">
+													<div className="absolute inset-0 mt-4 transform transition-transform duration-300 group-hover:scale-110">
 														{child.image ? (
 															<Image
 																src={child.image}

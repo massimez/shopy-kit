@@ -3,23 +3,18 @@
 import { useMounted } from "@workspace/ui/hooks/use-mounted";
 import { OrderHistory } from "@/components/profile/order-history";
 import { useSession } from "@/lib/auth-client";
-import { useOrders, useOrganization } from "@/lib/hooks/use-storefront";
+import { useOrders } from "@/lib/hooks/use-storefront";
 
 export default function OrdersPage() {
 	const { data: session, isPending } = useSession();
 	const isClient = useMounted();
 
-	// Fetch organization
-	const { data: org } = useOrganization("yam");
-	const organizationId = org?.id;
-
 	// Fetch orders
 	const { data: orders, isLoading: isLoadingOrders } = useOrders(
 		{
-			organizationId: organizationId || "",
-			userId: session?.user?.id || "",
+			userId: session?.user?.id ?? "",
 		},
-		!!session?.user?.id && !!organizationId,
+		!!session?.user?.id,
 	);
 
 	if (isPending || !isClient) {

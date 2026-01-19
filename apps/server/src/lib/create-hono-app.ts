@@ -15,6 +15,8 @@ export function createRouter() {
 		Variables: {
 			user: typeof auth.$Infer.Session.user | null;
 			session: typeof auth.$Infer.Session.session | null;
+			tenant: typeof import("@/lib/db/schema").organization.$inferSelect | null;
+			tenantId: string | null;
 		};
 	}>({
 		strict: false,
@@ -40,7 +42,10 @@ export default function createApp() {
 					: [
 							"http://localhost:3000",
 							"http://localhost:3002",
+							"http://alpha.localhost:3002",
 							"http://127.0.0.1:3000",
+							"http://alpha.test.com:3002",
+							"http://test.com:3002",
 						],
 			credentials: true,
 			allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

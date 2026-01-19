@@ -9,12 +9,21 @@ import { redis } from "../redis";
 
 export const auth = betterAuth({
 	trustedOrigins: [
+		"http://test.com:3002",
 		"http://localhost:3000",
 		"http://127.0.0.1:3000",
 		"http://localhost:3002",
+		"http://alpha.localhost:3002",
+		"http://alpha.test.com:3002",
 	],
 	telemetry: {
 		enabled: false,
+	},
+	advanced: {
+		crossSubDomainCookies: {
+			enabled: true,
+			domain: "test.com",
+		},
 	},
 	database: drizzleAdapter(db, {
 		provider: "pg",

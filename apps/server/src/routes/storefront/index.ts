@@ -1,4 +1,5 @@
 import { createRouter } from "@/lib/create-hono-app";
+import { tenantMiddleware } from "@/middleware/tenant-middleware";
 import { clientRoute } from "./client";
 import { collectionsRoutes } from "./collections";
 import { locationRoutes } from "./locations";
@@ -8,6 +9,7 @@ import { productsRoutes } from "./products";
 import { rewardsRoutes } from "./rewards/route";
 
 export const storefrontRoutes = createRouter()
+	.use("*", tenantMiddleware)
 	.route("/products", productsRoutes)
 	.route("/orders", ordersRoutes)
 	.route("/collections", collectionsRoutes)

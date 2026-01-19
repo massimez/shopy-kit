@@ -10,11 +10,7 @@ export function CategorySidebarContainer({
 }: {
 	className?: string;
 }) {
-	const organizationId = process.env.NEXT_PUBLIC_ORGANIZATION_ID || "";
-	const { data: collections = [] } = useCollections(
-		organizationId,
-		!!organizationId,
-	);
+	const { data: collections = [] } = useCollections(true);
 	const pathname = usePathname();
 
 	// Extract slug from pathname if present, e.g. /category/slug

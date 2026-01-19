@@ -32,7 +32,6 @@ const orderItemSchema = z.object({
 });
 
 const createOrderSchema = z.object({
-	organizationId: z.string(),
 	shippingAddress: shippingAddressSchema,
 	items: z.array(orderItemSchema).min(1),
 	currency: z.string().length(3),
@@ -46,34 +45,44 @@ const createOrderSchema = z.object({
 
 export const ordersRoutes = createRouter()
 	// Create order
-	.post("/", jsonValidator(createOrderSchema), async (c) => {
-		try {
-			const payload = c.req.valid("json");
-			const result = await createStorefrontOrder(payload);
-			return c.json(createSuccessResponse(result), 201);
-		} catch (error) {
-			// Handle stock errors specifically
-			if (error instanceof Error && error.name === "StockError") {
-				return c.json(
-					createErrorResponse("BadRequestError", error.message, [
-						{
-							code: "INSUFFICIENT_STOCK",
-							path: ["items"],
-							message: error.message,
-						},
-					]),
-					400,
-				);
+	.post(
+		"/",
+
+		jsonValidator(createOrderSchema),
+		async (c) => {
+			try {
+				const payload = c.req.valid("json");
+				const organizationId = c.var.tenantId;
+				if (!organizationId) throw new Error("Organization ID required");
+
+				const result = await createStorefrontOrder({
+					...payload,
+					organizationId,
+				});
+				return c.json(createSuccessResponse(result), 201);
+			} catch (error) {
+				// Handle stock errors specifically
+				if (error instanceof Error && error.name === "StockError") {
+					return c.json(
+						createErrorResponse("BadRequestError", error.message, [
+							{
+								code: "INSUFFICIENT_STOCK",
+								path: ["items"],
+								message: error.message,
+							},
+						]),
+						400,
+					);
+				}
+				return handleRouteError(c, error, "create order");
 			}
-			return handleRouteError(c, error, "create order");
-		}
-	})
+		},
+	)
 	// Get orders
 	.get(
 		"/",
 		queryValidator(
 			z.object({
-				organizationId: z.string().min(1),
 				userId: z.string().min(1),
 				limit: z.coerce.number().default(20),
 				offset: z.coerce.number().default(0),
@@ -82,7 +91,10 @@ export const ordersRoutes = createRouter()
 		async (c) => {
 			try {
 				const query = c.req.valid("query");
-				const orders = await getStorefrontOrders(query);
+				const organizationId = c.var.tenantId;
+				if (!organizationId) throw new Error("Organization ID required");
+
+				const orders = await getStorefrontOrders({ ...query, organizationId });
 				return c.json(createSuccessResponse(orders));
 			} catch (error) {
 				return handleRouteError(c, error, "fetch storefront orders");
@@ -98,14 +110,15 @@ export const ordersRoutes = createRouter()
 		),
 		queryValidator(
 			z.object({
-				organizationId: z.string().min(1),
 				userId: z.string().optional(),
 			}),
 		),
 		async (c) => {
 			try {
 				const { orderId } = c.req.valid("param");
-				const { organizationId, userId } = c.req.valid("query");
+				const { userId } = c.req.valid("query");
+				const organizationId = c.var.tenantId;
+				if (!organizationId) throw new Error("Organization ID required");
 				const order = await getStorefrontOrder({
 					organizationId,
 					orderId,

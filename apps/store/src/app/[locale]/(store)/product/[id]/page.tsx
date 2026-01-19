@@ -41,11 +41,7 @@ import { use, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { FrequentlyBoughtTogether } from "@/components/features";
 import { useFormatPrice } from "@/lib/hooks/use-format-price";
-import {
-	useDefaultLocation,
-	useOrganization,
-	useProduct,
-} from "@/lib/hooks/use-storefront";
+import { useDefaultLocation, useProduct } from "@/lib/hooks/use-storefront";
 import type { ProductVariant } from "@/lib/storefront-types";
 import { useCartStore } from "@/store/use-cart-store";
 
@@ -63,24 +59,16 @@ export default function ProductPage({ params }: ProductPageProps) {
 	const [quantity, setQuantity] = useState(1);
 	const [isWishlisted, setIsWishlisted] = useState(false);
 
-	// Get organization info
-	const { data: org, isLoading: isLoadingOrg } = useOrganization("yam");
-	const organizationId = org?.id || "qGH0Uy2lnzoOfVeU6kcaLSuqfdKon8qe";
-
 	// Get default location
-	const { data: location } = useDefaultLocation(
-		organizationId,
-		!!organizationId,
-	);
+	const { data: location } = useDefaultLocation();
 
 	// Get product data with stock information
 	const { data: product, isLoading: isLoadingProduct } = useProduct(
 		{
-			organizationId,
 			productId: id,
 			locationId: location?.id,
 		},
-		!!organizationId && !!location?.id,
+		!!location?.id,
 	);
 
 	// Get the localized translation
@@ -243,7 +231,7 @@ export default function ProductPage({ params }: ProductPageProps) {
 	};
 
 	// Loading state
-	if (isLoadingOrg || isLoadingProduct || !productData) {
+	if (isLoadingProduct || !productData) {
 		return (
 			<div className="flex min-h-screen items-center justify-center">
 				<div className="h-32 w-32 animate-spin rounded-full border-violet-500 border-t-2 border-b-2" />

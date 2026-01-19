@@ -23,7 +23,6 @@ export class StorefrontError extends Error {
 
 export const storefrontClient = {
 	getProducts: async (params: {
-		organizationId: string;
 		collectionId?: string;
 		limit?: number;
 		offset?: number;
@@ -35,7 +34,6 @@ export const storefrontClient = {
 	}) => {
 		const response = await hc.api.storefront.products.$get({
 			query: {
-				organizationId: params.organizationId,
 				...(params.collectionId ? { collectionId: params.collectionId } : {}),
 				...(params.sort ? { sort: params.sort } : {}),
 				...(params.q ? { q: params.q } : {}),
@@ -57,15 +55,10 @@ export const storefrontClient = {
 		return json.data;
 	},
 
-	getProduct: async (params: {
-		organizationId: string;
-		productId: string;
-		locationId?: string;
-	}) => {
+	getProduct: async (params: { productId: string; locationId?: string }) => {
 		const response = await hc.api.storefront.products[":productId"].$get({
 			param: { productId: params.productId },
 			query: {
-				organizationId: params.organizationId,
 				...(params.locationId ? { locationId: params.locationId } : {}),
 			},
 		});
@@ -76,10 +69,8 @@ export const storefrontClient = {
 		return json.data;
 	},
 
-	getCollections: async (params: { organizationId: string }) => {
-		const response = await hc.api.storefront.collections.$get({
-			query: params,
-		});
+	getCollections: async () => {
+		const response = await hc.api.storefront.collections.$get();
 		const json = await response.json();
 		if (!json.success) {
 			throw new Error(json.error?.message || "Failed to fetch collections");
@@ -87,10 +78,7 @@ export const storefrontClient = {
 		return json.data;
 	},
 
-	getOrganization: async (params: {
-		orgSlug?: string;
-		organizationId?: string;
-	}) => {
+	getOrganization: async (params: { orgSlug?: string }) => {
 		const response = await hc.api.storefront.organizations.info.$get({
 			query: params,
 		});
@@ -102,10 +90,8 @@ export const storefrontClient = {
 		return json.data;
 	},
 
-	getDefaultLocation: async (params: { organizationId: string }) => {
-		const response = await hc.api.storefront.locations.default.$get({
-			query: params,
-		});
+	getDefaultLocation: async () => {
+		const response = await hc.api.storefront.locations.default.$get();
 		const json = await response.json();
 		if (!json.success) {
 			throw new Error(
@@ -116,7 +102,6 @@ export const storefrontClient = {
 	},
 
 	createOrder: async (params: {
-		organizationId: string;
 		shippingAddress: {
 			street?: string;
 			city: string;
@@ -158,14 +143,12 @@ export const storefrontClient = {
 	},
 
 	getOrders: async (params: {
-		organizationId: string;
 		userId: string;
 		limit?: number;
 		offset?: number;
 	}) => {
 		const response = await hc.api.storefront.orders.$get({
 			query: {
-				organizationId: params.organizationId,
 				userId: params.userId,
 				limit: (params.limit ?? 20).toString(),
 				offset: (params.offset ?? 0).toString(),
@@ -178,15 +161,10 @@ export const storefrontClient = {
 		return json.data;
 	},
 
-	getOrder: async (params: {
-		organizationId: string;
-		orderId: string;
-		userId?: string;
-	}) => {
+	getOrder: async (params: { orderId: string; userId?: string }) => {
 		const response = await hc.api.storefront.orders[":orderId"].$get({
 			param: { orderId: params.orderId },
 			query: {
-				organizationId: params.organizationId,
 				...(params.userId ? { userId: params.userId } : {}),
 			},
 		});

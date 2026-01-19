@@ -1,22 +1,17 @@
-import { z } from "zod";
 import { createRouter } from "@/lib/create-hono-app";
 import { getDefaultLocation } from "@/lib/utils/location-helpers";
 import {
 	createSuccessResponse,
 	handleRouteError,
 } from "@/lib/utils/route-helpers";
-import { queryValidator } from "@/lib/utils/validator";
 
 export const locationRoutes = createRouter().get(
 	"/default",
-	queryValidator(
-		z.object({
-			organizationId: z.string(),
-		}),
-	),
+
 	async (c) => {
 		try {
-			const { organizationId } = c.req.valid("query");
+			const organizationId = c.var.tenantId;
+			if (!organizationId) throw new Error("Organization ID required");
 			const location = await getDefaultLocation(organizationId);
 
 			if (!location) {

@@ -5,15 +5,11 @@ import { useDefaultLocation } from "./use-storefront";
  * Returns the location ID or null if not available
  */
 export function useDefaultLocationId() {
-	const organizationId = process.env.NEXT_PUBLIC_ORGANIZATION_ID || "";
-	const { data: defaultLocation, isLoading } = useDefaultLocation(
-		organizationId,
-		!!organizationId,
-	);
+	const { data: defaultLocation, isLoading } = useDefaultLocation();
 
 	return {
 		locationId: defaultLocation?.id || null,
+		defaultLocation,
 		isLoading,
-		organizationId,
 	};
 }

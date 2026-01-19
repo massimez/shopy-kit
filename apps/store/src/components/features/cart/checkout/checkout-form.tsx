@@ -30,7 +30,6 @@ import {
 } from "./validation";
 
 export function CheckoutForm({
-	organizationId,
 	locationId,
 	currency = "USD",
 	onClose,
@@ -247,7 +246,6 @@ export function CheckoutForm({
 			}
 
 			const payload = {
-				organizationId,
 				locationId,
 				currency,
 				shippingAddress: data.shippingAddress,

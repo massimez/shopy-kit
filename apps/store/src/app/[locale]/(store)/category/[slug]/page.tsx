@@ -18,13 +18,9 @@ interface PageProps {
 export default function CategoryPage({ params }: PageProps) {
 	const resolvedParams = use(params);
 	const { slug } = resolvedParams;
-	const organizationId = process.env.NEXT_PUBLIC_ORGANIZATION_ID || "";
 
 	// Fetch all collections to find the current one and its tree
-	const { data: collections = [], isLoading } = useCollections(
-		organizationId,
-		!!organizationId,
-	);
+	const { data: collections = [], isLoading } = useCollections(true);
 
 	const collectionPath = getCollectionPath(collections, slug);
 	const collection = collectionPath

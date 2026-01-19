@@ -1,8 +1,5 @@
-import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { createRouter } from "@/lib/create-hono-app";
-import { db } from "@/lib/db";
-import { organization } from "@/lib/db/schema";
 import {
 	createErrorResponse,
 	createSuccessResponse,
@@ -16,36 +13,30 @@ export const organizationRoutes = createRouter().get(
 	queryValidator(
 		z.object({
 			orgSlug: z.string().optional(),
-			organizationId: z.string().optional(),
 		}),
 	),
 	async (c) => {
 		try {
-			const { orgSlug, organizationId } = c.req.valid("query");
+			const { orgSlug } = c.req.valid("query");
 
 			let slug = orgSlug;
 
-			if (!slug && organizationId) {
-				const org = await db.query.organization.findFirst({
-					where: eq(organization.id, organizationId),
-					columns: { slug: true },
-				});
-				if (org) slug = org.slug || undefined;
+			if (!slug) {
+				const organization = c.var.tenant;
+				if (organization) {
+					slug = organization.slug || undefined;
+				}
 			}
 
 			if (!slug) {
 				return c.json(
-					createErrorResponse(
-						"BadRequest",
-						"orgSlug or organizationId is required",
-						[
-							{
-								code: "MISSING_PARAM",
-								path: ["orgSlug", "organizationId"],
-								message: "orgSlug or organizationId is required",
-							},
-						],
-					),
+					createErrorResponse("BadRequest", "orgSlug is required", [
+						{
+							code: "MISSING_PARAM",
+							path: ["orgSlug"],
+							message: "orgSlug is required",
+						},
+					]),
 					400,
 				);
 			}

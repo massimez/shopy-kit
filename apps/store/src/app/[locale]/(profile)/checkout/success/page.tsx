@@ -13,7 +13,7 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { useSession } from "@/lib/auth-client";
-import { useOrder, useOrganization } from "@/lib/hooks/use-storefront";
+import { useOrder } from "@/lib/hooks/use-storefront";
 
 interface OrderItem {
 	id: string;
@@ -31,17 +31,15 @@ export default function OrderSuccessPage() {
 	const orderNumber = searchParams.get("orderNumber");
 	const { data: session } = useSession();
 
-	const { data: org } = useOrganization("yam");
-	const organizationId = org?.id;
-	const userId = session?.user?.id;
+	// const { data: org } = useOrganization();
+	// const organizationId = org?.id;
 
 	const { data: orderDetails, isLoading } = useOrder(
 		{
-			organizationId: organizationId || "",
 			orderId: orderId || "",
-			userId: userId,
+			userId: session?.user?.id,
 		},
-		!!organizationId && !!orderId && !!userId,
+		!!orderId,
 	);
 
 	if (!orderId || !orderNumber) {
