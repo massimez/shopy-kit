@@ -11,8 +11,8 @@ import { ModalProvider } from "@/components/modals/modal-context";
 import ModalRenderer from "@/components/modals/modal-render";
 
 export const metadata: Metadata = {
-	title: "Next Starter Template",
-	description: "A starter template for Next.js applications",
+	title: "ShopyKit - Commerce Platform",
+	description: "A comprehensive commerce platform for your business",
 };
 
 interface LayoutProps {

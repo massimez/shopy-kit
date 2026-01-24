@@ -7,6 +7,17 @@ import { routing } from "@/i18n/routing";
 import { QueryProvider } from "@/providers/query-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import "@workspace/ui/globals.css";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+	title: {
+		template: "%s | Finitop",
+		default: "Finitop - Premium E-commerce Experience",
+	},
+	description:
+		"Discover the best products at Finitop. Your one-stop shop for premium items.",
+	keywords: ["ecommerce", "shop", "premium", "store"],
+};
 
 export default async function LocaleLayout({
 	children,

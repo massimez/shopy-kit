@@ -1,12 +1,10 @@
-import { PageDashboardHeader } from "@/app/[locale]/(landing)/_components/sections/page-dashboard-header";
-
 export default function DashBoard() {
 	return (
 		<div className="overflow-hidden">
-			<PageDashboardHeader
-				title="Dashboard"
-				description="Overview and quick stats"
-			/>
+			<div className="mb-4">
+				<h1 className="font-bold text-2xl">Dashboard</h1>
+				<p className="text-muted-foreground">Overview and quick stats</p>
+			</div>
 			<div className="mt-4">
 				<div />
 			</div>

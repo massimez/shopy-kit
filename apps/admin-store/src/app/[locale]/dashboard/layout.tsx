@@ -18,8 +18,8 @@ import { AppSidebar } from "./layout/sidebar/app-sidebar";
 import { HeaderDashboard } from "./layout/sidebar/header";
 
 export const metadata: Metadata = {
-	title: "Next Starter Template",
-	description: "A starter template for Next.js applications",
+	title: "ShopyKit Dashboard",
+	description: "Manage your ShopyKit commerce platform",
 };
 
 interface LayoutProps {

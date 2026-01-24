@@ -1,5 +1,5 @@
 {
-	"name": "starter-plus",
+	"name": "shopy-kit",
 	"private": true,
 	"workspaces": [
 		"apps/*",

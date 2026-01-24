@@ -2,6 +2,19 @@
 	"name": "@workspace/store",
 	"version": "0.1.0",
 	"private": true,
+	"description": "Modern e-commerce storefront application built, featuring multi-language support, product catalog, shopping cart, and customer authentication",
+	"keywords": [
+		"ecommerce",
+		"storefront",
+		"nextjs",
+		"react",
+		"shopping",
+		"multi-language",
+		"i18n",
+		"tailwindcss",
+		"typescript"
+	],
+
 	"scripts": {
 		"dev": "next dev --port 3002",
 		"build": "next build",
