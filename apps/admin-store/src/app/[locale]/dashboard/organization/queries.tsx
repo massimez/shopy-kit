@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
 	insertOrganizationInfoSchema,
 	updateOrganizationInfoSchema,
-} from "@workspace/server/schema";
+} from "@workspace/api/schema";
 import type { z } from "zod";
 import { hc } from "@/lib/api-client";
 import { authClient } from "@/lib/auth-client";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import type { InsertLocation } from "@workspace/server/schema";
+import type { InsertLocation } from "@workspace/api/schema";
 import { Button } from "@workspace/ui/components/button";
 import {
 	Card,

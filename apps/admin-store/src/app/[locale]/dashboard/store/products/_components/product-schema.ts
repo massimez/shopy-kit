@@ -1,4 +1,4 @@
-import { insertProductSchema } from "@workspace/server/schema";
+import { insertProductSchema } from "@workspace/api/schema";
 import { z } from "zod";
 
 export type ProductVariantFormValues = {
