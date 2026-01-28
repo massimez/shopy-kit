@@ -1,6 +1,8 @@
 // Example 1: Organization Form using FormBuilder
 "use client";
 
+import { useMounted } from "@workspace/ui/hooks/use-mounted";
+import { useFormContext } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
@@ -9,20 +11,81 @@ import {
 	useGetOrganizationInfo,
 	useUpdateOrganizationInfo,
 } from "@/app/[locale]/dashboard/organization/queries";
+import { GalleryViewer } from "@/components/file-upload/gallery-viewer";
+import { UploadZone } from "@/components/file-upload/upload-zone";
 import {
 	FormBuilder,
 	type FormBuilderConfig,
 } from "@/components/form/form-builder";
+import type { SlotComponent } from "@/components/form/form-builder/types";
+import { useEntityImageUpload } from "@/hooks/use-entity-image-upload";
+import type { FileMetadata } from "@/hooks/use-file-upload";
 import { authClient } from "@/lib/auth-client";
 
 const organizationSchema = z.object({
 	organizationName: z.string().max(100).optional().or(z.literal("")),
+	logo: z.string().optional().nullable(),
 	contactName: z.string().max(100).optional().or(z.literal("")),
 	contactEmail: z.email().max(100).optional().or(z.literal("")),
 	contactPhone: z.string().max(20).optional().or(z.literal("")),
 });
 
 type OrganizationFormValues = z.infer<typeof organizationSchema>;
+
+// Slot component for organization logo
+const OrganizationLogoSlot: SlotComponent<OrganizationFormValues> = () => {
+	const { setValue, watch } = useFormContext<OrganizationFormValues>();
+	const logo = watch("logo");
+
+	const handleUpdateLogo = async (images: FileMetadata[]) => {
+		if (images.length > 0) {
+			const newLogo = images[0]?.url;
+			if (newLogo) {
+				setValue("logo", newLogo, { shouldDirty: true });
+			}
+		} else {
+			setValue("logo", null, { shouldDirty: true });
+		}
+	};
+
+	// We wrap the single logo string in a FileMetadata array for the hook
+	const initialImages: FileMetadata[] = logo
+		? [
+				{
+					url: logo,
+					name: "Logo",
+					key: logo,
+					type: "image/png", // Dummy type
+					size: 0, // Dummy size
+				},
+			]
+		: [];
+
+	const { stateImages, actions, handleRemove } = useEntityImageUpload({
+		initialImages: initialImages,
+		onUpdateImages: handleUpdateLogo,
+	});
+
+	// Restrict to 1 image
+	const canUpload = stateImages.files.length === 0;
+
+	return (
+		<div>
+			<div className="mb-2 block font-medium text-gray-700 text-sm dark:text-gray-300">
+				Organization Logo
+			</div>
+			{canUpload && <UploadZone state={stateImages} actions={actions} />}
+			<GalleryViewer
+				className="mt-4"
+				files={stateImages.files}
+				onRemove={async (id) => {
+					await handleRemove(id);
+					handleUpdateLogo([]);
+				}}
+			/>
+		</div>
+	);
+};
 
 export function OrganizationForm() {
 	// const t = useTranslations("common"); // removed
@@ -37,7 +100,13 @@ export function OrganizationForm() {
 		schema: organizationSchema,
 		defaultValues: {},
 		gridLayout: true,
-		fields: [
+		items: [
+			{
+				itemType: "slot",
+				slotId: "organization-logo",
+				component: OrganizationLogoSlot,
+				gridCols: 12,
+			},
 			{
 				name: "organizationName",
 				type: "text",
@@ -45,6 +114,7 @@ export function OrganizationForm() {
 				placeholderKey: "Your organization name",
 				gridCols: 6,
 				required: true,
+				itemType: "field",
 			},
 			{
 				name: "contactName",
@@ -52,6 +122,7 @@ export function OrganizationForm() {
 				labelKey: "Contact Name",
 				placeholderKey: "Enter contact name",
 				gridCols: 6,
+				itemType: "field",
 			},
 			{
 				name: "contactEmail",
@@ -59,6 +130,7 @@ export function OrganizationForm() {
 				labelKey: "Contact Email",
 				placeholderKey: "Enter contact email",
 				gridCols: 6,
+				itemType: "field",
 			},
 			{
 				name: "contactPhone",
@@ -66,12 +138,14 @@ export function OrganizationForm() {
 				labelKey: "Contact Phone",
 				placeholderKey: "Enter contact phone",
 				gridCols: 6,
+				itemType: "field",
 			},
 		],
 	};
 
 	const initialValues = {
 		organizationName: activeOrganization?.name ?? "",
+		logo: activeOrganization?.logo ?? null,
 		contactName: activeInfoOrg?.contactName || undefined,
 		contactEmail: activeInfoOrg?.contactEmail || undefined,
 		contactPhone: activeInfoOrg?.contactPhone || undefined,
@@ -79,12 +153,16 @@ export function OrganizationForm() {
 
 	const handleSubmit = async (values: OrganizationFormValues) => {
 		try {
-			if (activeOrganization?.name !== values.organizationName) {
+			// Update auth organization (name and logo)
+			if (
+				activeOrganization?.name !== values.organizationName ||
+				activeOrganization?.logo !== values.logo
+			) {
 				await authClient.organization.update({
 					organizationId: activeOrganizationId,
 					data: {
 						slug: activeOrganization?.slug,
-						logo: activeOrganization?.logo || undefined,
+						logo: values.logo || undefined,
 						name: values.organizationName,
 					},
 				});
@@ -117,6 +195,17 @@ export function OrganizationForm() {
 			console.error("Failed to update organization info:", error);
 		}
 	};
+
+	const isMounted = useMounted();
+
+	// Wait for active organization to prevent hydration mismatch
+	if (!isMounted || !activeOrganization) {
+		return (
+			<div className="flex h-40 items-center justify-center">
+				<div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+			</div>
+		);
+	}
 
 	return (
 		<FormBuilder

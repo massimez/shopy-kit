@@ -19,15 +19,23 @@ import { toast } from "sonner";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 
-export function Footer() {
+export function Footer({
+	storeName,
+	email,
+	phone,
+}: {
+	storeName?: string;
+	email?: string;
+	phone?: string;
+}) {
 	const t = useTranslations("Footer");
-	const [email, setEmail] = useState("");
+	const [newsletterEmail, setNewsletterEmail] = useState("");
 
 	const handleNewsletterSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-		if (email) {
+		if (newsletterEmail) {
 			toast.success(t("newsletterSuccess"));
-			setEmail("");
+			setNewsletterEmail("");
 		}
 	};
 
@@ -90,12 +98,9 @@ export function Footer() {
 				<div className="lg:col-span-6">
 					<Link href="/" className="mb-6 inline-block">
 						<h2 className="bg-linear-to-r from-primary to-primary/60 bg-clip-text font-bold text-3xl text-transparent tracking-tight">
-							STORE
+							{storeName || t("brandName")}
 						</h2>
 					</Link>
-					<p className="mb-8 text-muted-foreground leading-relaxed">
-						{t("brandDescription")}
-					</p>
 
 					{/* Contact Info */}
 					<div className="space-y-4">
@@ -109,13 +114,17 @@ export function Footer() {
 							<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
 								<Phone className="h-4 w-4 shrink-0" />
 							</div>
-							<span className="font-medium text-sm">+1 (555) 123-4567</span>
+							<span className="font-medium text-sm">
+								{phone || "+1 (555) 123-4567"}
+							</span>
 						</div>
 						<div className="flex items-center gap-3 text-muted-foreground transition-colors hover:text-foreground">
 							<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
 								<Mail className="h-4 w-4 shrink-0" />
 							</div>
-							<span className="font-medium text-sm">support@store.com</span>
+							<span className="font-medium text-sm">
+								{email || "support@store.com"}
+							</span>
 						</div>
 					</div>
 					{/* Social Links */}
@@ -184,8 +193,8 @@ export function Footer() {
 						<Input
 							type="email"
 							placeholder={t("emailPlaceholder")}
-							value={email}
-							onChange={(e) => setEmail(e.target.value)}
+							value={newsletterEmail}
+							onChange={(e) => setNewsletterEmail(e.target.value)}
 							required
 							className="flex-1"
 						/>
@@ -201,7 +210,8 @@ export function Footer() {
 			<div className="mt-12 flex flex-col items-center justify-center gap-4 border-t pt-8 md:flex-row">
 				{/* Copyright */}
 				<p className="text-center text-muted-foreground text-sm">
-					© {new Date().getFullYear()} STORE. {t("allRightsReserved")}
+					© {new Date().getFullYear()} {storeName?.toUpperCase() || "STORE"}.{" "}
+					{t("allRightsReserved")}
 				</p>
 			</div>
 		</footer>

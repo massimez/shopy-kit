@@ -14,6 +14,7 @@ import {
 } from "@workspace/ui/components/language-selector";
 import { ModeToggle } from "@workspace/ui/components/theme-toggle";
 import { ChevronDown, Search, Tornado, User } from "lucide-react";
+import Image from "next/image";
 import { useLocale } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -23,7 +24,12 @@ import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { signOut, useSession } from "@/lib/auth-client";
 import { AuthModal } from "../auth/auth-modal";
 
-export function Navbar() {
+interface NavbarProps {
+	logo?: string | null;
+	storeName?: string;
+}
+
+export function Navbar({ logo, storeName = "YAMMY" }: NavbarProps) {
 	const pathname = usePathname();
 	const router = useRouter();
 	const currentLocale = useLocale();
@@ -71,12 +77,27 @@ export function Navbar() {
 			<Card className="mx-auto flex h-20 flex-row items-center gap-4 px-4">
 				{/* Logo Section */}
 				<Link href="/" className="me-6 flex w-[236px] items-center gap-2">
-					<div className="flex items-center justify-center text-primary">
-						<Tornado className="h-8 w-8 rotate-180" />
-					</div>
-					<span className="font-bold text-2xl text-primary italic tracking-tight">
-						YAMMY
-					</span>
+					{logo ? (
+						<div className="relative flex h-16 w-auto max-w-[200px]">
+							<Image
+								src={logo}
+								alt={storeName}
+								width={0}
+								height={0}
+								sizes="200px"
+								className="h-full w-auto object-contain"
+							/>
+						</div>
+					) : (
+						<>
+							<div className="flex items-center justify-center text-primary">
+								<Tornado className="h-8 w-8 rotate-180" />
+							</div>
+							<span className="font-bold text-2xl text-primary italic tracking-tight">
+								{storeName}
+							</span>
+						</>
+					)}
 				</Link>
 
 				{/* Search Bar */}

@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
 	/* config options here */
 	trailingSlash: false,
 	output: "standalone",
+	images: {
+		remotePatterns: [
+			{
+				protocol: "https",
+				hostname: "pub-e8b933c426ae49678ffcad1423494ac2.r2.dev",
+			},
+		],
+	},
 	async headers() {
 		return [
 			{

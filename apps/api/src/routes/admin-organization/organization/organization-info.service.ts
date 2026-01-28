@@ -111,6 +111,7 @@ export async function getOrganizationBasicInfoBySlug(orgSlug: string) {
 			activeLanguages: true,
 			images: true,
 			socialLinks: true,
+			seoMetadata: true,
 		},
 	});
 
