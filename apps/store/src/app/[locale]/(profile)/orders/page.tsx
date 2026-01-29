@@ -30,7 +30,7 @@ export default function OrdersPage() {
 	}
 
 	return (
-		<div className="container mx-auto space-y-8 px-4 pb-16 md:block">
+		<div className="container mx-auto space-y-8 pb-16 md:block md:px-4">
 			<OrderHistory orders={orders} isLoadingOrders={isLoadingOrders} />
 		</div>
 	);

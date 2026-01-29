@@ -110,22 +110,22 @@ export function Footer({
 							</div>
 							<span className="font-medium text-sm">{t("address")}</span>
 						</div>
-						<div className="flex items-center gap-3 text-muted-foreground transition-colors hover:text-foreground">
-							<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-								<Phone className="h-4 w-4 shrink-0" />
+						{phone && (
+							<div className="flex items-center gap-3 text-muted-foreground transition-colors hover:text-foreground">
+								<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+									<Phone className="h-4 w-4 shrink-0" />
+								</div>
+								<span className="font-medium text-sm">{phone}</span>
 							</div>
-							<span className="font-medium text-sm">
-								{phone || "+1 (555) 123-4567"}
-							</span>
-						</div>
-						<div className="flex items-center gap-3 text-muted-foreground transition-colors hover:text-foreground">
-							<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-								<Mail className="h-4 w-4 shrink-0" />
+						)}
+						{email && (
+							<div className="flex items-center gap-3 text-muted-foreground transition-colors hover:text-foreground">
+								<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+									<Mail className="h-4 w-4 shrink-0" />
+								</div>
+								<span className="font-medium text-sm">{email}</span>
 							</div>
-							<span className="font-medium text-sm">
-								{email || "support@store.com"}
-							</span>
-						</div>
+						)}
 					</div>
 					{/* Social Links */}
 					<div className="mt-8 flex items-center gap-2">
@@ -210,7 +210,7 @@ export function Footer({
 			<div className="mt-12 flex flex-col items-center justify-center gap-4 border-t pt-8 md:flex-row">
 				{/* Copyright */}
 				<p className="text-center text-muted-foreground text-sm">
-					© {new Date().getFullYear()} {storeName?.toUpperCase() || "STORE"}.{" "}
+					© {new Date().getFullYear()} {storeName?.toUpperCase() || ""}.{" "}
 					{t("allRightsReserved")}
 				</p>
 			</div>

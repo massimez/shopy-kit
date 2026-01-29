@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@workspace/ui/components/button";
-import { MapPin, Settings, Shield, ShoppingBag } from "lucide-react";
+import { MapPin, Settings, ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 
@@ -29,11 +29,6 @@ export function ProfileSidebar({
 			id: "addresses",
 			title: t("addresses"),
 			icon: MapPin,
-		},
-		{
-			id: "privacy",
-			title: t("privacy"),
-			icon: Shield,
 		},
 	];
 

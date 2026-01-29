@@ -1,5 +1,6 @@
 import { Card } from "@workspace/ui/components/card";
 import { CartSidebar } from "@/components/features/cart/cart-sidebar";
+import { MobileCartBar } from "@/components/features/cart/mobile-cart-bar";
 import { CategorySidebarContainer } from "@/components/features/category/category-sidebar-container";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
@@ -40,6 +41,7 @@ export default async function LayoutStore({
 					<CartSidebar className="scrollbar-hide sticky top-20 flex max-h-[calc(100vh-8rem)] w-[330px] shrink-0 flex-col overflow-hidden" />
 				</Card>
 			</div>
+			<MobileCartBar />
 			<Footer storeName={storeName} email={email} phone={phone} />
 		</div>
 	);

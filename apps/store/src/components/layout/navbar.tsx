@@ -29,7 +29,7 @@ interface NavbarProps {
 	storeName?: string;
 }
 
-export function Navbar({ logo, storeName = "YAMMY" }: NavbarProps) {
+export function Navbar({ logo, storeName = "" }: NavbarProps) {
 	const pathname = usePathname();
 	const router = useRouter();
 	const currentLocale = useLocale();
@@ -78,7 +78,7 @@ export function Navbar({ logo, storeName = "YAMMY" }: NavbarProps) {
 				{/* Logo Section */}
 				<Link href="/" className="me-6 flex w-[236px] items-center gap-2">
 					{logo ? (
-						<div className="relative flex h-16 w-auto max-w-[200px]">
+						<div className="relative flex h-12 w-auto max-w-[200px] items-center justify-center">
 							<Image
 								src={logo}
 								alt={storeName}
@@ -87,13 +87,16 @@ export function Navbar({ logo, storeName = "YAMMY" }: NavbarProps) {
 								sizes="200px"
 								className="h-full w-auto object-contain"
 							/>
+							<span className="font-bold text-2xl text-[#774ba9] tracking-tight">
+								{storeName}
+							</span>
 						</div>
 					) : (
 						<>
 							<div className="flex items-center justify-center text-primary">
 								<Tornado className="h-8 w-8 rotate-180" />
 							</div>
-							<span className="font-bold text-2xl text-primary italic tracking-tight">
+							<span className="font-bold text-2xl text-primary tracking-tight">
 								{storeName}
 							</span>
 						</>
@@ -127,7 +130,7 @@ export function Navbar({ logo, storeName = "YAMMY" }: NavbarProps) {
 					</Button> */}
 
 					<div className="flex items-center">
-						<CartButton classNameIcon="size-6" />
+						<CartButton className="hidden lg:flex" classNameIcon="size-6" />
 					</div>
 					<LanguageSelector
 						locales={locales}
