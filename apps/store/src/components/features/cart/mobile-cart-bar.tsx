@@ -16,9 +16,9 @@ export function MobileCartBar() {
 
 	return (
 		<>
-			<div className="fixed right-6 bottom-6 z-50 lg:hidden">
+			<div className="fixed end-4 bottom-6 z-50 lg:hidden">
 				<Button
-					className="flex h-16 w-16 items-center justify-center rounded-full shadow-xl"
+					className="flex h-15 w-15 items-center justify-center rounded-full shadow-xl"
 					size="icon"
 					onClick={() => setIsOpen(true)}
 				>

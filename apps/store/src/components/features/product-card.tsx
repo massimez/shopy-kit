@@ -99,9 +99,6 @@ export function ProductCard({ product }: ProductCardProps) {
 		};
 
 		addItem(itemToAdd);
-		if (quantity === 0) {
-			toast.success(t("addToCartSuccess", { name: product.name }));
-		}
 	};
 
 	const handleRemoveOne = (e: React.MouseEvent) => {
