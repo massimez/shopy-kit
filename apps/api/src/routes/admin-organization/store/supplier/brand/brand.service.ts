@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { brand } from "@/lib/db/schema";
 import { validateOrgId } from "@/lib/utils/validator";
 import type { offsetPaginationSchema } from "@/middleware/pagination";
-import type { insertBrandSchema, updateBrandSchema } from "./brand";
+import type { insertBrandSchema, updateBrandSchema } from "./route";
 
 type OffsetPaginationParams = z.infer<typeof offsetPaginationSchema>;
 type InsertBrand = z.infer<typeof insertBrandSchema>;
