@@ -1,5 +1,7 @@
 import { defineConfig } from "tsdown";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 export default defineConfig({
 	entry: {
 		index: "src/index.ts",
@@ -10,12 +12,13 @@ export default defineConfig({
 		resolve: false,
 		compilerOptions: {
 			declaration: true,
-			declarationMap: true,
+			declarationMap: !isProduction,
 			skipLibCheck: false,
 			preserveValueImports: true,
 			composite: true,
 		},
 	},
-	minify: process.env?.NODE_ENV === "production",
+	sourcemap: !isProduction,
+	minify: isProduction,
 	clean: true,
 });
