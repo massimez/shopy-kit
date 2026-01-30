@@ -1,3 +1,4 @@
+import type { User } from "@/lib/auth";
 import { createRouter } from "@/lib/create-hono-app";
 import {
 	createErrorResponse,
@@ -10,7 +11,6 @@ import {
 	paramValidator,
 	queryValidator,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import { offsetPaginationSchema } from "@/middleware/pagination";
 import { insertShippingZoneSchema, updateShippingZoneSchema } from "./schema";
@@ -25,14 +25,18 @@ import {
 export const shippingZoneRoute = createRouter()
 	.post(
 		"/shipping-zones",
-		authMiddleware,
 		hasOrgPermission("shipping:create"),
 		jsonValidator(insertShippingZoneSchema),
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const user = c.get("user") as User;
 				const data = c.req.valid("json");
-				const newShippingZone = await createShippingZone(data, activeOrgId);
+				const newShippingZone = await createShippingZone(
+					data,
+					activeOrgId,
+					user,
+				);
 				return c.json(createSuccessResponse(newShippingZone), 201);
 			} catch (error) {
 				return handleRouteError(c, error, "create shipping zone");
@@ -41,7 +45,6 @@ export const shippingZoneRoute = createRouter()
 	)
 	.get(
 		"/shipping-zones",
-		authMiddleware,
 		hasOrgPermission("shipping:read"),
 		queryValidator(offsetPaginationSchema),
 		async (c) => {
@@ -57,7 +60,6 @@ export const shippingZoneRoute = createRouter()
 	)
 	.get(
 		"/shipping-zones/:id",
-		authMiddleware,
 		hasOrgPermission("shipping:read"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -85,19 +87,21 @@ export const shippingZoneRoute = createRouter()
 	)
 	.put(
 		"/shipping-zones/:id",
-		authMiddleware,
 		hasOrgPermission("shipping:update"),
 		paramValidator(idParamSchema),
 		jsonValidator(updateShippingZoneSchema),
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const user = c.get("user");
+				if (!user) throw new Error("User not found in context");
 				const { id } = c.req.valid("param");
 				const data = c.req.valid("json");
 				const updatedShippingZone = await updateShippingZone(
 					id,
 					data,
 					activeOrgId,
+					user,
 				);
 				if (!updatedShippingZone) {
 					return c.json(
@@ -119,14 +123,19 @@ export const shippingZoneRoute = createRouter()
 	)
 	.delete(
 		"/shipping-zones/:id",
-		authMiddleware,
 		hasOrgPermission("shipping:delete"),
 		paramValidator(idParamSchema),
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const user = c.get("user");
+				if (!user) throw new Error("User not found in context");
 				const { id } = c.req.valid("param");
-				const deletedShippingZone = await deleteShippingZone(id, activeOrgId);
+				const deletedShippingZone = await deleteShippingZone(
+					id,
+					activeOrgId,
+					user,
+				);
 				if (!deletedShippingZone) {
 					return c.json(
 						createErrorResponse(

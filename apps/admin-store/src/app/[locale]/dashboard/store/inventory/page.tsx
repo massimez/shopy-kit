@@ -26,6 +26,7 @@ import {
 } from "@/app/[locale]/dashboard/organization/queries";
 import { DEFAULT_LOCALE } from "@/constants/locales";
 import { useNuqsPagination } from "@/hooks/use-nuqs-pagination";
+import { CollectionFilter } from "../_components/collection-filter";
 import { useProductCollections } from "../product-collections/hooks/use-product-collection";
 import {
 	InventoryList,
@@ -64,7 +65,7 @@ export default function InventoryPage() {
 	const { data: locationsData } = useGetLocations(activeOrganization?.id);
 	// We need collections for the filter
 	const { data: collectionsData } = useProductCollections(selectedLanguage);
-	const collections = collectionsData?.flat || [];
+	const collections = collectionsData?.data || [];
 
 	const normalizedLocationId =
 		selectedLocationId === "ALL" ? undefined : selectedLocationId;
@@ -146,27 +147,14 @@ export default function InventoryPage() {
 							</div>
 
 							{/* Collection Filter */}
-							<Select
-								value={selectedCollection || undefined}
-								onValueChange={(val) => {
+							<CollectionFilter
+								collections={collections}
+								selectedCollectionId={selectedCollection || null}
+								onSelect={(val) => {
 									setSelectedCollection(val || null);
 									pagination.setPage(1);
 								}}
-							>
-								<SelectTrigger className="w-[200px]">
-									<SelectValue placeholder="All Collections" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="ALL_COLLECTIONS">
-										All Collections
-									</SelectItem>
-									{collections.map((collection) => (
-										<SelectItem key={collection.id} value={collection.id}>
-											{collection.name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
+							/>
 
 							{/* Location Filter */}
 							{locationsData?.data && locationsData.data.length > 0 && (

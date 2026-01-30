@@ -9,7 +9,7 @@ import {
 	queryValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
+import { hasOrgPermission } from "@/middleware/org-permission";
 import {
 	approvePayoutRequest,
 	listPayoutRequests,
@@ -30,7 +30,7 @@ const rejectSchema = z.object({
 export const payoutRoute = createRouter()
 	.get(
 		"/payouts",
-		authMiddleware,
+		hasOrgPermission("payout:read"),
 		queryValidator(paginationSchema),
 		async (c) => {
 			try {
@@ -52,28 +52,32 @@ export const payoutRoute = createRouter()
 			}
 		},
 	)
-	.post("/payouts/:id/approve", authMiddleware, async (c) => {
-		try {
-			const organizationId = validateOrgId(
-				c.get("session")?.activeOrganizationId as string,
-			);
-			const user = c.get("user") as { id: string };
-			const payoutId = c.req.param("id");
+	.post(
+		"/payouts/:id/approve",
+		hasOrgPermission("payout:approve"),
+		async (c) => {
+			try {
+				const organizationId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+				const user = c.get("user") as { id: string };
+				const payoutId = c.req.param("id");
 
-			const result = await approvePayoutRequest(
-				payoutId,
-				organizationId,
-				user.id,
-			);
+				const result = await approvePayoutRequest(
+					payoutId,
+					organizationId,
+					user.id,
+				);
 
-			return c.json(createSuccessResponse(result));
-		} catch (error) {
-			return handleRouteError(c, error, "approve payout request");
-		}
-	})
+				return c.json(createSuccessResponse(result));
+			} catch (error) {
+				return handleRouteError(c, error, "approve payout request");
+			}
+		},
+	)
 	.post(
 		"/payouts/:id/reject",
-		authMiddleware,
+		hasOrgPermission("payout:reject"),
 		jsonValidator(rejectSchema),
 		async (c) => {
 			try {
@@ -97,18 +101,22 @@ export const payoutRoute = createRouter()
 			}
 		},
 	)
-	.post("/payouts/:id/mark-paid", authMiddleware, async (c) => {
-		try {
-			const organizationId = validateOrgId(
-				c.get("session")?.activeOrganizationId as string,
-			);
-			const user = c.get("user") as { id: string };
-			const payoutId = c.req.param("id");
+	.post(
+		"/payouts/:id/mark-paid",
+		hasOrgPermission("payout:mark_paid"),
+		async (c) => {
+			try {
+				const organizationId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+				const user = c.get("user") as { id: string };
+				const payoutId = c.req.param("id");
 
-			const result = await markPayoutPaid(payoutId, organizationId, user.id);
+				const result = await markPayoutPaid(payoutId, organizationId, user.id);
 
-			return c.json(createSuccessResponse(result));
-		} catch (error) {
-			return handleRouteError(c, error, "mark payout paid");
-		}
-	});
+				return c.json(createSuccessResponse(result));
+			} catch (error) {
+				return handleRouteError(c, error, "mark payout paid");
+			}
+		},
+	);

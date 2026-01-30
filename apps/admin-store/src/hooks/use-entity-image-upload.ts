@@ -92,13 +92,15 @@ export function useEntityImageUpload({
 			return { success: false };
 		}
 
+		const uploadId = fileItem.id;
+
 		try {
 			fileItem.isUploading = true;
-			updateProgress(fileItem.id, 25);
+			updateProgress(uploadId, 25);
 
 			const originalFile = fileItem.file;
 			const { key, publicUrl } = await uploadPublic(originalFile);
-			updateProgress(fileItem.id, 75);
+			updateProgress(uploadId, 75);
 
 			// Clean up old preview URL
 			if (fileItem.preview) {
@@ -121,13 +123,13 @@ export function useEntityImageUpload({
 			fileItem.isUploading = false;
 			fileItem.isUploaded = true;
 
-			updateProgress(fileItem.id, 100);
-			clearProgress(fileItem.id);
+			updateProgress(uploadId, 100);
+			clearProgress(uploadId);
 
 			return { success: true, file: fileItem };
 		} catch (error) {
 			fileItem.isUploading = false;
-			clearProgress(fileItem.id);
+			clearProgress(uploadId);
 
 			const errorMessage =
 				error instanceof Error

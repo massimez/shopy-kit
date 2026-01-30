@@ -9,7 +9,6 @@ import {
 	jsonValidator,
 	paramValidator,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import {
 	insertProductCollectionSchema,
@@ -26,7 +25,6 @@ import {
 export const productCollectionRoute = createRouter()
 	.post(
 		"/product-collections",
-		authMiddleware,
 		hasOrgPermission("productCollection:create"),
 		jsonValidator(insertProductCollectionSchema),
 		async (c) => {
@@ -45,7 +43,6 @@ export const productCollectionRoute = createRouter()
 	)
 	.get(
 		"/product-collections",
-		authMiddleware,
 		hasOrgPermission("productCollection:read"),
 		async (c) => {
 			try {
@@ -58,44 +55,33 @@ export const productCollectionRoute = createRouter()
 			}
 		},
 	)
-	.get(
-		"/product-collections/:id",
-		authMiddleware,
-		hasOrgPermission("productCollection:read"),
-		paramValidator(idParamSchema),
-		async (c) => {
-			try {
-				const activeOrgId = c.get("session")?.activeOrganizationId as string;
-				const { id } = c.req.valid("param");
-				const foundProductCollection = await getProductCollection(
-					id,
-					activeOrgId,
+	.get("/product-collections/:id", paramValidator(idParamSchema), async (c) => {
+		try {
+			const activeOrgId = c.get("session")?.activeOrganizationId as string;
+			const { id } = c.req.valid("param");
+			const foundProductCollection = await getProductCollection(
+				id,
+				activeOrgId,
+			);
+			if (!foundProductCollection) {
+				return c.json(
+					createErrorResponse("NotFoundError", "Product collection not found", [
+						{
+							code: "RESOURCE_NOT_FOUND",
+							path: ["id"],
+							message: "No product collection found with the provided id",
+						},
+					]),
+					404,
 				);
-				if (!foundProductCollection) {
-					return c.json(
-						createErrorResponse(
-							"NotFoundError",
-							"Product collection not found",
-							[
-								{
-									code: "RESOURCE_NOT_FOUND",
-									path: ["id"],
-									message: "No product collection found with the provided id",
-								},
-							],
-						),
-						404,
-					);
-				}
-				return c.json(createSuccessResponse(foundProductCollection));
-			} catch (error) {
-				return handleRouteError(c, error, "fetch product collection");
 			}
-		},
-	)
+			return c.json(createSuccessResponse(foundProductCollection));
+		} catch (error) {
+			return handleRouteError(c, error, "fetch product collection");
+		}
+	})
 	.put(
 		"/product-collections/:id",
-		authMiddleware,
 		hasOrgPermission("productCollection:update"),
 		paramValidator(idParamSchema),
 		jsonValidator(updateProductCollectionSchema),
@@ -133,7 +119,6 @@ export const productCollectionRoute = createRouter()
 	)
 	.delete(
 		"/product-collections/:id",
-		authMiddleware,
 		hasOrgPermission("productCollection:delete"),
 		paramValidator(idParamSchema),
 		async (c) => {

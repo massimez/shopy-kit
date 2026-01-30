@@ -1,4 +1,5 @@
 import z from "zod";
+import type { User } from "@/lib/auth";
 import { createRouter } from "@/lib/create-hono-app";
 import {
 	createErrorResponse,
@@ -6,7 +7,6 @@ import {
 	handleRouteError,
 } from "@/lib/utils/route-helpers";
 import { jsonValidator, paramValidator } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import {
 	createOrganizationInfo,
@@ -24,17 +24,19 @@ import {
 export const organizationInfoRoute = createRouter()
 	.post(
 		"/info",
-		authMiddleware,
 		hasOrgPermission("organization:create"),
 		jsonValidator(insertOrganizationInfoSchema),
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
-
+				const user = c.get("user") as User;
 				const data = c.req.valid("json");
 				const insertData = { ...data, organizationId: activeOrgId };
 
-				const newOrganizationInfo = await createOrganizationInfo(insertData);
+				const newOrganizationInfo = await createOrganizationInfo(
+					insertData,
+					user,
+				);
 
 				return c.json(createSuccessResponse(newOrganizationInfo), 201);
 			} catch (error) {
@@ -42,43 +44,37 @@ export const organizationInfoRoute = createRouter()
 			}
 		},
 	)
-	.get(
-		"/info",
-		authMiddleware,
-		hasOrgPermission("organization:read"),
-		async (c) => {
-			try {
-				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+	.get("/info", hasOrgPermission("organization:read"), async (c) => {
+		try {
+			const activeOrgId = c.get("session")?.activeOrganizationId as string;
 
-				if (!activeOrgId) {
-					return c.json(
-						createErrorResponse(
-							"BadRequestError",
-							"No active organization found in session",
-							[
-								{
-									code: "SESSION_ERROR",
-									path: ["session"],
-									message:
-										"Active organization ID is required for this operation",
-								},
-							],
-						),
-						400,
-					);
-				}
-
-				const foundOrganizationInfo = await getOrganizationInfo(activeOrgId);
-
-				return c.json(createSuccessResponse(foundOrganizationInfo));
-			} catch (error) {
-				return handleRouteError(c, error, "fetch organization info");
+			if (!activeOrgId) {
+				return c.json(
+					createErrorResponse(
+						"BadRequestError",
+						"No active organization found in session",
+						[
+							{
+								code: "SESSION_ERROR",
+								path: ["session"],
+								message:
+									"Active organization ID is required for this operation",
+							},
+						],
+					),
+					400,
+				);
 			}
-		},
-	)
+
+			const foundOrganizationInfo = await getOrganizationInfo(activeOrgId);
+
+			return c.json(createSuccessResponse(foundOrganizationInfo));
+		} catch (error) {
+			return handleRouteError(c, error, "fetch organization info");
+		}
+	})
 	.get(
 		"/info/:id",
-		authMiddleware,
 		hasOrgPermission("organization:read"),
 		paramValidator(
 			z.object({
@@ -120,12 +116,12 @@ export const organizationInfoRoute = createRouter()
 	)
 	.put(
 		"/info/:id",
-		authMiddleware,
 		hasOrgPermission("organization:update"),
 		jsonValidator(updateOrganizationInfoSchema),
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const user = c.get("user") as User;
 				const id = c.req.param("id");
 				const data = c.req.valid("json");
 				console.log("Updating organization info with data:", data);
@@ -134,6 +130,7 @@ export const organizationInfoRoute = createRouter()
 					id,
 					data,
 					activeOrgId,
+					user,
 				);
 
 				if (!updatedOrganizationInfo) {

@@ -1,43 +1,52 @@
 import type { Context, Next } from "hono";
-
-// Simple in-memory rate limiter
-// In production, use Redis or a proper rate limiting service
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+import { rateLimit } from "@/lib/redis/rate-limit";
+import { createErrorResponse } from "./error-handler";
 
 export function rateLimiter(windowMs = 60000, max = 100) {
 	return async (c: Context, next: Next) => {
-		const key =
+		const ip =
 			c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown";
+		const path = c.req.path;
+		const method = c.req.method;
 
-		const now = Date.now();
-		const windowStart = now - windowMs;
+		// Create a unique identifier for the rate limit key
+		const identifier = `${ip}`;
+		const routeKey = `${method}:${path}`;
 
-		// Clean up old entries
-		for (const [k, v] of rateLimitStore.entries()) {
-			if (v.resetTime < windowStart) {
-				rateLimitStore.delete(k);
-			}
-		}
-
-		const current = rateLimitStore.get(key);
-
-		if (!current) {
-			rateLimitStore.set(key, { count: 1, resetTime: now });
-		} else if (current.resetTime < windowStart) {
-			rateLimitStore.set(key, { count: 1, resetTime: now });
-		} else if (current.count >= max) {
-			return c.json(
-				{
-					success: false,
-					error: "Too many requests",
-					retryAfter: Math.ceil((current.resetTime + windowMs - now) / 1000),
-				},
-				429,
+		try {
+			const { success, reset, remaining } = await rateLimit(
+				identifier,
+				routeKey,
+				max,
+				Math.ceil(windowMs / 1000),
 			);
-		} else {
-			current.count++;
-		}
 
-		await next();
+			// Set standard rate limit headers
+			c.header("X-RateLimit-Limit", max.toString());
+			c.header("X-RateLimit-Remaining", remaining.toString());
+			c.header("X-RateLimit-Reset", reset.toString());
+
+			if (!success) {
+				const retryAfter = Math.max(0, reset - Math.floor(Date.now() / 1000));
+				c.header("Retry-After", retryAfter.toString());
+
+				return c.json(
+					createErrorResponse("TooManyRequestsError", "Too many requests", [
+						{
+							code: "RATE_LIMIT_EXCEEDED",
+							path: [],
+							message: "Please try again later",
+						},
+					]),
+					429,
+				);
+			}
+
+			await next();
+		} catch (error) {
+			console.error("Rate limiter error:", error);
+			// Fail open - allow request if rate limiter fails
+			await next();
+		}
 	};
 }

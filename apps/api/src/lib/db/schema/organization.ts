@@ -101,4 +101,11 @@ export const organizationInfo = pgTable("organization_info", {
 	images: jsonb("images").$type<TImage[]>(),
 
 	socialLinks: jsonb("social_links").$type<TSocialLinks>(),
+	seoMetadata:
+		jsonb("seo_metadata").$type<
+			Record<
+				string,
+				{ title?: string; description?: string; keywords?: string }
+			>
+		>(),
 });

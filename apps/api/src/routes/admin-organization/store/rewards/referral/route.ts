@@ -12,7 +12,6 @@ import {
 	queryValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import {
 	getReferralStats,
@@ -29,7 +28,6 @@ export const referralRoute = createRouter()
 	 */
 	.post(
 		"/referrals/validate",
-		authMiddleware,
 		jsonValidator(validateReferralCodeSchema),
 		async (c) => {
 			try {
@@ -79,7 +77,6 @@ export const referralRoute = createRouter()
 	 */
 	.get(
 		"/referrals/stats/:userId",
-		authMiddleware,
 		hasOrgPermission("rewards:read"),
 		paramValidator(z.object({ userId: idParamSchema.shape.id })),
 		queryValidator(z.object({ bonusProgramId: z.string() })),
@@ -137,7 +134,6 @@ export const referralRoute = createRouter()
 	 */
 	.get(
 		"/referrals/program/:programId",
-		authMiddleware,
 		hasOrgPermission("rewards:read"),
 		paramValidator(z.object({ programId: z.string().uuid() })),
 		async (c) => {
@@ -190,7 +186,6 @@ export const referralRoute = createRouter()
 
 	.post(
 		"/referrals/track",
-		authMiddleware,
 		hasOrgPermission("rewards:write"),
 		jsonValidator(
 			validateReferralCodeSchema.extend({

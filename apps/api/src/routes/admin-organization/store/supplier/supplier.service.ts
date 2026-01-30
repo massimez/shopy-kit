@@ -1,8 +1,10 @@
 import { and, eq, isNull } from "drizzle-orm";
 import type { z } from "zod";
 import { withPaginationAndTotal } from "@/helpers/pagination";
+import type { User } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { supplier } from "@/lib/db/schema";
+import { getAuditData } from "@/lib/utils/audit";
 import { validateOrgId } from "@/lib/utils/validator";
 import type { offsetPaginationSchema } from "@/middleware/pagination";
 import type { insertSupplierSchema, updateSupplierSchema } from "./schema";
@@ -17,12 +19,14 @@ type UpdateSupplier = z.infer<typeof updateSupplierSchema>;
 export async function createSupplier(
 	supplierData: InsertSupplier,
 	orgId: string,
+	user: User,
 ) {
 	const [newSupplier] = await db
 		.insert(supplier)
 		.values({
 			...supplierData,
 			organizationId: orgId,
+			...getAuditData(user, "create"),
 		})
 		.returning();
 	return newSupplier;
@@ -71,10 +75,14 @@ export async function updateSupplier(
 	supplierId: string,
 	supplierData: UpdateSupplier,
 	orgId: string,
+	user: User,
 ) {
 	const [updatedSupplier] = await db
 		.update(supplier)
-		.set(supplierData)
+		.set({
+			...supplierData,
+			...getAuditData(user, "update"),
+		})
 		.where(
 			and(
 				eq(supplier.id, supplierId),
@@ -89,10 +97,16 @@ export async function updateSupplier(
 /**
  * Delete a supplier (soft delete)
  */
-export async function deleteSupplier(supplierId: string, orgId: string) {
+export async function deleteSupplier(
+	supplierId: string,
+	orgId: string,
+	user: User,
+) {
 	const [deletedSupplier] = await db
 		.update(supplier)
-		.set({ deletedAt: new Date() })
+		.set({
+			...getAuditData(user, "delete"),
+		})
 		.where(
 			and(
 				eq(supplier.id, supplierId),

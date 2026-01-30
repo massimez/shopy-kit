@@ -1,0 +1,1 @@
+ALTER TABLE "organization_info" ADD COLUMN "seo_metadata" jsonb;

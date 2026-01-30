@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { User } from "@/lib/auth";
 import { createRouter } from "@/lib/create-hono-app";
 import {
 	createErrorResponse,
@@ -11,7 +12,6 @@ import {
 	paramValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import { cancelCoupon, getUserCoupons } from "../coupon.service";
 import { cancelCouponSchema } from "../schema";
@@ -24,7 +24,6 @@ export const couponRoute = createRouter()
 	 */
 	.post(
 		"/coupons/cancel",
-		authMiddleware,
 		hasOrgPermission("rewards:write"),
 		jsonValidator(cancelCouponSchema),
 		async (c) => {
@@ -32,9 +31,10 @@ export const couponRoute = createRouter()
 				const organizationId = validateOrgId(
 					c.get("session")?.activeOrganizationId as string,
 				);
+				const user = c.get("user") as User;
 				const { couponId } = c.req.valid("json");
 
-				const result = await cancelCoupon(couponId, organizationId);
+				const result = await cancelCoupon(couponId, organizationId, user);
 
 				if (!result) {
 					return c.json(
@@ -64,7 +64,6 @@ export const couponRoute = createRouter()
 	 */
 	.get(
 		"/coupons/user/:userId",
-		authMiddleware,
 		hasOrgPermission("rewards:read"),
 		paramValidator(z.object({ userId: idParamSchema.shape.id })),
 		async (c) => {
@@ -89,7 +88,6 @@ export const couponRoute = createRouter()
 	 */
 	.get(
 		"/coupons/:id",
-		authMiddleware,
 		hasOrgPermission("rewards:read"),
 		paramValidator(idParamSchema),
 		async (c) => {

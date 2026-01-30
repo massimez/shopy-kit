@@ -1,3 +1,4 @@
+import type { User } from "@/lib/auth";
 import { createRouter } from "@/lib/create-hono-app";
 import {
 	createErrorResponse,
@@ -10,7 +11,6 @@ import {
 	paramValidator,
 	queryValidator,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import { offsetPaginationSchema } from "@/middleware/pagination";
 import {
@@ -28,14 +28,18 @@ import {
 export const shippingMethodRoute = createRouter()
 	.post(
 		"/shipping-methods",
-		authMiddleware,
 		hasOrgPermission("shipping:create"),
 		jsonValidator(insertShippingMethodSchema),
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const user = c.get("user") as User;
 				const data = c.req.valid("json");
-				const newShippingMethod = await createShippingMethod(data, activeOrgId);
+				const newShippingMethod = await createShippingMethod(
+					data,
+					activeOrgId,
+					user,
+				);
 				return c.json(createSuccessResponse(newShippingMethod), 201);
 			} catch (error) {
 				return handleRouteError(c, error, "create shipping method");
@@ -44,7 +48,6 @@ export const shippingMethodRoute = createRouter()
 	)
 	.get(
 		"/shipping-methods",
-		authMiddleware,
 		hasOrgPermission("shipping:read"),
 		queryValidator(offsetPaginationSchema),
 		async (c) => {
@@ -60,7 +63,6 @@ export const shippingMethodRoute = createRouter()
 	)
 	.get(
 		"/shipping-methods/:id",
-		authMiddleware,
 		hasOrgPermission("shipping:read"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -88,19 +90,20 @@ export const shippingMethodRoute = createRouter()
 	)
 	.put(
 		"/shipping-methods/:id",
-		authMiddleware,
 		hasOrgPermission("shipping:update"),
 		paramValidator(idParamSchema),
 		jsonValidator(updateShippingMethodSchema),
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const user = c.get("user") as User;
 				const { id } = c.req.valid("param");
 				const data = c.req.valid("json");
 				const updatedShippingMethod = await updateShippingMethod(
 					id,
 					data,
 					activeOrgId,
+					user,
 				);
 				if (!updatedShippingMethod) {
 					return c.json(
@@ -122,16 +125,17 @@ export const shippingMethodRoute = createRouter()
 	)
 	.delete(
 		"/shipping-methods/:id",
-		authMiddleware,
 		hasOrgPermission("shipping:delete"),
 		paramValidator(idParamSchema),
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const user = c.get("user") as User;
 				const { id } = c.req.valid("param");
 				const deletedShippingMethod = await deleteShippingMethod(
 					id,
 					activeOrgId,
+					user,
 				);
 				if (!deletedShippingMethod) {
 					return c.json(

@@ -241,14 +241,16 @@ export function generateProductSku(
 		.join(""); // Combine without separators
 
 	// Combine product prefix and variant letters
+	let sku = "";
 	if (productPrefix && variantLetters) {
-		return `${productPrefix}-${variantLetters}`;
+		sku = `${productPrefix}-${variantLetters}`;
+	} else if (productPrefix) {
+		sku = productPrefix;
+	} else {
+		sku = variantLetters || "";
 	}
 
-	if (productPrefix) {
-		return productPrefix;
-	}
-
-	// Fallback if no product name
-	return variantLetters || "";
+	// Append 3 random characters
+	const randomChars = Math.random().toString(36).substring(2, 5).toUpperCase();
+	return sku ? `${sku}-${randomChars}` : randomChars;
 }

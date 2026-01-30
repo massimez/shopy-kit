@@ -4,7 +4,6 @@ import {
 	Card,
 	CardContent,
 	CardDescription,
-	CardHeader,
 	CardTitle,
 } from "@workspace/ui/components/card";
 import { Separator } from "@workspace/ui/components/separator";
@@ -12,7 +11,6 @@ import { useMounted } from "@workspace/ui/hooks/use-mounted";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
 import { AddressManager } from "@/components/profile/address-manager";
-import { PrivacySettings } from "@/components/profile/privacy-settings";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { ProfileSidebar } from "@/components/profile/profile-sidebar";
 import { useSession } from "@/lib/auth-client";
@@ -26,7 +24,7 @@ export default function ProfilePage() {
 		parse: (value) => {
 			if (
 				typeof value === "string" &&
-				["settings", "addresses", "privacy"].includes(value)
+				["settings", "addresses"].includes(value)
 			) {
 				return value;
 			}
@@ -71,14 +69,14 @@ export default function ProfilePage() {
 				<div className="w-full flex-1">
 					{activeTab === "settings" && profile && (
 						<div className="space-y-6">
-							<Card>
-								<CardHeader>
+							<div>
+								<div className="pb-4">
 									<CardTitle>Personal Information</CardTitle>
 									<CardDescription>
 										Update your personal details.
 									</CardDescription>
-								</CardHeader>
-								<CardContent>
+								</div>
+								<div>
 									<ProfileForm
 										profile={profile}
 										onUpdate={(data) =>
@@ -86,8 +84,8 @@ export default function ProfilePage() {
 										}
 										updating={updating}
 									/>
-								</CardContent>
-							</Card>
+								</div>
+							</div>
 						</div>
 					)}
 					{activeTab === "addresses" && profile && (
@@ -103,30 +101,8 @@ export default function ProfilePage() {
 							</Card>
 						</div>
 					)}
-					{activeTab === "privacy" && profile && (
-						<div className="space-y-6">
-							<Card>
-								<CardHeader>
-									<CardTitle>Privacy & Consent</CardTitle>
-									<CardDescription>
-										Manage your privacy settings and consent preferences.
-									</CardDescription>
-								</CardHeader>
-								<CardContent>
-									<PrivacySettings
-										profile={profile}
-										onUpdate={(data) =>
-											updateProfile(data as Parameters<typeof updateProfile>[0])
-										}
-										updating={updating}
-									/>
-								</CardContent>
-							</Card>
-						</div>
-					)}
-					{(activeTab === "settings" ||
-						activeTab === "addresses" ||
-						activeTab === "privacy") &&
+
+					{(activeTab === "settings" || activeTab === "addresses") &&
 						profileLoading && (
 							<div className="flex items-center justify-center py-12">
 								<div className="h-8 w-8 animate-spin rounded-full border-primary border-t-2" />

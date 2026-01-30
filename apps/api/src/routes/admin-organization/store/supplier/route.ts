@@ -1,3 +1,4 @@
+import type { User } from "@/lib/auth";
 import { createRouter } from "@/lib/create-hono-app";
 import {
 	createErrorResponse,
@@ -10,7 +11,6 @@ import {
 	paramValidator,
 	queryValidator,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import { offsetPaginationSchema } from "@/middleware/pagination";
 import { insertSupplierSchema, updateSupplierSchema } from "./schema";
@@ -25,14 +25,14 @@ import {
 export const supplierRoute = createRouter()
 	.post(
 		"/suppliers",
-		authMiddleware,
 		hasOrgPermission("supplier:create"),
 		jsonValidator(insertSupplierSchema),
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const user = c.get("user") as User;
 				const data = c.req.valid("json");
-				const newSupplier = await createSupplier(data, activeOrgId);
+				const newSupplier = await createSupplier(data, activeOrgId, user);
 				return c.json(createSuccessResponse(newSupplier), 201);
 			} catch (error) {
 				return handleRouteError(c, error, "create supplier");
@@ -41,7 +41,6 @@ export const supplierRoute = createRouter()
 	)
 	.get(
 		"/suppliers",
-		authMiddleware,
 		hasOrgPermission("supplier:read"),
 		queryValidator(offsetPaginationSchema),
 		async (c) => {
@@ -57,7 +56,6 @@ export const supplierRoute = createRouter()
 	)
 	.get(
 		"/suppliers/:id",
-		authMiddleware,
 		hasOrgPermission("supplier:read"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -85,16 +83,21 @@ export const supplierRoute = createRouter()
 	)
 	.put(
 		"/suppliers/:id",
-		authMiddleware,
 		hasOrgPermission("supplier:update"),
 		paramValidator(idParamSchema),
 		jsonValidator(updateSupplierSchema),
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const user = c.get("user") as User;
 				const { id } = c.req.valid("param");
 				const data = c.req.valid("json");
-				const updatedSupplier = await updateSupplier(id, data, activeOrgId);
+				const updatedSupplier = await updateSupplier(
+					id,
+					data,
+					activeOrgId,
+					user,
+				);
 				if (!updatedSupplier) {
 					return c.json(
 						createErrorResponse("NotFoundError", "Supplier not found", [
@@ -115,14 +118,14 @@ export const supplierRoute = createRouter()
 	)
 	.delete(
 		"/suppliers/:id",
-		authMiddleware,
 		hasOrgPermission("supplier:delete"),
 		paramValidator(idParamSchema),
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const user = c.get("user") as User;
 				const { id } = c.req.valid("param");
-				const deletedSupplier = await deleteSupplier(id, activeOrgId);
+				const deletedSupplier = await deleteSupplier(id, activeOrgId, user);
 				if (!deletedSupplier) {
 					return c.json(
 						createErrorResponse(

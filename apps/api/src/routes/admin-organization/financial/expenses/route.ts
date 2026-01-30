@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { User } from "@/lib/auth";
 import { createRouter } from "@/lib/create-hono-app";
 import {
 	createSuccessResponse,
@@ -10,7 +11,7 @@ import {
 	queryValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
+import { hasOrgPermission } from "@/middleware/org-permission";
 import * as expensesService from "./expenses.service";
 
 const createExpenseSchema = z.object({
@@ -31,7 +32,7 @@ const createCategorySchema = z.object({
 export default createRouter()
 	.get(
 		"/expenses",
-		authMiddleware,
+		hasOrgPermission("expense:read"),
 		queryValidator(
 			z.object({
 				limit: z.string().optional(),
@@ -65,7 +66,7 @@ export default createRouter()
 	)
 	.post(
 		"/expenses",
-		authMiddleware,
+		hasOrgPermission("expense:create"),
 		jsonValidator(createExpenseSchema),
 		async (c) => {
 			try {
@@ -87,7 +88,7 @@ export default createRouter()
 	)
 	.post(
 		"/expenses/:id/approve",
-		authMiddleware,
+		hasOrgPermission("expense:approve"),
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {
@@ -109,7 +110,7 @@ export default createRouter()
 	)
 	.post(
 		"/expenses/:id/reject",
-		authMiddleware,
+		hasOrgPermission("expense:reject"),
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {
@@ -131,7 +132,7 @@ export default createRouter()
 	)
 	.put(
 		"/expenses/:id",
-		authMiddleware,
+		hasOrgPermission("expense:update"),
 		paramValidator(z.object({ id: z.string().uuid() })),
 		jsonValidator(createExpenseSchema.partial()),
 		async (c) => {
@@ -139,12 +140,14 @@ export default createRouter()
 				const activeOrgId = validateOrgId(
 					c.get("session")?.activeOrganizationId as string,
 				);
+				const user = c.get("user") as User;
 				const { id } = c.req.valid("param");
 				const data = c.req.valid("json");
 				const expense = await expensesService.updateExpense(
 					activeOrgId,
 					id,
 					data,
+					user,
 				);
 				return c.json(createSuccessResponse(expense));
 			} catch (error) {
@@ -154,7 +157,7 @@ export default createRouter()
 	)
 	.post(
 		"/expenses/:id/pay",
-		authMiddleware,
+		hasOrgPermission("expense:pay"),
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {
@@ -169,21 +172,25 @@ export default createRouter()
 			}
 		},
 	)
-	.get("/expense-categories", authMiddleware, async (c) => {
-		try {
-			const activeOrgId = validateOrgId(
-				c.get("session")?.activeOrganizationId as string,
-			);
-			const categories =
-				await expensesService.getExpenseCategories(activeOrgId);
-			return c.json(createSuccessResponse(categories));
-		} catch (error) {
-			return handleRouteError(c, error, "fetch expense categories");
-		}
-	})
+	.get(
+		"/expense-categories",
+		hasOrgPermission("expense_category:read"),
+		async (c) => {
+			try {
+				const activeOrgId = validateOrgId(
+					c.get("session")?.activeOrganizationId as string,
+				);
+				const categories =
+					await expensesService.getExpenseCategories(activeOrgId);
+				return c.json(createSuccessResponse(categories));
+			} catch (error) {
+				return handleRouteError(c, error, "fetch expense categories");
+			}
+		},
+	)
 	.post(
 		"/expense-categories",
-		authMiddleware,
+		hasOrgPermission("expense_category:create"),
 		jsonValidator(createCategorySchema),
 		async (c) => {
 			try {

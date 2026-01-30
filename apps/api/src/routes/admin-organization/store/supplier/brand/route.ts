@@ -13,7 +13,6 @@ import {
 	paramValidator,
 	queryValidator,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import { offsetPaginationSchema } from "@/middleware/pagination";
 import {
@@ -34,7 +33,6 @@ export const updateBrandSchema = createSelectSchema(brand)
 export const brandRoute = app
 	.post(
 		"/brands",
-		authMiddleware,
 		hasOrgPermission("brand:create"),
 		jsonValidator(insertBrandSchema),
 		async (c) => {
@@ -50,7 +48,6 @@ export const brandRoute = app
 	)
 	.get(
 		"/brands",
-		authMiddleware,
 		hasOrgPermission("brand:read"),
 		queryValidator(offsetPaginationSchema),
 		async (c) => {
@@ -66,7 +63,6 @@ export const brandRoute = app
 	)
 	.get(
 		"/brands/:id",
-		authMiddleware,
 		hasOrgPermission("brand:read"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -94,7 +90,6 @@ export const brandRoute = app
 	)
 	.put(
 		"/brands/:id",
-		authMiddleware,
 		hasOrgPermission("brand:update"),
 		paramValidator(idParamSchema),
 		jsonValidator(updateBrandSchema),
@@ -124,7 +119,6 @@ export const brandRoute = app
 	)
 	.delete(
 		"/brands/:id",
-		authMiddleware,
 		hasOrgPermission("brand:delete"),
 		paramValidator(idParamSchema),
 		async (c) => {

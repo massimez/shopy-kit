@@ -1,9 +1,11 @@
 import { and, eq } from "drizzle-orm";
 import type { z } from "zod";
+import type { User } from "@/lib/auth";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 import { payment } from "@/lib/db/schema/financial/invoices";
 import type { TOrderStatus } from "@/lib/db/schema/helpers/types";
+import { getAuditData } from "@/lib/utils/audit";
 import type { TransactionDb } from "@/types/db";
 import {
 	decrementClientUncompletedOrders,
@@ -216,9 +218,9 @@ export async function createOrder(
 				totalAmount: subtotal.toString(),
 				shippingAddress: payload.shippingAddress,
 				customerEmail,
-				customerPhone,
 				customerFullName,
 				status: "pending",
+				...getAuditData(user, "create"),
 			})
 			.returning();
 
@@ -262,6 +264,7 @@ export async function adjustInventoryForCompletion(
 		unitPrice?: string;
 	}>,
 	activeOrgId: string,
+	user: { id: string },
 	tx: TransactionDb,
 ) {
 	for (const item of orderItems) {
@@ -288,7 +291,7 @@ export async function adjustInventoryForCompletion(
 			organizationId: activeOrgId,
 		};
 
-		await createStockTransaction(transactionData, activeOrgId);
+		await createStockTransaction(transactionData, activeOrgId, user);
 
 		// Reduce reserved quantity since these items are now sold
 		if (currentStock) {
@@ -446,7 +449,11 @@ export async function createOrderStatusHistory(
 /**
  * Complete an order
  */
-export async function completeOrder(orderId: string, activeOrgId: string) {
+export async function completeOrder(
+	orderId: string,
+	activeOrgId: string,
+	user?: User,
+) {
 	const [ord] = await db.transaction(async (tx) => {
 		// Get current status before updating
 		const currentOrder = await tx.query.order.findFirst({
@@ -461,7 +468,10 @@ export async function completeOrder(orderId: string, activeOrgId: string) {
 
 		const [ord] = await tx
 			.update(schema.order)
-			.set({ status: "completed" })
+			.set({
+				status: "completed",
+				...(user ? getAuditData(user, "update") : {}),
+			})
 			.where(
 				and(
 					eq(schema.order.id, orderId),
@@ -475,7 +485,13 @@ export async function completeOrder(orderId: string, activeOrgId: string) {
 			where: eq(schema.orderItem.orderId, orderId),
 		});
 
-		await adjustInventoryForCompletion(orderId, orderItems, activeOrgId, tx);
+		await adjustInventoryForCompletion(
+			orderId,
+			orderItems,
+			activeOrgId,
+			user || { id: "system" }, // Fallback if no user provided (system action)
+			tx,
+		);
 
 		// Process bonus completion
 		if (ord?.userId) {
@@ -599,7 +615,11 @@ export async function reversePendingBonus(
 /**
  * Cancel an order
  */
-export async function cancelOrder(orderId: string, activeOrgId: string) {
+export async function cancelOrder(
+	orderId: string,
+	activeOrgId: string,
+	user?: User,
+) {
 	const [ord] = await db.transaction(async (tx) => {
 		// Get current status before updating
 		const currentOrder = await tx.query.order.findFirst({
@@ -614,7 +634,10 @@ export async function cancelOrder(orderId: string, activeOrgId: string) {
 
 		const [ord] = await tx
 			.update(schema.order)
-			.set({ status: "cancelled" })
+			.set({
+				status: "cancelled",
+				...(user ? getAuditData(user, "update") : {}),
+			})
 			.where(
 				and(
 					eq(schema.order.id, orderId),
@@ -657,4 +680,28 @@ export async function cancelOrder(orderId: string, activeOrgId: string) {
 	});
 
 	return ord;
+}
+
+/**
+ * Delete an order (soft delete)
+ */
+export async function deleteOrder(
+	orderId: string,
+	activeOrgId: string,
+	user: User,
+) {
+	const [deletedOrder] = await db
+		.update(schema.order)
+		.set({
+			...getAuditData(user, "delete"),
+		})
+		.where(
+			and(
+				eq(schema.order.id, orderId),
+				eq(schema.order.organizationId, activeOrgId),
+			),
+		)
+		.returning();
+
+	return deletedOrder;
 }

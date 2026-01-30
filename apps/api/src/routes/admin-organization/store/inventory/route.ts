@@ -1,4 +1,5 @@
 import z from "zod";
+import type { User } from "@/lib/auth";
 import { createRouter } from "@/lib/create-hono-app";
 import {
 	createSuccessResponse,
@@ -9,7 +10,6 @@ import {
 	paramValidator,
 	queryValidator,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import { offsetPaginationSchema } from "@/middleware/pagination";
 import {
@@ -37,7 +37,6 @@ export const inventoryRoute = createRouter()
 	// Product Variant Stock
 	.get(
 		"/inventory/stock/:productVariantId",
-		authMiddleware,
 		hasOrgPermission("inventory:read"),
 		paramValidator(productVariantIdParamSchema),
 		async (c) => {
@@ -58,7 +57,6 @@ export const inventoryRoute = createRouter()
 	// Product Variant Stock Transactions
 	.post(
 		"/inventory/stock-transactions",
-		authMiddleware,
 		hasOrgPermission("inventory:create"),
 		jsonValidator(insertProductVariantStockTransactionSchema),
 		async (c) => {
@@ -66,7 +64,13 @@ export const inventoryRoute = createRouter()
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
 				const data = c.req.valid("json");
 
-				const newTransaction = await createStockTransaction(data, activeOrgId);
+				const user = c.get("user") as User;
+
+				const newTransaction = await createStockTransaction(
+					data,
+					activeOrgId,
+					user,
+				);
 				return c.json(createSuccessResponse(newTransaction), 201);
 			} catch (error) {
 				return handleRouteError(c, error, "create stock transaction");
@@ -75,7 +79,6 @@ export const inventoryRoute = createRouter()
 	)
 	.get(
 		"/inventory/stock-transactions",
-		authMiddleware,
 		hasOrgPermission("inventory:read"),
 		queryValidator(offsetPaginationSchema),
 		async (c) => {
@@ -96,7 +99,6 @@ export const inventoryRoute = createRouter()
 	)
 	.get(
 		"/inventory/stock-transactions/:productVariantId",
-		authMiddleware,
 		hasOrgPermission("inventory:read"),
 		paramValidator(productVariantIdParamSchema),
 		queryValidator(offsetPaginationSchema),
@@ -120,7 +122,6 @@ export const inventoryRoute = createRouter()
 	// Product variants grouped by product with stock
 	.get(
 		"/inventory/grouped-by-product",
-		authMiddleware,
 		hasOrgPermission("inventory:read"),
 		queryValidator(getGroupedInventoryQuerySchema),
 		async (c) => {

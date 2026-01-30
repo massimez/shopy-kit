@@ -46,6 +46,7 @@ export default function createApp() {
 							"http://127.0.0.1:3000",
 							"http://alpha.test.com:3002",
 							"http://test.com:3002",
+							"http://test.com:3000",
 						],
 			credentials: true,
 			allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

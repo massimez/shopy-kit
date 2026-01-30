@@ -28,12 +28,9 @@ import {
 	Heart,
 	Minus,
 	Plus,
-	RotateCcw,
 	Share2,
-	Shield,
 	ShoppingCart,
 	Star,
-	Truck,
 } from "lucide-react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
@@ -52,11 +49,10 @@ interface ProductPageProps {
 export default function ProductPage({ params }: ProductPageProps) {
 	const t = useTranslations("Product");
 	const locale = useLocale();
-	const { addItem } = useCartStore();
+	const { addItem, items, updateQuantity, removeItem } = useCartStore();
 	const { formatPrice } = useFormatPrice();
 	const { id } = use(params);
 	const [selectedVariantId, setSelectedVariantId] = useState<string>("");
-	const [quantity, setQuantity] = useState(1);
 	const [isWishlisted, setIsWishlisted] = useState(false);
 
 	// Get default location
@@ -110,9 +106,8 @@ export default function ProductPage({ params }: ProductPageProps) {
 							product.images?.[0]?.url ||
 							"/placeholder-product.jpg",
 					],
-			category: "General", // TODO: Get category from collections
 			rating: 4.5, // TODO: Get from reviews
-			reviewsCount: 0, // TODO: Get from reviews
+			reviewsCount: 1, // TODO: Get from reviews
 			inStock: selectedVariant?.stock
 				? selectedVariant.stock.availableQuantity > 0 || product.allowBackorders
 				: true,
@@ -148,72 +143,61 @@ export default function ProductPage({ params }: ProductPageProps) {
 		setSelectedVariantId(product.variants[0].id);
 	}
 
-	const handleAddToCart = () => {
-		// Validate that we have a selected variant
-		if (!productData?.selectedVariant?.id) {
-			toast.error("Please select a product variant");
-			return;
-		}
+	// Get current quantity in cart for this variant
+	const cartItem = items.find(
+		(item) => item.productVariantId === productData?.selectedVariant?.id,
+	);
+	const cartQuantity = cartItem?.quantity || 0;
 
-		// Validate that we have a location
-		if (!location?.id) {
-			toast.error("Unable to add to cart. Location not available.");
-			return;
-		}
+	const handleIncrement = () => {
+		if (!productData?.selectedVariant?.id || !location?.id) return;
 
-		// Check stock availability
 		const availableStock = productData.stockQuantity;
 		const allowBackorders = productData.allowBackorders;
+		const currentQty = cartQuantity;
 
-		if (availableStock <= 0 && !allowBackorders) {
-			toast.error(
-				`${productData.name} is currently out of stock and backorders are not allowed.`,
-			);
-			return;
-		}
-
-		if (quantity > availableStock && !allowBackorders) {
+		if (currentQty >= availableStock && !allowBackorders) {
 			toast.error(
 				`Only ${availableStock} units available. Backorders are not allowed.`,
 			);
 			return;
 		}
 
-		// Get variant translation for name
-		const variantTranslation =
-			productData.selectedVariant.translations?.find(
-				(t) => t.languageCode === locale,
-			) ||
-			productData.selectedVariant.translations?.find(
-				(t) => t.languageCode === "en",
-			);
+		if (currentQty === 0) {
+			// Add new item
+			const variantTranslation =
+				productData.selectedVariant.translations?.find(
+					(t) => t.languageCode === locale,
+				) ||
+				productData.selectedVariant.translations?.find(
+					(t) => t.languageCode === "en",
+				);
 
-		const cartItem = {
-			id: productData.selectedVariant.id, // Use variant ID as unique identifier
-			name: productData.name,
-			price: productData.price,
-			quantity,
-			description: productData.description,
-			image: productData.image,
-			productVariantId: productData.selectedVariant.id,
-			locationId: location.id,
-			variantName: variantTranslation?.name,
-			variantSku: productData.selectedVariant.sku,
-		};
-
-		addItem(cartItem);
-		toast.success(
-			`${quantity}x ${productData.name} has been added to your cart!`,
-		);
+			addItem({
+				id: productData.selectedVariant.id,
+				name: productData.name,
+				price: productData.price,
+				quantity: 1,
+				description: productData.description,
+				image: productData.image,
+				productVariantId: productData.selectedVariant.id,
+				locationId: location.id,
+				variantName: variantTranslation?.name,
+				variantSku: productData.selectedVariant.sku,
+			});
+		} else {
+			// Increment existing
+			updateQuantity(productData.selectedVariant.id, currentQty + 1);
+		}
 	};
 
-	const handleQuantityChange = (newQuantity: number) => {
-		if (!productData || newQuantity < 1) return;
-		if (
-			productData.allowBackorders ||
-			newQuantity <= productData.stockQuantity
-		) {
-			setQuantity(newQuantity);
+	const handleDecrement = () => {
+		if (!productData?.selectedVariant?.id) return;
+
+		if (cartQuantity <= 1) {
+			removeItem(productData.selectedVariant.id);
+		} else {
+			updateQuantity(productData.selectedVariant.id, cartQuantity - 1);
 		}
 	};
 
@@ -224,9 +208,11 @@ export default function ProductPage({ params }: ProductPageProps) {
 				text: productData?.description || "Check out this product!",
 				url: window.location.href,
 			});
-		} else {
+		} else if (navigator.clipboard) {
 			navigator.clipboard.writeText(window.location.href);
 			toast.success("Product link copied!");
+		} else {
+			toast.error("Sharing is not supported on this device");
 		}
 	};
 
@@ -240,21 +226,21 @@ export default function ProductPage({ params }: ProductPageProps) {
 	}
 
 	return (
-		<div className="min-h-screen">
-			<div className="grid gap-3 lg:grid-cols-2 lg:gap-8">
+		<div className="min-h-screen pb-24 lg:pb-0">
+			<div className="grid gap-0 lg:grid-cols-2 lg:gap-8">
 				{/* Left Column: Images */}
-				<div className="space-y-6">
-					<div className="relative overflow-hidden rounded-3xl border bg-muted/5 shadow-sm">
+				<div className="h-fit w-full space-y-6 lg:rounded-3xl lg:border lg:bg-muted/5 lg:p-0 lg:shadow-sm">
+					<div className="relative w-full overflow-hidden">
 						<Carousel className="w-full">
 							<CarouselContent>
 								{productData.images.map((image, index) => (
 									<CarouselItem key={image}>
-										<div className="relative flex aspect-square items-center justify-center overflow-hidden bg-white p-2 md:aspect-4/3 md:p-8">
+										<div className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-3xl bg-white lg:aspect-4/3 lg:p-8">
 											<Image
 												src={image}
 												alt={`${productData.name} - View ${index + 1}`}
 												fill
-												className="object-contain transition-transform duration-500 hover:scale-105"
+												className="object-cover transition-transform duration-500 hover:scale-105 lg:object-fill"
 											/>
 										</div>
 									</CarouselItem>
@@ -262,6 +248,14 @@ export default function ProductPage({ params }: ProductPageProps) {
 							</CarouselContent>
 							{productData.images.length > 1 && (
 								<>
+									<div className="absolute right-0 bottom-4 left-0 flex justify-center gap-2 lg:hidden">
+										{productData.images.map((image) => (
+											<div
+												key={image}
+												className="h-1.5 w-1.5 rounded-full bg-black/20 backdrop-blur-sm transition-all data-[active=true]:w-4 data-[active=true]:bg-black/60"
+											/>
+										))}
+									</div>
 									<CarouselPrevious className="left-4 hidden lg:flex" />
 									<CarouselNext className="right-4 hidden lg:flex" />
 								</>
@@ -275,33 +269,35 @@ export default function ProductPage({ params }: ProductPageProps) {
 							</Badge>
 						)}
 					</div>
-
-					{/* Thumbnails (Optional - could be added here) */}
 				</div>
 
 				{/* Right Column: Product Details (Sticky) */}
-				<div className="flex flex-col space-y-8 lg:sticky lg:top-20 lg:h-fit">
+				<div className="flex flex-col space-y-4 lg:sticky lg:top-20 lg:h-fit lg:space-y-6 lg:px-0">
 					{/* Header */}
-					<div className="space-y-4">
+					<div className="fade-in slide-in-from-bottom-4 animate-in space-y-3 duration-500 lg:space-y-4">
 						<div className="flex items-center gap-2">
 							{productData.stockQuantity < 5 &&
 								productData.stockQuantity > 0 && (
-									<span className="animate-pulse font-medium text-red-500 text-xs">
+									<span className="flex animate-pulse items-center gap-1.5 font-medium text-red-500 text-xs">
+										<span className="relative flex h-2 w-2">
+											<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+											<span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+										</span>
 										Only {productData.stockQuantity} left!
 									</span>
 								)}
 						</div>
 
-						<h1 className="font-bold text-2xl text-foreground tracking-tight md:text-4xl lg:text-5xl">
+						<h1 className="font-bold text-2xl text-foreground leading-tight tracking-tight md:text-4xl lg:text-3xl 2xl:text-3xl">
 							{productData.name}
 						</h1>
 
 						<div className="flex items-center gap-4">
-							<div className="flex items-center gap-1">
+							<div className="flex items-center gap-0.5">
 								{[1, 2, 3, 4, 5].map((star) => (
 									<Star
 										key={star}
-										className={`h-5 w-5 ${
+										className={`h-4 w-4 ${
 											star <= Math.floor(productData.rating)
 												? "fill-yellow-400 text-yellow-400"
 												: "text-muted-foreground/30"
@@ -315,10 +311,11 @@ export default function ProductPage({ params }: ProductPageProps) {
 						</div>
 					</div>
 
-					<Separator />
+					{/* Mobile Separator only */}
+					<div className="h-px w-full bg-border lg:hidden" />
 
 					{/* Price */}
-					<div className="flex items-baseline gap-3">
+					<div className="fade-in slide-in-from-bottom-4 flex animate-in items-baseline gap-3 delay-100 duration-500">
 						<span className="font-bold text-3xl text-foreground md:text-4xl">
 							{formatPrice(productData.price)}
 						</span>
@@ -338,17 +335,16 @@ export default function ProductPage({ params }: ProductPageProps) {
 						)}
 					</div>
 
+					<Separator className="hidden lg:block" />
+
 					{/* Short Description */}
-					<p className="text-base text-muted-foreground leading-relaxed md:text-lg">
+					<p className="fade-in slide-in-from-bottom-4 animate-in text-base text-muted-foreground leading-relaxed delay-150 duration-500 md:text-lg">
 						{productData.shortDescription}
 					</p>
 
 					{/* Variants */}
 					{productData.variants.length > 0 && (
-						<div className="space-y-4">
-							<span className="font-medium text-foreground text-sm">
-								Select Option
-							</span>
+						<div className="fade-in slide-in-from-bottom-4 animate-in space-y-4 delay-200 duration-500">
 							<div className="flex flex-wrap gap-3">
 								{productData.variants.map((variant) => {
 									const variantTranslation =
@@ -363,15 +359,15 @@ export default function ProductPage({ params }: ProductPageProps) {
 											key={variant.id}
 											type="button"
 											onClick={() => setSelectedVariantId(variant.id)}
-											className={`relative min-w-16 rounded-xl border-2 px-4 py-2 font-medium text-sm transition-all ${
+											className={`relative min-w-18 rounded-xl border-2 px-4 py-2.5 font-medium text-sm transition-all active:scale-95 ${
 												isSelected
-													? "border-primary bg-primary/5 text-primary"
+													? "border-primary bg-primary/5 text-primary shadow-sm"
 													: "border-muted bg-transparent hover:border-muted-foreground/50"
 											}`}
 										>
 											{variantTranslation?.name || variant.sku}
 											{isSelected && (
-												<div className="-top-2 -right-2 absolute rounded-full bg-primary p-0.5 text-white shadow-sm">
+												<div className="-top-2 -right-2 absolute rounded-full bg-primary p-0.5 text-white shadow-sm ring-2 ring-background">
 													<Check className="h-3 w-3" />
 												</div>
 											)}
@@ -382,51 +378,59 @@ export default function ProductPage({ params }: ProductPageProps) {
 						</div>
 					)}
 
-					{/* Actions */}
-					<div className="space-y-6 pt-4">
+					{/* Desktop Actions */}
+					<div className="hidden space-y-6 pt-4 lg:block">
 						<div className="flex flex-col flex-wrap gap-4 sm:flex-row">
-							{/* Quantity */}
-							<div className="hidden w-fit items-center rounded-full border bg-background p-1 shadow-sm sm:flex">
+							{cartQuantity === 0 ? (
 								<Button
-									variant="ghost"
-									size="icon"
-									onClick={() => handleQuantityChange(quantity - 1)}
-									disabled={quantity <= 1}
-									className="h-10 w-10 rounded-full hover:bg-muted"
-								>
-									<Minus className="h-4 w-4" />
-								</Button>
-								<span className="w-12 text-center font-medium">{quantity}</span>
-								<Button
-									variant="ghost"
-									size="icon"
-									onClick={() => handleQuantityChange(quantity + 1)}
+									size="lg"
+									onClick={handleIncrement}
 									disabled={
-										!productData.allowBackorders &&
-										quantity >= productData.stockQuantity
+										!productData.inStock ||
+										(productData.stockQuantity <= 0 &&
+											!productData.allowBackorders)
 									}
-									className="h-10 w-10 rounded-full hover:bg-muted"
+									className="hover:-translate-y-0.5 h-12 w-full rounded-full py-2 text-base shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:flex-1"
 								>
-									<Plus className="h-4 w-4" />
+									<ShoppingCart className="mr-2 size-5" />
+									{productData.stockQuantity <= 0 &&
+									!productData.allowBackorders
+										? "Out of Stock"
+										: t("addToCart")}
 								</Button>
-							</div>
-
-							{/* Add to Cart */}
-							<Button
-								size="lg"
-								onClick={handleAddToCart}
-								disabled={
-									!productData.inStock ||
-									(productData.stockQuantity <= 0 &&
-										!productData.allowBackorders)
-								}
-								className="hover:-translate-y-0.5 hidden h-12 flex-1 rounded-full py-2 text-base shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40 disabled:cursor-not-allowed disabled:opacity-50 sm:flex"
-							>
-								<ShoppingCart className="mr-2 size-5" />
-								{productData.stockQuantity <= 0 && !productData.allowBackorders
-									? "Out of Stock"
-									: t("addToCart")}
-							</Button>
+							) : (
+								<div className="flex h-12 w-full items-center justify-between rounded-full border bg-muted/50 p-1 sm:w-auto sm:flex-1">
+									<Button
+										variant="ghost"
+										size="icon"
+										onClick={handleDecrement}
+										className="h-10 w-10 rounded-full hover:bg-background hover:shadow-sm"
+									>
+										{cartQuantity === 1 ? (
+											<Minus className="h-4 w-4 text-red-500" />
+										) : (
+											<Minus className="h-4 w-4" />
+										)}
+									</Button>
+									<span className="flex min-w-8 items-center justify-center gap-1 px-2 text-center font-bold text-sm">
+										<span className="text-lg">{cartQuantity}</span>
+										<span className="text-muted-foreground">x</span>
+										<span>{formatPrice(productData.price)}</span>
+									</span>
+									<Button
+										variant="ghost"
+										size="icon"
+										onClick={handleIncrement}
+										disabled={
+											!productData.allowBackorders &&
+											cartQuantity >= productData.stockQuantity
+										}
+										className="h-10 w-10 rounded-full hover:bg-background hover:shadow-sm"
+									>
+										<Plus className="h-4 w-4" />
+									</Button>
+								</div>
+							)}
 
 							{/* Wishlist & Share */}
 							<div className="flex gap-2">
@@ -479,111 +483,138 @@ export default function ProductPage({ params }: ProductPageProps) {
 						</div>
 					</div>
 
-					<Separator />
+					<Separator className="hidden lg:block" />
 				</div>
 			</div>
-			<div>
+
+			<div className="mt-8 lg:mt-0 lg:px-0">
 				{/* Accordion Info */}
 				<Accordion type="single" collapsible className="w-full">
-					<AccordionItem value="description">
-						<AccordionTrigger className="font-semibold text-base">
-							Description
-						</AccordionTrigger>
-						<AccordionContent>
-							<div className="prose prose-sm max-w-none text-muted-foreground">
-								<p>{productData.description}</p>
-							</div>
-						</AccordionContent>
-					</AccordionItem>
-					<AccordionItem value="shipping">
-						<AccordionTrigger className="font-semibold text-base">
+					{productData.description && (
+						<AccordionItem value="description" className="border-t border-b-0">
+							<AccordionTrigger className="py-6 font-semibold text-lg">
+								Description
+							</AccordionTrigger>
+							<AccordionContent>
+								<div className="prose prose-sm max-w-none text-muted-foreground leading-relaxed">
+									<p>{productData.description}</p>
+								</div>
+							</AccordionContent>
+						</AccordionItem>
+					)}
+					{/* <AccordionItem value="shipping" className="border-t">
+						<AccordionTrigger className="py-6 font-semibold text-lg">
 							Shipping & Returns
 						</AccordionTrigger>
 						<AccordionContent>
-							<div className="space-y-4 text-muted-foreground text-sm">
-								<div className="flex items-start gap-3">
-									<Truck className="h-5 w-5 shrink-0 text-primary" />
+							<div className="space-y-6 text-muted-foreground text-sm">
+								<div className="flex items-start gap-4">
+									<div className="rounded-full bg-primary/10 p-2 text-primary">
+										<Truck className="h-5 w-5 shrink-0" />
+									</div>
 									<div>
-										<p className="font-medium text-foreground">Free Shipping</p>
-										<p>On all orders over $50. Arrives in 3-5 business days.</p>
+										<p className="font-semibold text-base text-foreground">
+											Free Shipping
+										</p>
+										<p className="mt-1">
+											On all orders over $50. Arrives in 3-5 business days.
+										</p>
 									</div>
 								</div>
-								<div className="flex items-start gap-3">
-									<RotateCcw className="h-5 w-5 shrink-0 text-primary" />
+								<div className="flex items-start gap-4">
+									<div className="rounded-full bg-primary/10 p-2 text-primary">
+										<RotateCcw className="h-5 w-5 shrink-0" />
+									</div>
 									<div>
-										<p className="font-medium text-foreground">Easy Returns</p>
-										<p>30-day return policy. No questions asked.</p>
+										<p className="font-semibold text-base text-foreground">
+											Easy Returns
+										</p>
+										<p className="mt-1">
+											30-day return policy. No questions asked.
+										</p>
 									</div>
 								</div>
-								<div className="flex items-start gap-3">
-									<Shield className="h-5 w-5 shrink-0 text-primary" />
+								<div className="flex items-start gap-4">
+									<div className="rounded-full bg-primary/10 p-2 text-primary">
+										<Shield className="h-5 w-5 shrink-0" />
+									</div>
 									<div>
-										<p className="font-medium text-foreground">
+										<p className="font-semibold text-base text-foreground">
 											Secure Checkout
 										</p>
-										<p>SSL encrypted checkout for your peace of mind.</p>
+										<p className="mt-1">
+											SSL encrypted checkout for your peace of mind.
+										</p>
 									</div>
 								</div>
 							</div>
 						</AccordionContent>
-					</AccordionItem>
+					</AccordionItem> */}
 				</Accordion>
 			</div>
+
 			{/* Frequently Bought Together */}
-			<FrequentlyBoughtTogether currentProductId={id} />
+			<div className="mt-8 px-4 lg:px-0">
+				<FrequentlyBoughtTogether currentProductId={id} />
+			</div>
 
 			{/* Mobile Sticky Add to Cart */}
-			<div className="fixed right-0 bottom-0 left-0 z-50 border-t bg-background/95 p-4 pb-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] backdrop-blur-md lg:hidden">
-				<div className="flex items-center gap-4">
-					<div className="hidden flex-col sm:flex">
-						<span className="text-muted-foreground text-xs">Total</span>
-						<span className="font-bold text-xl">
-							{formatPrice(productData.price * quantity)}
-						</span>
-					</div>
-
-					{/* Quantity Selector */}
-					<div className="flex w-fit items-center rounded-full border bg-background p-1 shadow-sm">
+			{/* Mobile Sticky Add to Cart */}
+			<div className="fixed right-0 bottom-0 left-0 z-50 border-t bg-background/80 p-4 pb-6 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] backdrop-blur-xl supports-backdrop-filter:bg-background/60 lg:hidden">
+				<div className="flex items-center gap-4 pe-22">
+					{cartQuantity === 0 ? (
 						<Button
-							variant="ghost"
-							size="icon"
-							onClick={() => handleQuantityChange(quantity - 1)}
-							disabled={quantity <= 1}
-							className="h-8 w-8 rounded-full hover:bg-muted"
-						>
-							<Minus className="h-3 w-3" />
-						</Button>
-						<span className="w-8 text-center font-medium text-sm">
-							{quantity}
-						</span>
-						<Button
-							variant="ghost"
-							size="icon"
-							onClick={() => handleQuantityChange(quantity + 1)}
+							size="lg"
+							onClick={handleIncrement}
 							disabled={
-								!productData.allowBackorders &&
-								quantity >= productData.stockQuantity
+								!productData.inStock ||
+								(productData.stockQuantity <= 0 && !productData.allowBackorders)
 							}
-							className="h-8 w-8 rounded-full hover:bg-muted"
+							className="h-12 flex-1 rounded-full font-semibold text-base shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
 						>
-							<Plus className="h-3 w-3" />
+							{productData.stockQuantity <= 0 &&
+							!productData.allowBackorders ? (
+								"Out of Stock"
+							) : (
+								<>
+									<ShoppingCart className="mr-2 h-5 w-5" />
+									Add to Cart
+								</>
+							)}
 						</Button>
-					</div>
-
-					<Button
-						size="lg"
-						onClick={handleAddToCart}
-						disabled={
-							!productData.inStock ||
-							(productData.stockQuantity <= 0 && !productData.allowBackorders)
-						}
-						className="flex-1 rounded-full shadow-md disabled:cursor-not-allowed disabled:opacity-50"
-					>
-						<ShoppingCart className="mr-2 h-4 w-4" />
-						{productData.stockQuantity <= 0 && !productData.allowBackorders
-							? "Out of Stock"
-							: t("addToCart")}
-					</Button>
+					) : (
+						<div className="flex h-12 flex-1 items-center justify-between rounded-full border bg-muted/50 p-1">
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={handleDecrement}
+								className="h-10 w-10 rounded-full hover:bg-background hover:shadow-sm"
+							>
+								{cartQuantity === 1 ? (
+									<Minus className="h-4 w-4 text-red-500" />
+								) : (
+									<Minus className="h-4 w-4" />
+								)}
+							</Button>
+							<span className="flex min-w-8 items-center justify-center gap-1 px-2 text-center font-bold text-sm">
+								<span className="text-lg">{cartQuantity}</span>
+								<span className="text-muted-foreground">x</span>
+								<span>{formatPrice(productData.price)}</span>
+							</span>
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={handleIncrement}
+								disabled={
+									!productData.allowBackorders &&
+									cartQuantity >= productData.stockQuantity
+								}
+								className="h-10 w-10 rounded-full hover:bg-background hover:shadow-sm"
+							>
+								<Plus className="h-4 w-4" />
+							</Button>
+						</div>
+					)}
 				</div>
 			</div>
 		</div>

@@ -8,7 +8,6 @@ import {
 	jsonValidator,
 	paramValidator,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import {
 	insertProductReviewSchema,
@@ -26,7 +25,6 @@ import {
 export const productReviewRoute = createRouter()
 	.post(
 		"/product-reviews",
-		authMiddleware,
 		hasOrgPermission("productReview:create"),
 		jsonValidator(insertProductReviewSchema),
 		async (c) => {
@@ -42,7 +40,6 @@ export const productReviewRoute = createRouter()
 	)
 	.get(
 		"/product-reviews",
-		authMiddleware,
 		hasOrgPermission("productReview:read"),
 		async (c) => {
 			try {
@@ -56,7 +53,6 @@ export const productReviewRoute = createRouter()
 	)
 	.get(
 		"/product-reviews/:id",
-		authMiddleware,
 		hasOrgPermission("productReview:read"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -74,7 +70,6 @@ export const productReviewRoute = createRouter()
 	)
 	.put(
 		"/product-reviews/:id",
-		authMiddleware,
 		hasOrgPermission("productReview:update"),
 		paramValidator(idParamSchema),
 		jsonValidator(updateProductReviewSchema),
@@ -98,7 +93,6 @@ export const productReviewRoute = createRouter()
 	)
 	.delete(
 		"/product-reviews/:id",
-		authMiddleware,
 		hasOrgPermission("productReview:delete"),
 		paramValidator(idParamSchema),
 		async (c) => {

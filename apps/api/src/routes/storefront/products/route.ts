@@ -23,7 +23,7 @@ export const productsRoutes = createRouter()
 					.enum(["price_asc", "price_desc", "newest", "name_asc", "name_desc"])
 					.optional(),
 				q: z.string().optional(),
-				limit: z.coerce.number().default(20),
+				limit: z.coerce.number().max(100).default(20),
 				offset: z.coerce.number().default(0),
 				locationId: z.string().optional(),
 			}),

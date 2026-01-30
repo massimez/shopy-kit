@@ -1,8 +1,10 @@
 import { type AnyColumn, and, asc, count, desc, eq, isNull } from "drizzle-orm";
+import type { User } from "@/lib/auth";
 import { createRouter } from "@/lib/create-hono-app";
 import { db } from "@/lib/db";
 import { order, orderStatusHistory } from "@/lib/db/schema";
 import type { TOrderStatus } from "@/lib/db/schema/helpers/types";
+import { getAuditData } from "@/lib/utils/audit";
 import {
 	createErrorResponse,
 	createSuccessResponse,
@@ -15,7 +17,6 @@ import {
 	queryValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import { orderPaginationSchema } from "@/middleware/pagination";
 import {
@@ -23,36 +24,31 @@ import {
 	completeOrder,
 	createOrder,
 	createOrderStatusHistory,
+	deleteOrder,
 } from "./order.service";
 import { createOrderSchema, updateOrderSchema } from "./schema";
 
 export const orderRoute = createRouter()
 	// CREATE order (status = pending, add bonusPending)
-	.post(
-		"/orders",
-		authMiddleware,
-		jsonValidator(createOrderSchema),
-		async (c) => {
-			try {
-				const activeOrgId = validateOrgId(
-					c.get("session")?.activeOrganizationId as string,
-				);
-				const user = c.get("user");
-				const payload = c.req.valid("json");
+	.post("/orders", jsonValidator(createOrderSchema), async (c) => {
+		try {
+			const activeOrgId = validateOrgId(
+				c.get("session")?.activeOrganizationId as string,
+			);
+			const user = c.get("user");
+			const payload = c.req.valid("json");
 
-				const result = await createOrder(payload, user, activeOrgId);
+			const result = await createOrder(payload, user, activeOrgId);
 
-				return c.json(createSuccessResponse(result), 201);
-			} catch (error) {
-				return handleRouteError(c, error, "create order");
-			}
-		},
-	)
+			return c.json(createSuccessResponse(result), 201);
+		} catch (error) {
+			return handleRouteError(c, error, "create order");
+		}
+	})
 
 	// GET orders (with pagination)
 	.get(
 		"/orders",
-		authMiddleware,
 		hasOrgPermission("order:read"),
 		queryValidator(orderPaginationSchema),
 		async (c) => {
@@ -134,7 +130,6 @@ export const orderRoute = createRouter()
 	// GET single order
 	.get(
 		"/orders/:id",
-		authMiddleware,
 		hasOrgPermission("order:read"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -177,7 +172,6 @@ export const orderRoute = createRouter()
 	// GET order status history
 	.get(
 		"/orders/:id/status-history",
-		authMiddleware,
 		hasOrgPermission("order:read"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -203,7 +197,6 @@ export const orderRoute = createRouter()
 	// UPDATE order
 	.patch(
 		"/orders/:id",
-		authMiddleware,
 		hasOrgPermission("order:update"),
 		paramValidator(idParamSchema),
 		jsonValidator(updateOrderSchema),
@@ -216,23 +209,25 @@ export const orderRoute = createRouter()
 
 				const payload = c.req.valid("json");
 
-				// Get current order status before update if status is being updated
-				let previousStatus: string | null = null;
+				let previousStatus: TOrderStatus | null = null;
+
+				// If status is being updated, get the previous status
 				if (payload.status) {
 					const currentOrder = await db.query.order.findFirst({
-						where: and(
-							eq(order.id, id),
-							eq(order.organizationId, activeOrgId),
-							isNull(order.deletedAt),
-						),
+						where: and(eq(order.id, id), eq(order.organizationId, activeOrgId)),
 						columns: { status: true },
 					});
 					previousStatus = currentOrder?.status || null;
 				}
 
+				const user = c.get("user") as User;
+
 				const [updated] = await db
 					.update(order)
-					.set(payload)
+					.set({
+						...payload,
+						...getAuditData(user, "update"),
+					})
 					.where(
 						and(
 							eq(order.id, id),
@@ -291,15 +286,15 @@ export const orderRoute = createRouter()
 		"/orders/:id/complete",
 		paramValidator(idParamSchema),
 		hasOrgPermission("order:complete"),
-		authMiddleware,
 		async (c) => {
 			try {
 				const { id } = c.req.valid("param");
 				const activeOrgId = validateOrgId(
 					c.get("session")?.activeOrganizationId as string,
 				);
+				const user = c.get("user") as User;
 
-				const ord = await completeOrder(id, activeOrgId);
+				const ord = await completeOrder(id, activeOrgId, user);
 
 				return c.json(
 					createSuccessResponse(ord, "Order completed successfully"),
@@ -311,32 +306,25 @@ export const orderRoute = createRouter()
 	)
 
 	// CANCEL order (subtracts from bonusPending, decreases reservedQuantity)
-	.patch(
-		"/orders/:id/cancel",
-		authMiddleware,
-		paramValidator(idParamSchema),
-		async (c) => {
-			try {
-				const { id } = c.req.valid("param");
-				const activeOrgId = validateOrgId(
-					c.get("session")?.activeOrganizationId as string,
-				);
+	.patch("/orders/:id/cancel", paramValidator(idParamSchema), async (c) => {
+		try {
+			const { id } = c.req.valid("param");
+			const activeOrgId = validateOrgId(
+				c.get("session")?.activeOrganizationId as string,
+			);
+			const user = c.get("user") as User;
 
-				const ord = await cancelOrder(id, activeOrgId);
+			const ord = await cancelOrder(id, activeOrgId, user);
 
-				return c.json(
-					createSuccessResponse(ord, "Order cancelled successfully"),
-				);
-			} catch (error) {
-				return handleRouteError(c, error, "cancel order");
-			}
-		},
-	)
+			return c.json(createSuccessResponse(ord, "Order cancelled successfully"));
+		} catch (error) {
+			return handleRouteError(c, error, "cancel order");
+		}
+	})
 
 	// DELETE order
 	.delete(
 		"/orders/:id",
-		authMiddleware,
 		hasOrgPermission("order:delete"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -346,17 +334,9 @@ export const orderRoute = createRouter()
 					c.get("session")?.activeOrganizationId as string,
 				);
 
-				const [deleted] = await db
-					.update(order)
-					.set({ deletedAt: new Date() })
-					.where(
-						and(
-							eq(order.id, id),
-							eq(order.organizationId, activeOrgId),
-							isNull(order.deletedAt),
-						),
-					)
-					.returning();
+				const user = c.get("user") as User;
+
+				const deleted = await deleteOrder(id, activeOrgId, user);
 
 				if (!deleted) {
 					return c.json(

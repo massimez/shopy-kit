@@ -1,3 +1,4 @@
+import type { User } from "@/lib/auth";
 import { createRouter } from "@/lib/create-hono-app";
 import {
 	createErrorResponse,
@@ -10,7 +11,6 @@ import {
 	paramValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import {
 	createMilestone,
@@ -27,7 +27,6 @@ export const milestoneRoute = createRouter()
 	 */
 	.post(
 		"/milestones",
-		authMiddleware,
 		hasOrgPermission("rewards:write"),
 		jsonValidator(createMilestoneSchema),
 		async (c) => {
@@ -35,12 +34,16 @@ export const milestoneRoute = createRouter()
 				const organizationId = validateOrgId(
 					c.get("session")?.activeOrganizationId as string,
 				);
+				const user = c.get("user") as User;
 				const payload = c.req.valid("json");
 
-				const milestone = await createMilestone({
-					...payload,
-					organizationId,
-				});
+				const milestone = await createMilestone(
+					{
+						...payload,
+						organizationId,
+					},
+					user,
+				);
 
 				return c.json(
 					createSuccessResponse(milestone, "Milestone created successfully"),
@@ -56,39 +59,30 @@ export const milestoneRoute = createRouter()
 	 * GET /milestones
 	 * List all milestones for a program
 	 */
-	.get(
-		"/milestones",
-		authMiddleware,
-		hasOrgPermission("rewards:read"),
-		async (c) => {
-			try {
-				const bonusProgramId = c.req.query("bonusProgramId");
+	.get("/milestones", hasOrgPermission("rewards:read"), async (c) => {
+		try {
+			const bonusProgramId = c.req.query("bonusProgramId");
 
-				if (!bonusProgramId) {
-					return c.json(
-						createErrorResponse(
-							"ValidationError",
-							"bonusProgramId is required",
-							[
-								{
-									code: "REQUIRED",
-									path: ["bonusProgramId"],
-									message: "bonusProgramId query parameter is required",
-								},
-							],
-						),
-						400,
-					);
-				}
-
-				const milestones = await listMilestones(bonusProgramId);
-
-				return c.json(createSuccessResponse({ milestones }));
-			} catch (error) {
-				return handleRouteError(c, error, "fetch milestones");
+			if (!bonusProgramId) {
+				return c.json(
+					createErrorResponse("ValidationError", "bonusProgramId is required", [
+						{
+							code: "REQUIRED",
+							path: ["bonusProgramId"],
+							message: "bonusProgramId query parameter is required",
+						},
+					]),
+					400,
+				);
 			}
-		},
-	)
+
+			const milestones = await listMilestones(bonusProgramId);
+
+			return c.json(createSuccessResponse({ milestones }));
+		} catch (error) {
+			return handleRouteError(c, error, "fetch milestones");
+		}
+	})
 
 	/**
 	 * PATCH /milestones/:id
@@ -96,7 +90,6 @@ export const milestoneRoute = createRouter()
 	 */
 	.patch(
 		"/milestones/:id",
-		authMiddleware,
 		hasOrgPermission("rewards:write"),
 		paramValidator(idParamSchema),
 		jsonValidator(updateMilestoneSchema),
@@ -106,9 +99,15 @@ export const milestoneRoute = createRouter()
 				const organizationId = validateOrgId(
 					c.get("session")?.activeOrganizationId as string,
 				);
+				const user = c.get("user") as User;
 				const payload = c.req.valid("json");
 
-				const updated = await updateMilestone(id, organizationId, payload);
+				const updated = await updateMilestone(
+					id,
+					organizationId,
+					payload,
+					user,
+				);
 
 				if (!updated) {
 					return c.json(
@@ -138,7 +137,6 @@ export const milestoneRoute = createRouter()
 	 */
 	.delete(
 		"/milestones/:id",
-		authMiddleware,
 		hasOrgPermission("rewards:delete"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -147,8 +145,9 @@ export const milestoneRoute = createRouter()
 				const organizationId = validateOrgId(
 					c.get("session")?.activeOrganizationId as string,
 				);
+				const user = c.get("user") as User;
 
-				const deleted = await deleteMilestone(id, organizationId);
+				const deleted = await deleteMilestone(id, organizationId, user);
 
 				if (!deleted) {
 					return c.json(

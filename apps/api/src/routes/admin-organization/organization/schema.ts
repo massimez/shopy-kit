@@ -56,6 +56,16 @@ export const insertOrganizationInfoSchema = createInsertSchema(
 				website: z.string().optional(),
 			})
 			.optional(),
+		seoMetadata: z
+			.record(
+				z.string(),
+				z.object({
+					title: z.string().optional(),
+					description: z.string().optional(),
+					keywords: z.string().optional(),
+				}),
+			)
+			.optional(),
 	},
 );
 
@@ -112,6 +122,16 @@ export const updateOrganizationInfoSchema = createSelectSchema(
 				telegram: z.string().optional(),
 				website: z.string().optional(),
 			})
+			.optional(),
+		seoMetadata: z
+			.record(
+				z.string(),
+				z.object({
+					title: z.string().optional(),
+					description: z.string().optional(),
+					keywords: z.string().optional(),
+				}),
+			)
 			.optional(),
 	},
 ).partial();

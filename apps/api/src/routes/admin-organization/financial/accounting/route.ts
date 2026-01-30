@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { User } from "@/lib/auth";
 import { createRouter } from "@/lib/create-hono-app";
 import {
 	createSuccessResponse,
@@ -9,7 +10,7 @@ import {
 	paramValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
+import { hasOrgPermission } from "@/middleware/org-permission";
 import * as accountingService from "./accounting.service";
 import {
 	createAccountSchema,
@@ -21,7 +22,7 @@ export default createRouter()
 	/**
 	 * CHART OF ACCOUNTS ROUTES
 	 */
-	.get("/accounts", authMiddleware, async (c) => {
+	.get("/accounts", hasOrgPermission("account:read"), async (c) => {
 		try {
 			const activeOrgId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
@@ -35,17 +36,19 @@ export default createRouter()
 
 	.post(
 		"/accounts",
-		authMiddleware,
+		hasOrgPermission("account:create"),
 		jsonValidator(createAccountSchema),
 		async (c) => {
 			try {
 				const activeOrgId = validateOrgId(
 					c.get("session")?.activeOrganizationId as string,
 				);
+				const user = c.get("user") as User;
 				const data = c.req.valid("json");
 				const account = await accountingService.createAccount(
 					activeOrgId,
 					data,
+					user,
 				);
 				return c.json(createSuccessResponse(account), 201);
 			} catch (error) {
@@ -56,7 +59,7 @@ export default createRouter()
 
 	.patch(
 		"/accounts/:id",
-		authMiddleware,
+		hasOrgPermission("account:update"),
 		paramValidator(z.object({ id: z.string().uuid() })),
 		jsonValidator(updateAccountSchema),
 		async (c) => {
@@ -64,12 +67,14 @@ export default createRouter()
 				const activeOrgId = validateOrgId(
 					c.get("session")?.activeOrganizationId as string,
 				);
+				const user = c.get("user") as User;
 				const { id } = c.req.valid("param");
 				const data = c.req.valid("json");
 				const account = await accountingService.updateAccount(
 					activeOrgId,
 					id,
 					data,
+					user,
 				);
 				return c.json(createSuccessResponse(account));
 			} catch (error) {
@@ -81,7 +86,7 @@ export default createRouter()
 	/**
 	 * JOURNAL ENTRY ROUTES
 	 */
-	.get("/journal-entries", authMiddleware, async (c) => {
+	.get("/journal-entries", hasOrgPermission("journal:read"), async (c) => {
 		try {
 			const activeOrgId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
@@ -95,7 +100,7 @@ export default createRouter()
 
 	.post(
 		"/journal-entries",
-		authMiddleware,
+		hasOrgPermission("journal:create"),
 		jsonValidator(createJournalEntrySchema),
 		async (c) => {
 			try {
@@ -117,7 +122,7 @@ export default createRouter()
 
 	.post(
 		"/journal-entries/:id/post",
-		authMiddleware,
+		hasOrgPermission("journal:post"),
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {
@@ -138,7 +143,7 @@ export default createRouter()
 		},
 	)
 
-	.get("/trial-balance", authMiddleware, async (c) => {
+	.get("/trial-balance", hasOrgPermission("report:read"), async (c) => {
 		try {
 			const activeOrgId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
@@ -154,7 +159,7 @@ export default createRouter()
 
 	.delete(
 		"/journal-entries/:id",
-		authMiddleware,
+		hasOrgPermission("journal:delete"),
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {

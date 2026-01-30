@@ -4,7 +4,6 @@
 "use client";
 
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent } from "@workspace/ui/components/card";
 import { cn } from "@workspace/ui/lib/utils";
 import {
 	ChevronLeftIcon,
@@ -147,14 +146,14 @@ export function GalleryViewer({
 					const imageIndex = imageFiles.findIndex((f) => f.id === file.id);
 
 					return (
-						<Card
+						<div
 							key={file.id}
 							className={cn(
-								"group relative overflow-hidden rounded-lg transition-all active:scale-95 sm:rounded-xl sm:hover:shadow-lg",
+								"group relative overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all active:scale-95 sm:rounded-xl sm:hover:shadow-lg",
 								isThumbnail && "shadow-md ring-2 ring-primary",
 							)}
 						>
-							<CardContent className="p-0">
+							<div className="p-0">
 								<div
 									className={cn(
 										"relative h-40 w-full bg-muted/30 sm:h-20",
@@ -234,7 +233,7 @@ export function GalleryViewer({
 										{formatFileSize(file.file.size)}
 									</p>
 								</div>
-							</CardContent>
+							</div>
 
 							{/* Action buttons */}
 							<div className="absolute top-1.5 right-1.5 z-20 flex gap-1">
@@ -278,7 +277,7 @@ export function GalleryViewer({
 									<StarIcon className="h-2.5 w-2.5 fill-current sm:h-3 sm:w-3" />
 								</div>
 							)}
-						</Card>
+						</div>
 					);
 				})}
 			</div>

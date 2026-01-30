@@ -8,6 +8,7 @@ import OrganizationAdvancedTab from "./organization-advanced-tab";
 import OrganizationGeneralTab from "./organization-general-tab";
 import OrganizationLocationsTab from "./organization-locations-tab";
 import OrganizationMembersTab from "./organization-members-tab";
+import OrganizationSeoTab from "./organization-seo-tab";
 import OrganizationTravelFeesTab from "./organization-travel-fees-tab";
 
 export default async function OrganizationPage() {
@@ -25,6 +26,7 @@ export default async function OrganizationPage() {
 					<TabsTrigger value="locations">Locations</TabsTrigger>
 					<TabsTrigger value="members">Members</TabsTrigger>
 					<TabsTrigger value="travel-fees">Travel Fees</TabsTrigger>
+					<TabsTrigger value="seo">SEO</TabsTrigger>
 					<TabsTrigger value="advanced">Advanced</TabsTrigger>
 				</TabsList>
 				<TabsContent value="general" className="outline-none">
@@ -38,6 +40,9 @@ export default async function OrganizationPage() {
 				</TabsContent>
 				<TabsContent value="travel-fees" className="outline-none">
 					<OrganizationTravelFeesTab />
+				</TabsContent>
+				<TabsContent value="seo" className="outline-none">
+					<OrganizationSeoTab />
 				</TabsContent>
 				<TabsContent value="advanced" className="outline-none">
 					<OrganizationAdvancedTab />

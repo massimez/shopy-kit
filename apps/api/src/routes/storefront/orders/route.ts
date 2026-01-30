@@ -10,6 +10,7 @@ import {
 	paramValidator,
 	queryValidator,
 } from "@/lib/utils/validator";
+import { authMiddleware } from "@/middleware/auth";
 import {
 	createStorefrontOrder,
 	getStorefrontOrder,
@@ -45,46 +46,42 @@ const createOrderSchema = z.object({
 
 export const ordersRoutes = createRouter()
 	// Create order
-	.post(
-		"/",
+	.post("/", authMiddleware, jsonValidator(createOrderSchema), async (c) => {
+		try {
+			const payload = c.req.valid("json");
+			const organizationId = c.var.tenantId;
+			if (!organizationId) throw new Error("Organization ID required");
 
-		jsonValidator(createOrderSchema),
-		async (c) => {
-			try {
-				const payload = c.req.valid("json");
-				const organizationId = c.var.tenantId;
-				if (!organizationId) throw new Error("Organization ID required");
-
-				const result = await createStorefrontOrder({
-					...payload,
-					organizationId,
-				});
-				return c.json(createSuccessResponse(result), 201);
-			} catch (error) {
-				// Handle stock errors specifically
-				if (error instanceof Error && error.name === "StockError") {
-					return c.json(
-						createErrorResponse("BadRequestError", error.message, [
-							{
-								code: "INSUFFICIENT_STOCK",
-								path: ["items"],
-								message: error.message,
-							},
-						]),
-						400,
-					);
-				}
-				return handleRouteError(c, error, "create order");
+			const result = await createStorefrontOrder({
+				...payload,
+				organizationId,
+			});
+			return c.json(createSuccessResponse(result), 201);
+		} catch (error) {
+			// Handle stock errors specifically
+			if (error instanceof Error && error.name === "StockError") {
+				return c.json(
+					createErrorResponse("BadRequestError", error.message, [
+						{
+							code: "INSUFFICIENT_STOCK",
+							path: ["items"],
+							message: error.message,
+						},
+					]),
+					400,
+				);
 			}
-		},
-	)
+			return handleRouteError(c, error, "create order");
+		}
+	})
 	// Get orders
 	.get(
 		"/",
+		authMiddleware,
 		queryValidator(
 			z.object({
 				userId: z.string().min(1),
-				limit: z.coerce.number().default(20),
+				limit: z.coerce.number().max(100).default(20),
 				offset: z.coerce.number().default(0),
 			}),
 		),
@@ -92,9 +89,15 @@ export const ordersRoutes = createRouter()
 			try {
 				const query = c.req.valid("query");
 				const organizationId = c.var.tenantId;
+				const userId = c.get("user")?.id as string;
+
 				if (!organizationId) throw new Error("Organization ID required");
 
-				const orders = await getStorefrontOrders({ ...query, organizationId });
+				const orders = await getStorefrontOrders({
+					...query,
+					userId,
+					organizationId,
+				});
 				return c.json(createSuccessResponse(orders));
 			} catch (error) {
 				return handleRouteError(c, error, "fetch storefront orders");
@@ -103,6 +106,7 @@ export const ordersRoutes = createRouter()
 	)
 	.get(
 		"/:orderId",
+		authMiddleware,
 		paramValidator(
 			z.object({
 				orderId: z.string().min(1),
@@ -116,9 +120,11 @@ export const ordersRoutes = createRouter()
 		async (c) => {
 			try {
 				const { orderId } = c.req.valid("param");
-				const { userId } = c.req.valid("query");
 				const organizationId = c.var.tenantId;
+				const userId = c.get("user")?.id as string;
+
 				if (!organizationId) throw new Error("Organization ID required");
+
 				const order = await getStorefrontOrder({
 					organizationId,
 					orderId,
