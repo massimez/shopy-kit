@@ -14,7 +14,6 @@
 		"tailwindcss",
 		"typescript"
 	],
-
 	"scripts": {
 		"dev": "next dev --port 3002",
 		"build": "next build",
@@ -49,6 +48,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "2.3.6",
 		"@tailwindcss/postcss": "^4",
+		"@types/google.maps": "^3.58.1",
 		"@types/node": "^20",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
