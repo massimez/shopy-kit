@@ -1,4 +1,5 @@
 import z from "zod";
+import type { User } from "@/lib/auth";
 import { createRouter } from "@/lib/create-hono-app";
 import {
 	createSuccessResponse,
@@ -63,7 +64,13 @@ export const inventoryRoute = createRouter()
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
 				const data = c.req.valid("json");
 
-				const newTransaction = await createStockTransaction(data, activeOrgId);
+				const user = c.get("user") as User;
+
+				const newTransaction = await createStockTransaction(
+					data,
+					activeOrgId,
+					user,
+				);
 				return c.json(createSuccessResponse(newTransaction), 201);
 			} catch (error) {
 				return handleRouteError(c, error, "create stock transaction");

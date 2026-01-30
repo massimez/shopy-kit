@@ -1,3 +1,4 @@
+import type { User } from "@/lib/auth";
 import { createRouter } from "@/lib/create-hono-app";
 import {
 	createErrorResponse,
@@ -29,8 +30,9 @@ export const supplierRoute = createRouter()
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const user = c.get("user") as User;
 				const data = c.req.valid("json");
-				const newSupplier = await createSupplier(data, activeOrgId);
+				const newSupplier = await createSupplier(data, activeOrgId, user);
 				return c.json(createSuccessResponse(newSupplier), 201);
 			} catch (error) {
 				return handleRouteError(c, error, "create supplier");
@@ -87,9 +89,15 @@ export const supplierRoute = createRouter()
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const user = c.get("user") as User;
 				const { id } = c.req.valid("param");
 				const data = c.req.valid("json");
-				const updatedSupplier = await updateSupplier(id, data, activeOrgId);
+				const updatedSupplier = await updateSupplier(
+					id,
+					data,
+					activeOrgId,
+					user,
+				);
 				if (!updatedSupplier) {
 					return c.json(
 						createErrorResponse("NotFoundError", "Supplier not found", [
@@ -115,8 +123,9 @@ export const supplierRoute = createRouter()
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const user = c.get("user") as User;
 				const { id } = c.req.valid("param");
-				const deletedSupplier = await deleteSupplier(id, activeOrgId);
+				const deletedSupplier = await deleteSupplier(id, activeOrgId, user);
 				if (!deletedSupplier) {
 					return c.json(
 						createErrorResponse(

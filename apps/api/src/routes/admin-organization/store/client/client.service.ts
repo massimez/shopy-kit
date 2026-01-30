@@ -1,7 +1,8 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { user } from "@/lib/db/schema";
 import { client } from "@/lib/db/schema/store/client";
+import { getAuditData } from "@/lib/utils/audit";
 import type { AdminUpdateClient, InsertClient, UpdateClient } from "./schema";
 import { validateEmailUniqueness } from "./validation";
 
@@ -11,7 +12,7 @@ import { validateEmailUniqueness } from "./validation";
 export async function createClient(
 	data: InsertClient,
 	organizationId: string,
-	_userId?: string,
+	userId: string,
 ) {
 	// Validate email uniqueness if email is provided
 	if (data.email) {
@@ -39,6 +40,7 @@ export async function createClient(
 		.values({
 			...clientData,
 			organizationId,
+			...getAuditData({ id: userId }, "create"),
 		})
 		.returning();
 
@@ -56,7 +58,9 @@ export async function getClients(
 	const clients = await db
 		.select()
 		.from(client)
-		.where(eq(client.organizationId, organizationId))
+		.where(
+			and(eq(client.organizationId, organizationId), isNull(client.deletedAt)),
+		)
 		.orderBy(desc(client.createdAt))
 		.limit(limit)
 		.offset(offset);
@@ -64,7 +68,9 @@ export async function getClients(
 	const [totalCount] = await db
 		.select({ count: sql<number>`count(*)` })
 		.from(client)
-		.where(eq(client.organizationId, organizationId));
+		.where(
+			and(eq(client.organizationId, organizationId), isNull(client.deletedAt)),
+		);
 
 	return {
 		clients,
@@ -93,7 +99,7 @@ export async function updateClient(
 	id: string,
 	data: UpdateClient,
 	organizationId: string,
-	_userId?: string,
+	userId: string,
 ) {
 	// Get existing client for audit comparison
 	const [existingClient] = await db
@@ -129,7 +135,10 @@ export async function updateClient(
 
 	const [updatedClient] = await db
 		.update(client)
-		.set(updateData)
+		.set({
+			...updateData,
+			...getAuditData({ id: userId }, "update"),
+		})
 		.where(and(eq(client.id, id), eq(client.organizationId, organizationId)))
 		.returning();
 
@@ -142,13 +151,13 @@ export async function updateClient(
 export async function deleteClient(
 	id: string,
 	organizationId: string,
-	_userId?: string,
+	userId: string,
 ) {
 	const [deletedClient] = await db
 		.update(client)
 		.set({
 			isActive: false,
-			deletedAt: new Date(),
+			...getAuditData({ id: userId }, "delete"),
 		})
 		.where(and(eq(client.id, id), eq(client.organizationId, organizationId)))
 		.returning();
@@ -164,7 +173,7 @@ export async function adminUpdateClient(
 	id: string,
 	data: AdminUpdateClient,
 	organizationId: string,
-	_userId?: string,
+	userId: string,
 ) {
 	// Get existing client for audit comparison
 	const [existingClient] = await db
@@ -200,7 +209,10 @@ export async function adminUpdateClient(
 
 	const [updatedClient] = await db
 		.update(client)
-		.set(updateData)
+		.set({
+			...updateData,
+			...getAuditData({ id: userId }, "update"),
+		})
 		.where(and(eq(client.id, id), eq(client.organizationId, organizationId)))
 		.returning();
 
@@ -395,6 +407,7 @@ export async function findOrCreateClientFromUser(
 			source,
 		} as InsertClient,
 		organizationId,
+		userId,
 	);
 
 	return newClient;

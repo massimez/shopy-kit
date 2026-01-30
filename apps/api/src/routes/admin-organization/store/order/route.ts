@@ -1,8 +1,10 @@
 import { type AnyColumn, and, asc, count, desc, eq, isNull } from "drizzle-orm";
+import type { User } from "@/lib/auth";
 import { createRouter } from "@/lib/create-hono-app";
 import { db } from "@/lib/db";
 import { order, orderStatusHistory } from "@/lib/db/schema";
 import type { TOrderStatus } from "@/lib/db/schema/helpers/types";
+import { getAuditData } from "@/lib/utils/audit";
 import {
 	createErrorResponse,
 	createSuccessResponse,
@@ -22,6 +24,7 @@ import {
 	completeOrder,
 	createOrder,
 	createOrderStatusHistory,
+	deleteOrder,
 } from "./order.service";
 import { createOrderSchema, updateOrderSchema } from "./schema";
 
@@ -206,23 +209,25 @@ export const orderRoute = createRouter()
 
 				const payload = c.req.valid("json");
 
-				// Get current order status before update if status is being updated
-				let previousStatus: string | null = null;
+				let previousStatus: TOrderStatus | null = null;
+
+				// If status is being updated, get the previous status
 				if (payload.status) {
 					const currentOrder = await db.query.order.findFirst({
-						where: and(
-							eq(order.id, id),
-							eq(order.organizationId, activeOrgId),
-							isNull(order.deletedAt),
-						),
+						where: and(eq(order.id, id), eq(order.organizationId, activeOrgId)),
 						columns: { status: true },
 					});
 					previousStatus = currentOrder?.status || null;
 				}
 
+				const user = c.get("user") as User;
+
 				const [updated] = await db
 					.update(order)
-					.set(payload)
+					.set({
+						...payload,
+						...getAuditData(user, "update"),
+					})
 					.where(
 						and(
 							eq(order.id, id),
@@ -287,8 +292,9 @@ export const orderRoute = createRouter()
 				const activeOrgId = validateOrgId(
 					c.get("session")?.activeOrganizationId as string,
 				);
+				const user = c.get("user") as User;
 
-				const ord = await completeOrder(id, activeOrgId);
+				const ord = await completeOrder(id, activeOrgId, user);
 
 				return c.json(
 					createSuccessResponse(ord, "Order completed successfully"),
@@ -306,8 +312,9 @@ export const orderRoute = createRouter()
 			const activeOrgId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
 			);
+			const user = c.get("user") as User;
 
-			const ord = await cancelOrder(id, activeOrgId);
+			const ord = await cancelOrder(id, activeOrgId, user);
 
 			return c.json(createSuccessResponse(ord, "Order cancelled successfully"));
 		} catch (error) {
@@ -327,17 +334,9 @@ export const orderRoute = createRouter()
 					c.get("session")?.activeOrganizationId as string,
 				);
 
-				const [deleted] = await db
-					.update(order)
-					.set({ deletedAt: new Date() })
-					.where(
-						and(
-							eq(order.id, id),
-							eq(order.organizationId, activeOrgId),
-							isNull(order.deletedAt),
-						),
-					)
-					.returning();
+				const user = c.get("user") as User;
+
+				const deleted = await deleteOrder(id, activeOrgId, user);
 
 				if (!deleted) {
 					return c.json(

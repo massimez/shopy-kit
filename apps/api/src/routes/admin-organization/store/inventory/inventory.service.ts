@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, isNull, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { db } from "@/lib/db";
 import {
@@ -7,6 +7,7 @@ import {
 	productVariantStock,
 	productVariantStockTransaction,
 } from "@/lib/db/schema";
+import { getAuditData } from "@/lib/utils/audit";
 import { validateOrgId } from "@/lib/utils/validator";
 import type { OffsetPaginationParams } from "@/types/api";
 import type { insertProductVariantStockTransactionSchema } from "./schema";
@@ -36,6 +37,7 @@ export async function getProductVariantStock(
 			and(
 				eq(productVariantStock.productVariantId, productVariantId),
 				eq(productVariantStock.organizationId, validateOrgId(orgId)),
+				isNull(productVariantStock.deletedAt),
 			),
 		)
 		.limit(1);
@@ -49,6 +51,7 @@ export async function getProductVariantStock(
 export async function createStockTransaction(
 	data: InsertProductVariantStockTransaction,
 	orgId: string,
+	user: { id: string },
 ) {
 	return await db.transaction(async (tx) => {
 		const [newTransaction] = await tx
@@ -56,11 +59,12 @@ export async function createStockTransaction(
 			.values({
 				...data,
 				organizationId: orgId,
+				...getAuditData(user, "create"),
 			})
 			.returning();
 
 		// Update productVariantStock based on this transaction
-		await updateStockAfterTransaction(newTransaction, tx);
+		await updateStockAfterTransaction(newTransaction, user, tx);
 
 		return newTransaction;
 	});
@@ -71,6 +75,7 @@ export async function createStockTransaction(
  */
 export async function updateStockAfterTransaction(
 	transaction: typeof productVariantStockTransaction.$inferSelect,
+	user: { id: string },
 	_db: Pick<typeof db, "select" | "update" | "insert"> = db,
 ) {
 	const { productVariantId, organizationId, locationId, quantityChange } =
@@ -90,12 +95,16 @@ export async function updateStockAfterTransaction(
 	if (currentStock) {
 		await _db
 			.update(productVariantStock)
-			.set({ quantity: currentStock.quantity + quantityChange })
+			.set({
+				quantity: currentStock.quantity + quantityChange,
+				...getAuditData(user, "update"),
+			})
 			.where(
 				and(
 					eq(productVariantStock.productVariantId, productVariantId),
 					eq(productVariantStock.organizationId, organizationId),
 					eq(productVariantStock.locationId, locationId),
+					isNull(productVariantStock.deletedAt),
 				),
 			);
 	} else {
@@ -105,6 +114,7 @@ export async function updateStockAfterTransaction(
 			locationId,
 			quantity: quantityChange,
 			reservedQuantity: 0, // Assuming new stock starts with 0 reserved
+			...getAuditData(user, "create"),
 		});
 	}
 }
@@ -138,7 +148,9 @@ export async function getStockTransactions(
 				: undefined;
 
 	const data = await db.query.productVariantStockTransaction.findMany({
-		where: whereClause,
+		where: whereClause
+			? and(whereClause, isNull(productVariantStockTransaction.deletedAt))
+			: isNull(productVariantStockTransaction.deletedAt),
 		with: {
 			location: true,
 			variant: true,
@@ -152,7 +164,11 @@ export async function getStockTransactions(
 	const total = await db
 		.select({ count: sql<number>`count(*)` })
 		.from(productVariantStockTransaction)
-		.where(whereClause)
+		.where(
+			whereClause
+				? and(whereClause, isNull(productVariantStockTransaction.deletedAt))
+				: isNull(productVariantStockTransaction.deletedAt),
+		)
 		.then((res) => res[0]?.count ?? 0);
 
 	return { total, data };
@@ -170,7 +186,10 @@ export async function getProductVariantsGroupedByProductWithStock(
 	const { collectionId, search, limit = 20, offset = 0 } = params;
 
 	// 1. Get paginated product IDs first
-	const filters = [eq(product.organizationId, orgIdValidated)];
+	const filters = [
+		eq(product.organizationId, orgIdValidated),
+		isNull(product.deletedAt),
+	];
 
 	if (collectionId) {
 		const { productCollectionAssignment } = await import("@/lib/db/schema");
