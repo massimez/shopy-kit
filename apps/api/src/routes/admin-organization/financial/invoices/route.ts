@@ -11,7 +11,6 @@ import {
 	queryValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import * as invoicesService from "./invoices.service";
 import {
 	createInvoiceSchema,
@@ -23,7 +22,6 @@ export default createRouter()
 	// Get all invoices (with pagination and filters)
 	.get(
 		"/",
-		authMiddleware,
 		queryValidator(
 			z.object({
 				type: z.enum(["receivable", "payable"]).optional(),
@@ -58,7 +56,6 @@ export default createRouter()
 	// Get invoice stats
 	.get(
 		"/stats",
-		authMiddleware,
 		queryValidator(
 			z.object({
 				type: z.enum(["receivable", "payable"]),
@@ -81,7 +78,6 @@ export default createRouter()
 	// Get single invoice
 	.get(
 		"/:id",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {
@@ -112,7 +108,7 @@ export default createRouter()
 	)
 
 	// Create invoice
-	.post("/", authMiddleware, jsonValidator(createInvoiceSchema), async (c) => {
+	.post("/", jsonValidator(createInvoiceSchema), async (c) => {
 		try {
 			const activeOrgId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
@@ -132,7 +128,6 @@ export default createRouter()
 	// Update invoice
 	.put(
 		"/:id",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		jsonValidator(updateInvoiceSchema),
 		async (c) => {
@@ -157,7 +152,6 @@ export default createRouter()
 	// Approve invoice
 	.post(
 		"/:id/approve",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {
@@ -181,7 +175,6 @@ export default createRouter()
 	// Delete invoice
 	.delete(
 		"/:id",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {
@@ -198,32 +191,26 @@ export default createRouter()
 	)
 
 	// Record payment
-	.post(
-		"/payments",
-		authMiddleware,
-		jsonValidator(recordPaymentSchema),
-		async (c) => {
-			try {
-				const activeOrgId = validateOrgId(
-					c.get("session")?.activeOrganizationId as string,
-				);
-				const userId = c.get("user")?.id as string;
-				const data = c.req.valid("json");
-				const payment = await invoicesService.recordPayment(activeOrgId, {
-					...data,
-					createdBy: userId,
-				});
-				return c.json(createSuccessResponse(payment), 201);
-			} catch (error) {
-				return handleRouteError(c, error, "record payment");
-			}
-		},
-	)
+	.post("/payments", jsonValidator(recordPaymentSchema), async (c) => {
+		try {
+			const activeOrgId = validateOrgId(
+				c.get("session")?.activeOrganizationId as string,
+			);
+			const userId = c.get("user")?.id as string;
+			const data = c.req.valid("json");
+			const payment = await invoicesService.recordPayment(activeOrgId, {
+				...data,
+				createdBy: userId,
+			});
+			return c.json(createSuccessResponse(payment), 201);
+		} catch (error) {
+			return handleRouteError(c, error, "record payment");
+		}
+	})
 
 	// Get payments
 	.get(
 		"/payments",
-		authMiddleware,
 		queryValidator(
 			z.object({
 				type: z.enum(["received", "sent"]).optional(),
@@ -250,7 +237,6 @@ export default createRouter()
 	// Get party balance (customer or supplier)
 	.get(
 		"/balance/:partyType/:partyId",
-		authMiddleware,
 		paramValidator(
 			z.object({
 				partyType: z.enum(["customer", "supplier"]),

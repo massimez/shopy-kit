@@ -10,13 +10,12 @@ export const hasOrgPermission = (
 	requiredPermission: string, // e.g., "organization:update"
 ) =>
 	createMiddleware(async (c, next) => {
-		let organizationId = c.req.query("organizationId");
+		let organizationId: string | undefined;
 
-		if (!organizationId) {
-			organizationId = c.var.tenantId || undefined;
+		const session = c.get("session");
+		if (session?.activeOrganizationId) {
+			organizationId = session.activeOrganizationId;
 		}
-
-		await next();
 
 		if (!organizationId) {
 			return c.json(

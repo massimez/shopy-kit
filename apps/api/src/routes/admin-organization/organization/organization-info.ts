@@ -6,7 +6,6 @@ import {
 	handleRouteError,
 } from "@/lib/utils/route-helpers";
 import { jsonValidator, paramValidator } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import {
 	createOrganizationInfo,
@@ -24,7 +23,6 @@ import {
 export const organizationInfoRoute = createRouter()
 	.post(
 		"/info",
-		authMiddleware,
 		hasOrgPermission("organization:create"),
 		jsonValidator(insertOrganizationInfoSchema),
 		async (c) => {
@@ -42,43 +40,37 @@ export const organizationInfoRoute = createRouter()
 			}
 		},
 	)
-	.get(
-		"/info",
-		authMiddleware,
-		hasOrgPermission("organization:read"),
-		async (c) => {
-			try {
-				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+	.get("/info", hasOrgPermission("organization:read"), async (c) => {
+		try {
+			const activeOrgId = c.get("session")?.activeOrganizationId as string;
 
-				if (!activeOrgId) {
-					return c.json(
-						createErrorResponse(
-							"BadRequestError",
-							"No active organization found in session",
-							[
-								{
-									code: "SESSION_ERROR",
-									path: ["session"],
-									message:
-										"Active organization ID is required for this operation",
-								},
-							],
-						),
-						400,
-					);
-				}
-
-				const foundOrganizationInfo = await getOrganizationInfo(activeOrgId);
-
-				return c.json(createSuccessResponse(foundOrganizationInfo));
-			} catch (error) {
-				return handleRouteError(c, error, "fetch organization info");
+			if (!activeOrgId) {
+				return c.json(
+					createErrorResponse(
+						"BadRequestError",
+						"No active organization found in session",
+						[
+							{
+								code: "SESSION_ERROR",
+								path: ["session"],
+								message:
+									"Active organization ID is required for this operation",
+							},
+						],
+					),
+					400,
+				);
 			}
-		},
-	)
+
+			const foundOrganizationInfo = await getOrganizationInfo(activeOrgId);
+
+			return c.json(createSuccessResponse(foundOrganizationInfo));
+		} catch (error) {
+			return handleRouteError(c, error, "fetch organization info");
+		}
+	})
 	.get(
 		"/info/:id",
-		authMiddleware,
 		hasOrgPermission("organization:read"),
 		paramValidator(
 			z.object({
@@ -120,7 +112,6 @@ export const organizationInfoRoute = createRouter()
 	)
 	.put(
 		"/info/:id",
-		authMiddleware,
 		hasOrgPermission("organization:update"),
 		jsonValidator(updateOrganizationInfoSchema),
 		async (c) => {

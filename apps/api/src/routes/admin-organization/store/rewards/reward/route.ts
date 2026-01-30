@@ -10,7 +10,6 @@ import {
 	paramValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import {
 	createReward,
@@ -27,7 +26,6 @@ export const rewardRoute = createRouter()
 	 */
 	.post(
 		"/rewards",
-		authMiddleware,
 		hasOrgPermission("rewards:write"),
 		jsonValidator(createRewardSchema),
 		async (c) => {
@@ -62,39 +60,30 @@ export const rewardRoute = createRouter()
 	 * GET /rewards
 	 * List all rewards for a program
 	 */
-	.get(
-		"/rewards",
-		authMiddleware,
-		hasOrgPermission("rewards:read"),
-		async (c) => {
-			try {
-				const bonusProgramId = c.req.query("bonusProgramId");
+	.get("/rewards", hasOrgPermission("rewards:read"), async (c) => {
+		try {
+			const bonusProgramId = c.req.query("bonusProgramId");
 
-				if (!bonusProgramId) {
-					return c.json(
-						createErrorResponse(
-							"ValidationError",
-							"bonusProgramId is required",
-							[
-								{
-									code: "REQUIRED",
-									path: ["bonusProgramId"],
-									message: "bonusProgramId query parameter is required",
-								},
-							],
-						),
-						400,
-					);
-				}
-
-				const rewards = await listRewards(bonusProgramId);
-
-				return c.json(createSuccessResponse({ rewards }));
-			} catch (error) {
-				return handleRouteError(c, error, "fetch rewards");
+			if (!bonusProgramId) {
+				return c.json(
+					createErrorResponse("ValidationError", "bonusProgramId is required", [
+						{
+							code: "REQUIRED",
+							path: ["bonusProgramId"],
+							message: "bonusProgramId query parameter is required",
+						},
+					]),
+					400,
+				);
 			}
-		},
-	)
+
+			const rewards = await listRewards(bonusProgramId);
+
+			return c.json(createSuccessResponse({ rewards }));
+		} catch (error) {
+			return handleRouteError(c, error, "fetch rewards");
+		}
+	})
 
 	/**
 	 * PATCH /rewards/:id
@@ -102,7 +91,6 @@ export const rewardRoute = createRouter()
 	 */
 	.patch(
 		"/rewards/:id",
-		authMiddleware,
 		hasOrgPermission("rewards:write"),
 		paramValidator(idParamSchema),
 		jsonValidator(updateRewardSchema),
@@ -152,7 +140,6 @@ export const rewardRoute = createRouter()
 	 */
 	.delete(
 		"/rewards/:id",
-		authMiddleware,
 		hasOrgPermission("rewards:delete"),
 		paramValidator(idParamSchema),
 		async (c) => {

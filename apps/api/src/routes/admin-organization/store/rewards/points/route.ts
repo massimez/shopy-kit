@@ -12,7 +12,6 @@ import {
 	queryValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import {
 	awardPoints,
@@ -30,7 +29,6 @@ export const pointsAdminRoute = createRouter()
 	 */
 	.post(
 		"/points/award",
-		authMiddleware,
 		hasOrgPermission("rewards:write"),
 		jsonValidator(awardPointsManualSchema),
 		async (c) => {
@@ -89,7 +87,6 @@ export const pointsAdminRoute = createRouter()
 	 */
 	.post(
 		"/points/deduct",
-		authMiddleware,
 		hasOrgPermission("rewards:write"),
 		jsonValidator(
 			z.object({
@@ -151,7 +148,6 @@ export const pointsAdminRoute = createRouter()
 	 */
 	.post(
 		"/points/confirm/:transactionId",
-		authMiddleware,
 		hasOrgPermission("rewards:write"),
 		paramValidator(
 			idParamSchema.extend({ transactionId: idParamSchema.shape.id }),
@@ -183,7 +179,6 @@ export const pointsAdminRoute = createRouter()
 	 */
 	.post(
 		"/points/cancel/:transactionId",
-		authMiddleware,
 		hasOrgPermission("rewards:write"),
 		paramValidator(
 			idParamSchema.extend({ transactionId: idParamSchema.shape.id }),
@@ -215,7 +210,6 @@ export const pointsAdminRoute = createRouter()
 	 */
 	.get(
 		"/points/balance/:userId",
-		authMiddleware,
 		hasOrgPermission("rewards:read"),
 		paramValidator(
 			z.object({
@@ -308,7 +302,6 @@ export const pointsAdminRoute = createRouter()
 	 */
 	.get(
 		"/points/history/:userId",
-		authMiddleware,
 		paramValidator(
 			z.object({
 				userId: idParamSchema.shape.id,

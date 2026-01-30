@@ -11,7 +11,6 @@ import {
 	paramValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import { cancelCoupon, getUserCoupons } from "../coupon.service";
 import { cancelCouponSchema } from "../schema";
@@ -24,7 +23,6 @@ export const couponRoute = createRouter()
 	 */
 	.post(
 		"/coupons/cancel",
-		authMiddleware,
 		hasOrgPermission("rewards:write"),
 		jsonValidator(cancelCouponSchema),
 		async (c) => {
@@ -64,7 +62,6 @@ export const couponRoute = createRouter()
 	 */
 	.get(
 		"/coupons/user/:userId",
-		authMiddleware,
 		hasOrgPermission("rewards:read"),
 		paramValidator(z.object({ userId: idParamSchema.shape.id })),
 		async (c) => {
@@ -89,7 +86,6 @@ export const couponRoute = createRouter()
 	 */
 	.get(
 		"/coupons/:id",
-		authMiddleware,
 		hasOrgPermission("rewards:read"),
 		paramValidator(idParamSchema),
 		async (c) => {

@@ -9,7 +9,6 @@ import {
 	queryValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import {
 	approvePayoutRequest,
 	listPayoutRequests,
@@ -28,31 +27,26 @@ const rejectSchema = z.object({
 });
 
 export const payoutRoute = createRouter()
-	.get(
-		"/payouts",
-		authMiddleware,
-		queryValidator(paginationSchema),
-		async (c) => {
-			try {
-				const organizationId = validateOrgId(
-					c.get("session")?.activeOrganizationId as string,
-				);
-				const { limit, offset, status } = c.req.valid("query");
+	.get("/payouts", queryValidator(paginationSchema), async (c) => {
+		try {
+			const organizationId = validateOrgId(
+				c.get("session")?.activeOrganizationId as string,
+			);
+			const { limit, offset, status } = c.req.valid("query");
 
-				const result = await listPayoutRequests(
-					organizationId,
-					limit,
-					offset,
-					status,
-				);
+			const result = await listPayoutRequests(
+				organizationId,
+				limit,
+				offset,
+				status,
+			);
 
-				return c.json(createSuccessResponse(result));
-			} catch (error) {
-				return handleRouteError(c, error, "list payout requests");
-			}
-		},
-	)
-	.post("/payouts/:id/approve", authMiddleware, async (c) => {
+			return c.json(createSuccessResponse(result));
+		} catch (error) {
+			return handleRouteError(c, error, "list payout requests");
+		}
+	})
+	.post("/payouts/:id/approve", async (c) => {
 		try {
 			const organizationId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
@@ -71,33 +65,28 @@ export const payoutRoute = createRouter()
 			return handleRouteError(c, error, "approve payout request");
 		}
 	})
-	.post(
-		"/payouts/:id/reject",
-		authMiddleware,
-		jsonValidator(rejectSchema),
-		async (c) => {
-			try {
-				const organizationId = validateOrgId(
-					c.get("session")?.activeOrganizationId as string,
-				);
-				const user = c.get("user") as { id: string };
-				const payoutId = c.req.param("id");
-				const { reason } = c.req.valid("json");
+	.post("/payouts/:id/reject", jsonValidator(rejectSchema), async (c) => {
+		try {
+			const organizationId = validateOrgId(
+				c.get("session")?.activeOrganizationId as string,
+			);
+			const user = c.get("user") as { id: string };
+			const payoutId = c.req.param("id");
+			const { reason } = c.req.valid("json");
 
-				const result = await rejectPayoutRequest(
-					payoutId,
-					organizationId,
-					user.id,
-					reason,
-				);
+			const result = await rejectPayoutRequest(
+				payoutId,
+				organizationId,
+				user.id,
+				reason,
+			);
 
-				return c.json(createSuccessResponse(result));
-			} catch (error) {
-				return handleRouteError(c, error, "reject payout request");
-			}
-		},
-	)
-	.post("/payouts/:id/mark-paid", authMiddleware, async (c) => {
+			return c.json(createSuccessResponse(result));
+		} catch (error) {
+			return handleRouteError(c, error, "reject payout request");
+		}
+	})
+	.post("/payouts/:id/mark-paid", async (c) => {
 		try {
 			const organizationId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,

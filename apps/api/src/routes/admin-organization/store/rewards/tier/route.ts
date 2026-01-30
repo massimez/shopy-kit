@@ -10,7 +10,6 @@ import {
 	paramValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import { createTierSchema, updateTierSchema } from "../schema";
 import {
@@ -29,7 +28,6 @@ export const tierRoute = createRouter()
 	 */
 	.post(
 		"/tiers",
-		authMiddleware,
 		hasOrgPermission("rewards:write"),
 		jsonValidator(createTierSchema),
 		async (c) => {
@@ -58,39 +56,30 @@ export const tierRoute = createRouter()
 	 * GET /tiers
 	 * List all tiers for a program
 	 */
-	.get(
-		"/tiers",
-		authMiddleware,
-		hasOrgPermission("rewards:read"),
-		async (c) => {
-			try {
-				const bonusProgramId = c.req.query("bonusProgramId");
+	.get("/tiers", hasOrgPermission("rewards:read"), async (c) => {
+		try {
+			const bonusProgramId = c.req.query("bonusProgramId");
 
-				if (!bonusProgramId) {
-					return c.json(
-						createErrorResponse(
-							"ValidationError",
-							"bonusProgramId is required",
-							[
-								{
-									code: "REQUIRED",
-									path: ["bonusProgramId"],
-									message: "bonusProgramId query parameter is required",
-								},
-							],
-						),
-						400,
-					);
-				}
-
-				const tiers = await listTiers(bonusProgramId);
-
-				return c.json(createSuccessResponse({ tiers }));
-			} catch (error) {
-				return handleRouteError(c, error, "fetch tiers");
+			if (!bonusProgramId) {
+				return c.json(
+					createErrorResponse("ValidationError", "bonusProgramId is required", [
+						{
+							code: "REQUIRED",
+							path: ["bonusProgramId"],
+							message: "bonusProgramId query parameter is required",
+						},
+					]),
+					400,
+				);
 			}
-		},
-	)
+
+			const tiers = await listTiers(bonusProgramId);
+
+			return c.json(createSuccessResponse({ tiers }));
+		} catch (error) {
+			return handleRouteError(c, error, "fetch tiers");
+		}
+	})
 
 	/**
 	 * PATCH /tiers/:id
@@ -98,7 +87,6 @@ export const tierRoute = createRouter()
 	 */
 	.patch(
 		"/tiers/:id",
-		authMiddleware,
 		hasOrgPermission("rewards:write"),
 		paramValidator(idParamSchema),
 		jsonValidator(updateTierSchema),
@@ -140,7 +128,6 @@ export const tierRoute = createRouter()
 	 */
 	.delete(
 		"/tiers/:id",
-		authMiddleware,
 		hasOrgPermission("rewards:delete"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -180,7 +167,6 @@ export const tierRoute = createRouter()
 	 */
 	.get(
 		"/tiers/:id/benefits",
-		authMiddleware,
 		hasOrgPermission("rewards:read"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -202,7 +188,6 @@ export const tierRoute = createRouter()
 	 */
 	.get(
 		"/tiers/calculate-user-tier",
-		authMiddleware,
 		hasOrgPermission("rewards:read"),
 		async (c) => {
 			try {

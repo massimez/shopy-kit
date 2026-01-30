@@ -15,7 +15,6 @@ import {
 	queryValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import { orderPaginationSchema } from "@/middleware/pagination";
 import {
@@ -28,31 +27,25 @@ import { createOrderSchema, updateOrderSchema } from "./schema";
 
 export const orderRoute = createRouter()
 	// CREATE order (status = pending, add bonusPending)
-	.post(
-		"/orders",
-		authMiddleware,
-		jsonValidator(createOrderSchema),
-		async (c) => {
-			try {
-				const activeOrgId = validateOrgId(
-					c.get("session")?.activeOrganizationId as string,
-				);
-				const user = c.get("user");
-				const payload = c.req.valid("json");
+	.post("/orders", jsonValidator(createOrderSchema), async (c) => {
+		try {
+			const activeOrgId = validateOrgId(
+				c.get("session")?.activeOrganizationId as string,
+			);
+			const user = c.get("user");
+			const payload = c.req.valid("json");
 
-				const result = await createOrder(payload, user, activeOrgId);
+			const result = await createOrder(payload, user, activeOrgId);
 
-				return c.json(createSuccessResponse(result), 201);
-			} catch (error) {
-				return handleRouteError(c, error, "create order");
-			}
-		},
-	)
+			return c.json(createSuccessResponse(result), 201);
+		} catch (error) {
+			return handleRouteError(c, error, "create order");
+		}
+	})
 
 	// GET orders (with pagination)
 	.get(
 		"/orders",
-		authMiddleware,
 		hasOrgPermission("order:read"),
 		queryValidator(orderPaginationSchema),
 		async (c) => {
@@ -134,7 +127,6 @@ export const orderRoute = createRouter()
 	// GET single order
 	.get(
 		"/orders/:id",
-		authMiddleware,
 		hasOrgPermission("order:read"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -177,7 +169,6 @@ export const orderRoute = createRouter()
 	// GET order status history
 	.get(
 		"/orders/:id/status-history",
-		authMiddleware,
 		hasOrgPermission("order:read"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -203,7 +194,6 @@ export const orderRoute = createRouter()
 	// UPDATE order
 	.patch(
 		"/orders/:id",
-		authMiddleware,
 		hasOrgPermission("order:update"),
 		paramValidator(idParamSchema),
 		jsonValidator(updateOrderSchema),
@@ -291,7 +281,6 @@ export const orderRoute = createRouter()
 		"/orders/:id/complete",
 		paramValidator(idParamSchema),
 		hasOrgPermission("order:complete"),
-		authMiddleware,
 		async (c) => {
 			try {
 				const { id } = c.req.valid("param");
@@ -311,32 +300,24 @@ export const orderRoute = createRouter()
 	)
 
 	// CANCEL order (subtracts from bonusPending, decreases reservedQuantity)
-	.patch(
-		"/orders/:id/cancel",
-		authMiddleware,
-		paramValidator(idParamSchema),
-		async (c) => {
-			try {
-				const { id } = c.req.valid("param");
-				const activeOrgId = validateOrgId(
-					c.get("session")?.activeOrganizationId as string,
-				);
+	.patch("/orders/:id/cancel", paramValidator(idParamSchema), async (c) => {
+		try {
+			const { id } = c.req.valid("param");
+			const activeOrgId = validateOrgId(
+				c.get("session")?.activeOrganizationId as string,
+			);
 
-				const ord = await cancelOrder(id, activeOrgId);
+			const ord = await cancelOrder(id, activeOrgId);
 
-				return c.json(
-					createSuccessResponse(ord, "Order cancelled successfully"),
-				);
-			} catch (error) {
-				return handleRouteError(c, error, "cancel order");
-			}
-		},
-	)
+			return c.json(createSuccessResponse(ord, "Order cancelled successfully"));
+		} catch (error) {
+			return handleRouteError(c, error, "cancel order");
+		}
+	})
 
 	// DELETE order
 	.delete(
 		"/orders/:id",
-		authMiddleware,
 		hasOrgPermission("order:delete"),
 		paramValidator(idParamSchema),
 		async (c) => {

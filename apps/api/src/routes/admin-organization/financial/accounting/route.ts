@@ -9,7 +9,6 @@ import {
 	paramValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import * as accountingService from "./accounting.service";
 import {
 	createAccountSchema,
@@ -21,7 +20,7 @@ export default createRouter()
 	/**
 	 * CHART OF ACCOUNTS ROUTES
 	 */
-	.get("/accounts", authMiddleware, async (c) => {
+	.get("/accounts", async (c) => {
 		try {
 			const activeOrgId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
@@ -33,30 +32,21 @@ export default createRouter()
 		}
 	})
 
-	.post(
-		"/accounts",
-		authMiddleware,
-		jsonValidator(createAccountSchema),
-		async (c) => {
-			try {
-				const activeOrgId = validateOrgId(
-					c.get("session")?.activeOrganizationId as string,
-				);
-				const data = c.req.valid("json");
-				const account = await accountingService.createAccount(
-					activeOrgId,
-					data,
-				);
-				return c.json(createSuccessResponse(account), 201);
-			} catch (error) {
-				return handleRouteError(c, error, "create account");
-			}
-		},
-	)
+	.post("/accounts", jsonValidator(createAccountSchema), async (c) => {
+		try {
+			const activeOrgId = validateOrgId(
+				c.get("session")?.activeOrganizationId as string,
+			);
+			const data = c.req.valid("json");
+			const account = await accountingService.createAccount(activeOrgId, data);
+			return c.json(createSuccessResponse(account), 201);
+		} catch (error) {
+			return handleRouteError(c, error, "create account");
+		}
+	})
 
 	.patch(
 		"/accounts/:id",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		jsonValidator(updateAccountSchema),
 		async (c) => {
@@ -81,7 +71,7 @@ export default createRouter()
 	/**
 	 * JOURNAL ENTRY ROUTES
 	 */
-	.get("/journal-entries", authMiddleware, async (c) => {
+	.get("/journal-entries", async (c) => {
 		try {
 			const activeOrgId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
@@ -95,7 +85,6 @@ export default createRouter()
 
 	.post(
 		"/journal-entries",
-		authMiddleware,
 		jsonValidator(createJournalEntrySchema),
 		async (c) => {
 			try {
@@ -117,7 +106,6 @@ export default createRouter()
 
 	.post(
 		"/journal-entries/:id/post",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {
@@ -138,7 +126,7 @@ export default createRouter()
 		},
 	)
 
-	.get("/trial-balance", authMiddleware, async (c) => {
+	.get("/trial-balance", async (c) => {
 		try {
 			const activeOrgId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
@@ -154,7 +142,6 @@ export default createRouter()
 
 	.delete(
 		"/journal-entries/:id",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {

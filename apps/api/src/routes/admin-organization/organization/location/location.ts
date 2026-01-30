@@ -2,7 +2,6 @@ import z from "zod";
 import { createRouter } from "@/lib/create-hono-app";
 import { handleRouteError } from "@/lib/utils/route-helpers";
 import { jsonValidator, paramValidator } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import {
 	createLocation,
@@ -23,7 +22,6 @@ const idParamSchema = z.object({
 export const locationRoute = createRouter()
 	.post(
 		"/locations",
-		authMiddleware,
 		hasOrgPermission("location:create"),
 		jsonValidator(insertLocationSchema),
 		async (c) => {
@@ -43,24 +41,18 @@ export const locationRoute = createRouter()
 		},
 	)
 
-	.get(
-		"/locations",
-		authMiddleware,
-		hasOrgPermission("location:read"),
-		async (c) => {
-			try {
-				const activeOrgId = c.get("session")?.activeOrganizationId as string;
-				const locations = await getLocationsByOrg(activeOrgId);
-				return c.json({ data: locations });
-			} catch (error) {
-				return handleRouteError(c, error, "fetch locations");
-			}
-		},
-	)
+	.get("/locations", hasOrgPermission("location:read"), async (c) => {
+		try {
+			const activeOrgId = c.get("session")?.activeOrganizationId as string;
+			const locations = await getLocationsByOrg(activeOrgId);
+			return c.json({ data: locations });
+		} catch (error) {
+			return handleRouteError(c, error, "fetch locations");
+		}
+	})
 
 	.get(
 		"/locations/:id",
-		authMiddleware,
 		hasOrgPermission("location:read"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -80,7 +72,6 @@ export const locationRoute = createRouter()
 
 	.put(
 		"/locations/:id",
-		authMiddleware,
 		hasOrgPermission("location:update"),
 		paramValidator(idParamSchema),
 		jsonValidator(updateLocationSchema),
@@ -103,7 +94,6 @@ export const locationRoute = createRouter()
 
 	.delete(
 		"/locations/:id",
-		authMiddleware,
 		hasOrgPermission("location:delete"),
 		paramValidator(idParamSchema),
 		async (c) => {

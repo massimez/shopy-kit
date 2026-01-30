@@ -10,7 +10,6 @@ import {
 	paramValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import {
 	createBonusProgram,
@@ -29,7 +28,6 @@ export const bonusProgramRoute = createRouter()
 	 */
 	.post(
 		"/bonus-programs",
-		authMiddleware,
 		hasOrgPermission("rewards:write"),
 		jsonValidator(createBonusProgramSchema),
 		async (c) => {
@@ -58,24 +56,19 @@ export const bonusProgramRoute = createRouter()
 	 * GET /bonus-programs
 	 * List all bonus programs
 	 */
-	.get(
-		"/bonus-programs",
-		authMiddleware,
-		hasOrgPermission("rewards:read"),
-		async (c) => {
-			try {
-				const organizationId = validateOrgId(
-					c.get("session")?.activeOrganizationId as string,
-				);
+	.get("/bonus-programs", hasOrgPermission("rewards:read"), async (c) => {
+		try {
+			const organizationId = validateOrgId(
+				c.get("session")?.activeOrganizationId as string,
+			);
 
-				const programs = await listBonusPrograms(organizationId);
+			const programs = await listBonusPrograms(organizationId);
 
-				return c.json(createSuccessResponse({ programs }));
-			} catch (error) {
-				return handleRouteError(c, error, "fetch bonus programs");
-			}
-		},
-	)
+			return c.json(createSuccessResponse({ programs }));
+		} catch (error) {
+			return handleRouteError(c, error, "fetch bonus programs");
+		}
+	})
 
 	/**
 	 * GET /bonus-programs/:id
@@ -83,7 +76,6 @@ export const bonusProgramRoute = createRouter()
 	 */
 	.get(
 		"/bonus-programs/:id",
-		authMiddleware,
 		hasOrgPermission("rewards:read"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -121,7 +113,6 @@ export const bonusProgramRoute = createRouter()
 	 */
 	.patch(
 		"/bonus-programs/:id",
-		authMiddleware,
 		hasOrgPermission("rewards:write"),
 		paramValidator(idParamSchema),
 		jsonValidator(updateBonusProgramSchema),
@@ -163,7 +154,6 @@ export const bonusProgramRoute = createRouter()
 	 */
 	.delete(
 		"/bonus-programs/:id",
-		authMiddleware,
 		hasOrgPermission("rewards:delete"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -203,7 +193,6 @@ export const bonusProgramRoute = createRouter()
 	 */
 	.get(
 		"/bonus-programs/:id/stats",
-		authMiddleware,
 		hasOrgPermission("rewards:read"),
 		paramValidator(idParamSchema),
 		async (c) => {

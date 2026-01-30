@@ -10,7 +10,6 @@ import {
 	queryValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import * as expensesService from "./expenses.service";
 
 const createExpenseSchema = z.object({
@@ -31,7 +30,6 @@ const createCategorySchema = z.object({
 export default createRouter()
 	.get(
 		"/expenses",
-		authMiddleware,
 		queryValidator(
 			z.object({
 				limit: z.string().optional(),
@@ -63,31 +61,25 @@ export default createRouter()
 			}
 		},
 	)
-	.post(
-		"/expenses",
-		authMiddleware,
-		jsonValidator(createExpenseSchema),
-		async (c) => {
-			try {
-				const activeOrgId = validateOrgId(
-					c.get("session")?.activeOrganizationId as string,
-				);
-				const userId = c.get("user")?.id as string;
-				const data = c.req.valid("json");
-				const expense = await expensesService.createExpense(activeOrgId, {
-					...data,
-					userId,
-					createdBy: userId,
-				});
-				return c.json(createSuccessResponse(expense), 201);
-			} catch (error) {
-				return handleRouteError(c, error, "create expense");
-			}
-		},
-	)
+	.post("/expenses", jsonValidator(createExpenseSchema), async (c) => {
+		try {
+			const activeOrgId = validateOrgId(
+				c.get("session")?.activeOrganizationId as string,
+			);
+			const userId = c.get("user")?.id as string;
+			const data = c.req.valid("json");
+			const expense = await expensesService.createExpense(activeOrgId, {
+				...data,
+				userId,
+				createdBy: userId,
+			});
+			return c.json(createSuccessResponse(expense), 201);
+		} catch (error) {
+			return handleRouteError(c, error, "create expense");
+		}
+	})
 	.post(
 		"/expenses/:id/approve",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {
@@ -109,7 +101,6 @@ export default createRouter()
 	)
 	.post(
 		"/expenses/:id/reject",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {
@@ -131,7 +122,6 @@ export default createRouter()
 	)
 	.put(
 		"/expenses/:id",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		jsonValidator(createExpenseSchema.partial()),
 		async (c) => {
@@ -154,7 +144,6 @@ export default createRouter()
 	)
 	.post(
 		"/expenses/:id/pay",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {
@@ -169,7 +158,7 @@ export default createRouter()
 			}
 		},
 	)
-	.get("/expense-categories", authMiddleware, async (c) => {
+	.get("/expense-categories", async (c) => {
 		try {
 			const activeOrgId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
@@ -183,7 +172,6 @@ export default createRouter()
 	})
 	.post(
 		"/expense-categories",
-		authMiddleware,
 		jsonValidator(createCategorySchema),
 		async (c) => {
 			try {

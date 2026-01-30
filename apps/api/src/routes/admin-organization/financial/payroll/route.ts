@@ -9,7 +9,6 @@ import {
 	paramValidator,
 	validateOrgId,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import * as payrollService from "./payroll.service";
 import {
 	approveSalaryAdvanceSchema,
@@ -27,57 +26,46 @@ export default createRouter()
 	/**
 	 * EMPLOYEE ROUTES
 	 */
-	.post(
-		"/employees",
-		authMiddleware,
-		jsonValidator(createEmployeeSchema),
-		async (c) => {
-			try {
-				const activeOrgId = validateOrgId(
-					c.get("session")?.activeOrganizationId as string,
-				);
-				const userId = c.get("user")?.id as string;
-				const data = c.req.valid("json");
-				const employee = await payrollService.createEmployee(activeOrgId, {
-					...data,
-					createdBy: userId,
-					organizationId: activeOrgId,
-				});
-				return c.json(createSuccessResponse(employee), 201);
-			} catch (error) {
-				return handleRouteError(c, error, "create employee");
-			}
-		},
-	)
+	.post("/employees", jsonValidator(createEmployeeSchema), async (c) => {
+		try {
+			const activeOrgId = validateOrgId(
+				c.get("session")?.activeOrganizationId as string,
+			);
+			const userId = c.get("user")?.id as string;
+			const data = c.req.valid("json");
+			const employee = await payrollService.createEmployee(activeOrgId, {
+				...data,
+				createdBy: userId,
+				organizationId: activeOrgId,
+			});
+			return c.json(createSuccessResponse(employee), 201);
+		} catch (error) {
+			return handleRouteError(c, error, "create employee");
+		}
+	})
 
 	/**
 	 * PAYROLL RUN ROUTES
 	 */
-	.post(
-		"/payroll-runs",
-		authMiddleware,
-		jsonValidator(createPayrollRunSchema),
-		async (c) => {
-			try {
-				const activeOrgId = validateOrgId(
-					c.get("session")?.activeOrganizationId as string,
-				);
-				const userId = c.get("user")?.id as string;
-				const data = c.req.valid("json");
-				const run = await payrollService.createPayrollRun(activeOrgId, {
-					...data,
-					createdBy: userId,
-				});
-				return c.json(createSuccessResponse(run), 201);
-			} catch (error) {
-				return handleRouteError(c, error, "create payroll run");
-			}
-		},
-	)
+	.post("/payroll-runs", jsonValidator(createPayrollRunSchema), async (c) => {
+		try {
+			const activeOrgId = validateOrgId(
+				c.get("session")?.activeOrganizationId as string,
+			);
+			const userId = c.get("user")?.id as string;
+			const data = c.req.valid("json");
+			const run = await payrollService.createPayrollRun(activeOrgId, {
+				...data,
+				createdBy: userId,
+			});
+			return c.json(createSuccessResponse(run), 201);
+		} catch (error) {
+			return handleRouteError(c, error, "create payroll run");
+		}
+	})
 
 	.delete(
 		"/payroll-runs/:id",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {
@@ -99,7 +87,6 @@ export default createRouter()
 
 	.post(
 		"/payroll-runs/:id/calculate",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {
@@ -119,7 +106,6 @@ export default createRouter()
 
 	.post(
 		"/payroll-runs/:id/approve",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {
@@ -138,7 +124,6 @@ export default createRouter()
 	 */
 	.post(
 		"/salary-advances",
-		authMiddleware,
 		jsonValidator(requestSalaryAdvanceSchema),
 		async (c) => {
 			try {
@@ -160,7 +145,6 @@ export default createRouter()
 
 	.post(
 		"/salary-advances/:id/approve",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		jsonValidator(approveSalaryAdvanceSchema),
 		async (c) => {
@@ -182,7 +166,6 @@ export default createRouter()
 
 	.post(
 		"/salary-advances/:id/disburse",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {
@@ -195,7 +178,7 @@ export default createRouter()
 		},
 	)
 
-	.get("/employees", authMiddleware, async (c) => {
+	.get("/employees", async (c) => {
 		try {
 			const activeOrgId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
@@ -207,7 +190,7 @@ export default createRouter()
 		}
 	})
 
-	.get("/payroll-runs", authMiddleware, async (c) => {
+	.get("/payroll-runs", async (c) => {
 		try {
 			const activeOrgId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
@@ -221,7 +204,6 @@ export default createRouter()
 
 	.put(
 		"/employees/:id",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		jsonValidator(updateEmployeeSchema),
 		async (c) => {
@@ -248,7 +230,6 @@ export default createRouter()
 	 */
 	.post(
 		"/salary-components",
-		authMiddleware,
 		jsonValidator(createSalaryComponentSchema),
 		async (c) => {
 			try {
@@ -271,7 +252,7 @@ export default createRouter()
 		},
 	)
 
-	.get("/salary-components", authMiddleware, async (c) => {
+	.get("/salary-components", async (c) => {
 		try {
 			const activeOrgId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
@@ -285,7 +266,6 @@ export default createRouter()
 
 	.put(
 		"/salary-components/:id",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		jsonValidator(createSalaryComponentSchema.partial()),
 		async (c) => {
@@ -309,7 +289,6 @@ export default createRouter()
 
 	.delete(
 		"/salary-components/:id",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {
@@ -334,7 +313,6 @@ export default createRouter()
 	 */
 	.post(
 		"/salary-structures",
-		authMiddleware,
 		jsonValidator(createSalaryStructureSchema),
 		async (c) => {
 			try {
@@ -377,7 +355,7 @@ export default createRouter()
 		},
 	)
 
-	.get("/salary-structures", authMiddleware, async (c) => {
+	.get("/salary-structures", async (c) => {
 		try {
 			const activeOrgId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
@@ -408,7 +386,7 @@ export default createRouter()
 	/**
 	 * SALARY ADVANCE QUERIES
 	 */
-	.get("/salary-advances", authMiddleware, async (c) => {
+	.get("/salary-advances", async (c) => {
 		try {
 			const activeOrgId = validateOrgId(
 				c.get("session")?.activeOrganizationId as string,
@@ -429,7 +407,6 @@ export default createRouter()
 	 */
 	.get(
 		"/payroll-runs/:id/details",
-		authMiddleware,
 		paramValidator(z.object({ id: z.string().uuid() })),
 		async (c) => {
 			try {
@@ -455,7 +432,6 @@ export default createRouter()
 	 */
 	.post(
 		"/entries/process-payment",
-		authMiddleware,
 		jsonValidator(processPayrollPaymentsSchema),
 		async (c) => {
 			try {
@@ -471,7 +447,6 @@ export default createRouter()
 	)
 	.patch(
 		"/payroll-runs/:runId/entries/:entryId",
-		authMiddleware,
 		paramValidator(
 			z.object({ runId: z.string().uuid(), entryId: z.string().uuid() }),
 		),

@@ -10,7 +10,6 @@ import {
 	paramValidator,
 	queryValidator,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import { offsetPaginationSchema } from "@/middleware/pagination";
 import { insertSupplierSchema, updateSupplierSchema } from "./schema";
@@ -25,7 +24,6 @@ import {
 export const supplierRoute = createRouter()
 	.post(
 		"/suppliers",
-		authMiddleware,
 		hasOrgPermission("supplier:create"),
 		jsonValidator(insertSupplierSchema),
 		async (c) => {
@@ -41,7 +39,6 @@ export const supplierRoute = createRouter()
 	)
 	.get(
 		"/suppliers",
-		authMiddleware,
 		hasOrgPermission("supplier:read"),
 		queryValidator(offsetPaginationSchema),
 		async (c) => {
@@ -57,7 +54,6 @@ export const supplierRoute = createRouter()
 	)
 	.get(
 		"/suppliers/:id",
-		authMiddleware,
 		hasOrgPermission("supplier:read"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -85,7 +81,6 @@ export const supplierRoute = createRouter()
 	)
 	.put(
 		"/suppliers/:id",
-		authMiddleware,
 		hasOrgPermission("supplier:update"),
 		paramValidator(idParamSchema),
 		jsonValidator(updateSupplierSchema),
@@ -115,7 +110,6 @@ export const supplierRoute = createRouter()
 	)
 	.delete(
 		"/suppliers/:id",
-		authMiddleware,
 		hasOrgPermission("supplier:delete"),
 		paramValidator(idParamSchema),
 		async (c) => {

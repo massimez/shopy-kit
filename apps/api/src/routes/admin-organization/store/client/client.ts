@@ -5,7 +5,6 @@ import {
 	handleRouteError,
 } from "@/lib/utils/route-helpers";
 import { jsonValidator, queryValidator } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import { offsetPaginationSchema } from "@/middleware/pagination";
 import { rateLimiter } from "@/middleware/rate-limiter";
@@ -31,7 +30,6 @@ import { uuidSchema } from "./validation";
 export const clientRoute = createRouter()
 	.post(
 		"/clients",
-		authMiddleware,
 		hasOrgPermission("client:create"),
 		rateLimiter(60000, 20), // 20 requests per minute
 		jsonValidator(insertClientSchema),
@@ -49,7 +47,6 @@ export const clientRoute = createRouter()
 	)
 	.get(
 		"/clients",
-		authMiddleware,
 		hasOrgPermission("client:read"),
 		rateLimiter(60000, 100), // 100 requests per minute for reads
 		queryValidator(offsetPaginationSchema),
@@ -72,7 +69,6 @@ export const clientRoute = createRouter()
 	)
 	.get(
 		"/clients/:id",
-		authMiddleware,
 		hasOrgPermission("client:read"),
 		rateLimiter(60000, 100), // 100 requests per minute for reads
 		async (c) => {
@@ -116,7 +112,6 @@ export const clientRoute = createRouter()
 	)
 	.put(
 		"/clients/:id",
-		authMiddleware,
 		hasOrgPermission("client:update"),
 		rateLimiter(60000, 30), // 30 requests per minute for updates
 		jsonValidator(updateClientSchema),
@@ -167,7 +162,6 @@ export const clientRoute = createRouter()
 	)
 	.put(
 		"/clients/:id/admin",
-		authMiddleware,
 		hasOrgPermission("client:admin"), // Requires admin permission
 		rateLimiter(60000, 10), // Stricter rate limit for admin operations
 		jsonValidator(adminUpdateClientSchema),
@@ -218,7 +212,6 @@ export const clientRoute = createRouter()
 	)
 	.delete(
 		"/clients/:id",
-		authMiddleware,
 		hasOrgPermission("client:delete"),
 		rateLimiter(60000, 20), // 20 requests per minute for deletes
 		async (c) => {

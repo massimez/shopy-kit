@@ -10,7 +10,6 @@ import {
 	paramValidator,
 	queryValidator,
 } from "@/lib/utils/validator";
-import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import { offsetPaginationSchema } from "@/middleware/pagination";
 import {
@@ -28,7 +27,6 @@ import {
 export const shippingMethodRoute = createRouter()
 	.post(
 		"/shipping-methods",
-		authMiddleware,
 		hasOrgPermission("shipping:create"),
 		jsonValidator(insertShippingMethodSchema),
 		async (c) => {
@@ -44,7 +42,6 @@ export const shippingMethodRoute = createRouter()
 	)
 	.get(
 		"/shipping-methods",
-		authMiddleware,
 		hasOrgPermission("shipping:read"),
 		queryValidator(offsetPaginationSchema),
 		async (c) => {
@@ -60,7 +57,6 @@ export const shippingMethodRoute = createRouter()
 	)
 	.get(
 		"/shipping-methods/:id",
-		authMiddleware,
 		hasOrgPermission("shipping:read"),
 		paramValidator(idParamSchema),
 		async (c) => {
@@ -88,7 +84,6 @@ export const shippingMethodRoute = createRouter()
 	)
 	.put(
 		"/shipping-methods/:id",
-		authMiddleware,
 		hasOrgPermission("shipping:update"),
 		paramValidator(idParamSchema),
 		jsonValidator(updateShippingMethodSchema),
@@ -122,7 +117,6 @@ export const shippingMethodRoute = createRouter()
 	)
 	.delete(
 		"/shipping-methods/:id",
-		authMiddleware,
 		hasOrgPermission("shipping:delete"),
 		paramValidator(idParamSchema),
 		async (c) => {
