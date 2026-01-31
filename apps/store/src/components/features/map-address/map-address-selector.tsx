@@ -11,6 +11,7 @@ import { Input } from "@workspace/ui/components/input";
 import { Crosshair, MapPin, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { envData } from "@/env";
 import type { Address } from "../cart/checkout/types";
 
 interface MapAddressSelectorProps {
@@ -24,7 +25,7 @@ export function MapAddressSelector({
 	onSelect,
 	defaultLocation,
 }: MapAddressSelectorProps) {
-	const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+	const apiKey = envData.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 	if (!apiKey) {
 		return (

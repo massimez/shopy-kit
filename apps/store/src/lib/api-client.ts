@@ -1,5 +1,7 @@
 import { hcWithType } from "@workspace/api/hc";
 
-export const hc = hcWithType(process.env.NEXT_PUBLIC_API_BASE_URL || "", {
+import { envData } from "@/env";
+
+export const hc = hcWithType(envData.NEXT_PUBLIC_API_BASE_URL, {
 	init: { credentials: "include" },
 });

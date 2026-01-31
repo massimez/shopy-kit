@@ -1,10 +1,11 @@
 import bundleAnalyzer from "@next/bundle-analyzer";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { envData } from "./src/env";
 
 const withNextIntl = createNextIntlPlugin();
 const withBundleAnalyzer = bundleAnalyzer({
-	enabled: process.env.ANALYZE === "true",
+	enabled: envData.ANALYZE === "true",
 });
 
 const nextConfig: NextConfig = {
@@ -12,12 +13,7 @@ const nextConfig: NextConfig = {
 	trailingSlash: false,
 	output: "standalone",
 	images: {
-		remotePatterns: [
-			{
-				protocol: "https",
-				hostname: "pub-e8b933c426ae49678ffcad1423494ac2.r2.dev",
-			},
-		],
+		remotePatterns: envData.REMOTE_PATTERNS ?? [],
 	},
 	async headers() {
 		return [

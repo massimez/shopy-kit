@@ -136,6 +136,8 @@ export function formatCurrency(
 	}).format(amount || 0);
 }
 
+import { envData } from "../env";
+
 /**
  * Constructs an absolute URL based on the base application URL.
  *
@@ -143,7 +145,7 @@ export function formatCurrency(
  * @returns A string representing the absolute URL.
  */
 export function absoluteUrl(path: string): string {
-	return `${process.env.NEXT_PUBLIC_APP_URL}${path}`;
+	return `${envData.NEXT_PUBLIC_APP_URL}${path}`;
 }
 
 /**
