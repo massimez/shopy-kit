@@ -6,9 +6,9 @@ import {
 	handleRouteError,
 } from "@/lib/utils/route-helpers";
 import { jsonValidator } from "@/lib/utils/validator";
+import { adminMiddleware } from "@/middleware/admin";
 import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
-
 import {
 	type CommitParams,
 	cleanupOrphanFiles,
@@ -134,20 +134,15 @@ const storageRoutes = createRouter()
 	)
 
 	// POST: Cleanup orphan files (admin only or scheduled job)
-	.post(
-		"/cleanup",
-		authMiddleware,
-		// TODO: Add admin check or secret key check for security
-		async (c) => {
-			try {
-				const result = await cleanupOrphanFiles();
-				return c.json(
-					createSuccessResponse(result, "Orphan files cleaned up successfully"),
-				);
-			} catch (error) {
-				return handleRouteError(c, error, "cleanup orphan files");
-			}
-		},
-	);
+	.post("/cleanup", authMiddleware, adminMiddleware, async (c) => {
+		try {
+			const result = await cleanupOrphanFiles();
+			return c.json(
+				createSuccessResponse(result, "Orphan files cleaned up successfully"),
+			);
+		} catch (error) {
+			return handleRouteError(c, error, "cleanup orphan files");
+		}
+	});
 
 export default storageRoutes;
