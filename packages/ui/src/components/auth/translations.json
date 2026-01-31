@@ -1,0 +1,197 @@
+{
+	"en": {
+		"signIn": {
+			"title": "Sign in to your account",
+			"google_continue": "Continue with Google",
+			"email_or": "Or sign in with your email",
+			"email_label": "Email Address",
+			"password_label": "Password",
+			"forgot_password": "Forgot Password?",
+			"submit": "Sign in",
+			"no_account": "Don't have an account?",
+			"register": "Register for free",
+			"loading": "Sign in"
+		},
+		"signUp": {
+			"title": "Create your account",
+			"google_continue": "Continue with Google",
+			"email_or": "Or sign up with your email",
+			"first_name_label": "First name",
+			"last_name_label": "Last name",
+			"email_label": "Email Address",
+			"password_label": "Password",
+			"confirm_password_label": "Confirm Password",
+			"terms": "By creating an account you agree to our terms and conditions.",
+			"submit": "Create an account",
+			"has_account": "Already have an account?",
+			"sign_in": "Sign in",
+			"loading": "Create an account"
+		},
+		"forgetPassword": {
+			"title": "Forgot Password",
+			"email_label": "Email Address",
+			"submit": "Send Reset Link",
+			"remember_password": "Remember your password?",
+			"sign_in": "Sign in"
+		},
+		"resetPasswordOtp": {
+			"title": "Reset Password",
+			"description": "Enter the OTP sent to {email} and your new password.",
+			"otp_label": "OTP",
+			"new_password_label": "New Password",
+			"submit": "Reset Password",
+			"resend": "Resend OTP"
+		},
+		"otpVerification": {
+			"title": "Email Verification",
+			"description": "We sent a verification code to {email}. Please enter it below.",
+			"submit": "Verify",
+			"verifying": "Verifying...",
+			"resend": "Resend OTP",
+			"resend_wait": "Resend in {time}",
+			"sending": "Sending...",
+			"max_attempts": "Max attempts reached",
+			"attempts_remaining": "{count} resend attempt{s} remaining",
+			"no_attempts": "No more resend attempts available",
+			"wait_new_code": "Please wait before requesting a new code"
+		},
+		"notifications": {
+			"email_verified": "Email verified successfully!",
+			"verification_resent": "Verification code resent!",
+			"signed_in": "Signed in successfully",
+			"reset_otp_sent": "Password reset OTP sent to your email.",
+			"password_reset_success": "Your password has been reset successfully!",
+			"otp_resent": "OTP resent to your email."
+		}
+	},
+	"fr": {
+		"signIn": {
+			"title": "Connectez-vous à votre compte",
+			"google_continue": "Continuer avec Google",
+			"email_or": "Ou connectez-vous avec votre email",
+			"email_label": "Adresse email",
+			"password_label": "Mot de passe",
+			"forgot_password": "Mot de passe oublié ?",
+			"submit": "Se connecter",
+			"no_account": "Vous n'avez pas de compte ?",
+			"register": "Inscrivez-vous gratuitement",
+			"loading": "Connexion en cours..."
+		},
+		"signUp": {
+			"title": "Créez votre compte",
+			"google_continue": "Continuer avec Google",
+			"email_or": "Ou inscrivez-vous avec votre email",
+			"first_name_label": "Prénom",
+			"last_name_label": "Nom",
+			"email_label": "Adresse email",
+			"password_label": "Mot de passe",
+			"confirm_password_label": "Confirmez le mot de passe",
+			"terms": "En créant un compte, vous acceptez nos conditions générales.",
+			"submit": "Créer un compte",
+			"has_account": "Vous avez déjà un compte ?",
+			"sign_in": "Se connecter",
+			"loading": "Création de compte..."
+		},
+		"forgetPassword": {
+			"title": "Mot de passe oublié",
+			"email_label": "Adresse email",
+			"submit": "Envoyer le lien de réinitialisation",
+			"remember_password": "Vous vous souvenez de votre mot de passe ?",
+			"sign_in": "Se connecter"
+		},
+		"resetPasswordOtp": {
+			"title": "Réinitialiser le mot de passe",
+			"description": "Entrez l'OTP envoyé à {email} et votre nouveau mot de passe.",
+			"otp_label": "OTP",
+			"new_password_label": "Nouveau mot de passe",
+			"submit": "Réinitialiser le mot de passe",
+			"resend": "Renvoyer l'OTP"
+		},
+		"otpVerification": {
+			"title": "Vérification de l'email",
+			"description": "Nous avons envoyé un code de vérification à {email}. Veuillez l'entrer ci-dessous.",
+			"submit": "Vérifier",
+			"verifying": "Vérification...",
+			"resend": "Renvoyer l'OTP",
+			"resend_wait": "Renvoyer dans {time}",
+			"sending": "Envoi...",
+			"max_attempts": "Nombre maximal de tentatives atteint",
+			"attempts_remaining": "{count} tentative(s) de renvoi restante(s)",
+			"no_attempts": "Plus de tentatives de renvoi disponibles",
+			"wait_new_code": "Veuillez patienter avant de demander un nouveau code"
+		},
+		"notifications": {
+			"email_verified": "Email vérifié avec succès !",
+			"verification_resent": "Code de vérification renvoyé !",
+			"signed_in": "Connexion réussie",
+			"reset_otp_sent": "OTP de réinitialisation envoyé à votre email.",
+			"password_reset_success": "Votre mot de passe a été réinitialisé avec succès !",
+			"otp_resent": "OTP renvoyé à votre email."
+		}
+	},
+	"ar": {
+		"signIn": {
+			"title": "تسجيل الدخول إلى حسابك",
+			"google_continue": "المتابعة باستخدام Google",
+			"email_or": "أو قم بتسجيل الدخول باستخدام بريدك الإلكتروني",
+			"email_label": "عنوان البريد الإلكتروني",
+			"password_label": "كلمة المرور",
+			"forgot_password": "هل نسيت كلمة المرور؟",
+			"submit": "تسجيل الدخول",
+			"no_account": "ليس لديك حساب؟",
+			"register": "سجل مجانا",
+			"loading": "جاري تسجيل الدخول..."
+		},
+		"signUp": {
+			"title": "أنشئ حسابك",
+			"google_continue": "المتابعة باستخدام Google",
+			"email_or": "أو قم بالتسجيل باستخدام بريدك الإلكتروني",
+			"first_name_label": "الاسم الأول",
+			"last_name_label": "اسم العائلة",
+			"email_label": "عنوان البريد الإلكتروني",
+			"password_label": "كلمة المرور",
+			"confirm_password_label": "تأكيد كلمة المرور",
+			"terms": "من خلال إنشاء حساب فإنك توافق على الشروط والأحكام الخاصة بنا.",
+			"submit": "إنشاء حساب",
+			"has_account": "هل لديك حساب بالفعل؟",
+			"sign_in": "تسجيل الدخول",
+			"loading": "جاري إنشاء الحساب..."
+		},
+		"forgetPassword": {
+			"title": "نسيت كلمة المرور",
+			"email_label": "عنوان البريد الإلكتروني",
+			"submit": "إرسال رابط إعادة التعيين",
+			"remember_password": "تذكرت كلمة المرور؟",
+			"sign_in": "تسجيل الدخول"
+		},
+		"resetPasswordOtp": {
+			"title": "إعادة تعيين كلمة المرور",
+			"description": "أدخل رمز التحقق (OTP) المرسل إلى {email} وكلمة المرور الجديدة.",
+			"otp_label": "رمز التحقق (OTP)",
+			"new_password_label": "كلمة المرور الجديدة",
+			"submit": "إعادة تعيين كلمة المرور",
+			"resend": "إعادة إرسال رمز التحقق"
+		},
+		"otpVerification": {
+			"title": "التحقق من البريد الإلكتروني",
+			"description": "لقد أرسلنا رمز التحقق إلى {email}. الرجاء إدخاله أدناه.",
+			"submit": "تحقق",
+			"verifying": "جاري التحقق...",
+			"resend": "إعادة إرسال رمز التحقق",
+			"resend_wait": "إعادة الإرسال خلال {time}",
+			"sending": "جاري الإرسال...",
+			"max_attempts": "تم الوصول إلى الحد الأقصى من المحاولات",
+			"attempts_remaining": "تتبقى {count} محاولة إعادة إرسال",
+			"no_attempts": "لم يتبق أي محاولات إعادة إرسال",
+			"wait_new_code": "يرجى الانتظار قبل طلب رمز جديد"
+		},
+		"notifications": {
+			"email_verified": "تم التحقق من البريد الإلكتروني بنجاح!",
+			"verification_resent": "تم إعادة إرسال رمز التحقق!",
+			"signed_in": "تم تسجيل الدخول بنجاح",
+			"reset_otp_sent": "تم إرسال رمز إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.",
+			"password_reset_success": "تم إعادة تعيين كلمة المرور بنجاح!",
+			"otp_resent": "تم إعادة إرسال رمز التحقق إلى بريدك الإلكتروني."
+		}
+	}
+}

@@ -7,6 +7,7 @@ import {
 import { Input } from "@workspace/ui/components/input";
 import OTPInput, { type InputProps } from "@workspace/ui/components/inputs/otp";
 import { useCallback, useEffect, useState } from "react";
+import type defaultTranslations from "./translations.json";
 
 export interface OtpVerificationProps {
 	title?: string;
@@ -25,11 +26,12 @@ export interface OtpVerificationProps {
 	resendTimeoutDuration?: number;
 	maxResendAttempts?: number;
 	onResendLimitReached?: () => void;
+	translations: typeof defaultTranslations.en.otpVerification;
 }
 
 export const OtpVerification = ({
-	title = "OTP Verification",
-	description = "Please enter the one-time password sent to your device.",
+	title,
+	description,
 	length = 6,
 	onComplete,
 	onSubmit,
@@ -39,6 +41,7 @@ export const OtpVerification = ({
 	resendTimeoutDuration = 60, // Default 60 seconds
 	maxResendAttempts = 3, // Default max 3 attempts
 	onResendLimitReached,
+	translations,
 }: OtpVerificationProps) => {
 	const [otp, setOtp] = useState("");
 	const [timeLeft, setTimeLeft] = useState(0);
@@ -113,10 +116,11 @@ export const OtpVerification = ({
 
 	// Generate resend button text
 	const getResendButtonText = (): string => {
-		if (isResending) return "Sending...";
-		if (resendAttempts >= maxResendAttempts) return "Max attempts reached";
-		if (isTimeoutActive) return `Resend in ${formatTime(timeLeft)}`;
-		return "Resend OTP";
+		if (isResending) return translations.sending;
+		if (resendAttempts >= maxResendAttempts) return translations.max_attempts;
+		if (isTimeoutActive)
+			return translations.resend_wait.replace("{time}", formatTime(timeLeft));
+		return translations.resend;
 	};
 
 	// Generate helper text for resend attempts
@@ -124,9 +128,12 @@ export const OtpVerification = ({
 		if (maxResendAttempts && resendAttempts > 0) {
 			const remaining = maxResendAttempts - resendAttempts;
 			if (remaining > 0) {
-				return `${remaining} resend attempt${remaining === 1 ? "" : "s"} remaining`;
+				return translations.attempts_remaining.replace(
+					"{count}",
+					remaining.toString(),
+				);
 			}
-			return "No more resend attempts available";
+			return translations.no_attempts;
 		}
 		return null;
 	};
@@ -158,7 +165,7 @@ export const OtpVerification = ({
 					className="h-12 w-full font-medium text-base"
 					disabled={otp.length !== length || isLoading}
 				>
-					{isLoading ? "Verifying..." : "Verify"}
+					{isLoading ? translations.verifying : translations.submit}
 				</Button>
 
 				{onResend && (
@@ -183,7 +190,7 @@ export const OtpVerification = ({
 						{/* Additional timeout info */}
 						{isTimeoutActive && (
 							<p className="text-center text-muted-foreground text-xs">
-								Please wait before requesting a new code
+								{translations.wait_new_code}
 							</p>
 						)}
 					</div>

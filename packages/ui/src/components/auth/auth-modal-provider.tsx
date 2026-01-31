@@ -34,7 +34,10 @@ export interface AuthModalProviderProps {
 		error: (message: string) => void;
 		info: (message: string) => void;
 	};
+	translations?: typeof defaultTranslations.en;
 }
+
+import defaultTranslations from "./translations.json";
 
 export function AuthModalProvider({
 	open,
@@ -45,6 +48,7 @@ export function AuthModalProvider({
 	onSignUpSuccess,
 	onPasswordResetSuccess,
 	toast,
+	translations = defaultTranslations.en,
 }: AuthModalProviderProps) {
 	const [view, setView] = useState<ViewType>(defaultView);
 	const [otpProps, setOtpProps] = useState<OtpVerificationProps | null>(null);
@@ -69,9 +73,13 @@ export function AuthModalProvider({
 		onVerificationSuccess?: () => void;
 	}) => {
 		openModal("verificationOtp", {
-			title: "Email Verification",
-			description: `We sent a verification code to ${email}. Please enter it below.`,
+			title: translations.otpVerification.title,
+			description: translations.otpVerification.description.replace(
+				"{email}",
+				email,
+			),
 			length: 6,
+			translations: translations.otpVerification,
 			onComplete: async (_otp: string) => {
 				// Auto-submit on complete
 			},
@@ -84,7 +92,7 @@ export function AuthModalProvider({
 				if (error) {
 					toast.error(error.message || error.statusText);
 				} else {
-					toast.success("Email verified successfully!");
+					toast.success(translations.notifications.email_verified);
 					// Sign in after verification
 					await authClient.signIn.email({
 						email,
@@ -104,7 +112,7 @@ export function AuthModalProvider({
 					return null;
 				}
 
-				toast.success("Verification code resent!");
+				toast.success(translations.notifications.verification_resent);
 				return { status: 200, statusText: "OK" };
 			},
 		});
@@ -118,7 +126,7 @@ export function AuthModalProvider({
 			},
 			{
 				onSuccess: () => {
-					toast.success("Signed in successfully");
+					toast.success(translations.notifications.signed_in);
 					onSignInSuccess?.();
 				},
 				onError: async (ctx: { error: { message: string; code?: string } }) => {
@@ -189,9 +197,11 @@ export function AuthModalProvider({
 		if (error) {
 			toast.error(error.message || error.statusText);
 		} else {
-			toast.success("Password reset OTP sent to your email.");
+			toast.success(translations.notifications.reset_otp_sent);
+
 			setResetPasswordProps({
 				email,
+				translations: translations.resetPasswordOtp,
 				handleResetPassword: async (
 					email: string,
 					otp: string,
@@ -206,7 +216,7 @@ export function AuthModalProvider({
 					if (error) {
 						toast.error(error.message || error.statusText);
 					} else {
-						toast.success("Your password has been reset successfully!");
+						toast.success(translations.notifications.password_reset_success);
 						setView("signIn");
 						onPasswordResetSuccess?.();
 					}
@@ -218,7 +228,7 @@ export function AuthModalProvider({
 					if (error) {
 						toast.error(error.message || error.statusText);
 					} else {
-						toast.success("OTP resent to your email.");
+						toast.success(translations.notifications.otp_resent);
 					}
 				},
 			});
@@ -246,6 +256,7 @@ export function AuthModalProvider({
 				onSocialLoginClick={handleSocialLogin}
 				onSignUpClick={async () => setView("signUp")}
 				onForgetPasswordClick={async () => setView("forgetPassword")}
+				translations={translations.signIn}
 			/>
 		),
 		signUp: (
@@ -253,12 +264,14 @@ export function AuthModalProvider({
 				onClickCreateAccount={handleSignUp}
 				onClickSignIn={() => setView("signIn")}
 				onSocialLoginClick={handleSocialLogin}
+				translations={translations.signUp}
 			/>
 		),
 		forgetPassword: (
 			<ForgetPassword
 				sentResetCode={handleSendResetCode}
 				openSignIn={() => setView("signIn")}
+				translations={translations.forgetPassword}
 			/>
 		),
 		resetPasswordOtp: <ResetPasswordOtp {...resetPasswordProps} />,

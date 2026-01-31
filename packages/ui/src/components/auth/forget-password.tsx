@@ -8,13 +8,16 @@ import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import type defaultTranslations from "./translations.json";
 
 export const ForgetPassword = ({
 	sentResetCode,
 	openSignIn,
+	translations,
 }: {
 	sentResetCode: (email: string) => Promise<void>;
 	openSignIn: () => void;
+	translations: typeof defaultTranslations.en.forgetPassword;
 }) => {
 	const [email, setEmail] = useState("");
 	const [loading, setLoading] = useState(false);
@@ -23,19 +26,19 @@ export const ForgetPassword = ({
 		<div className="flex flex-col gap-6">
 			<DialogHeader className="space-y-2 text-center">
 				<DialogTitle className="font-semibold text-2xl">
-					Forgot Password
+					{translations.title}
 				</DialogTitle>
 			</DialogHeader>
 
 			<div className="space-y-4">
 				<div className="space-y-2">
 					<Label htmlFor="email" className="font-medium text-sm">
-						Email Address
+						{translations.email_label}
 					</Label>
 					<Input
 						id="email"
 						type="email"
-						placeholder="Email Address"
+						placeholder={translations.email_label}
 						required
 						onChange={(e) => {
 							setEmail(e.target.value);
@@ -58,20 +61,20 @@ export const ForgetPassword = ({
 					{loading ? (
 						<Loader2 size={20} className="animate-spin" />
 					) : (
-						"Send Reset Link"
+						translations.submit
 					)}
 				</Button>
 			</div>
 
 			<DialogFooter className="flex justify-center sm:justify-center">
 				<div className="text-center text-sm">
-					Remember your password?{" "}
+					{translations.remember_password}{" "}
 					<button
 						type="button"
 						className="font-medium underline hover:no-underline"
 						onClick={() => openSignIn()}
 					>
-						Sign in
+						{translations.sign_in}
 					</button>
 				</div>
 			</DialogFooter>

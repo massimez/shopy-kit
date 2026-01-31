@@ -1,8 +1,10 @@
 "use client";
 
 import { AuthModalProvider } from "@workspace/ui/components/auth/auth-modal-provider";
+import defaultTranslations from "@workspace/ui/components/auth/translations.json";
 import { Dialog, DialogContent } from "@workspace/ui/components/dialog";
 import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { DialogAddOrganization } from "./components/dialog-create-org";
@@ -11,6 +13,7 @@ import { useModal } from "./modal-context";
 const ModalRenderer = () => {
 	const { modalType, modalProps, closeModal } = useModal();
 	const router = useRouter();
+	const locale = useLocale();
 	console.log(modalProps, "modalProps");
 
 	const isAuthModal =
@@ -30,6 +33,10 @@ const ModalRenderer = () => {
 				authClient={authClient}
 				router={router}
 				toast={toast}
+				translations={
+					defaultTranslations[locale as keyof typeof defaultTranslations] ||
+					defaultTranslations.en
+				}
 				onSignInSuccess={() => {
 					closeModal();
 					router.push("/dashboard");

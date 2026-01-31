@@ -10,17 +10,20 @@ import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState } from "react";
+import type defaultTranslations from "./translations.json";
 
 export const SignIn = ({
 	onLoginClick,
 	onSocialLoginClick,
 	onSignUpClick,
 	onForgetPasswordClick,
+	translations,
 }: {
 	onLoginClick: (email: string, password: string) => Promise<void>;
 	onSocialLoginClick: (name: string) => Promise<void>;
 	onSignUpClick: () => Promise<void>;
 	onForgetPasswordClick: () => Promise<void>;
+	translations: typeof defaultTranslations.en.signIn;
 }) => {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -31,7 +34,7 @@ export const SignIn = ({
 		<div className="flex flex-col gap-6">
 			<DialogHeader className="space-y-2">
 				<DialogTitle className="text-center font-semibold text-2xl">
-					Sign in to your account
+					{translations.title}
 				</DialogTitle>
 			</DialogHeader>
 
@@ -46,7 +49,7 @@ export const SignIn = ({
 					}}
 				>
 					<GoogleIcon />
-					Continue with Google
+					{translations.google_continue}
 				</Button>
 				{/* <Button
 					variant="outline"
@@ -85,7 +88,7 @@ export const SignIn = ({
 				</div>
 				<div className="relative flex justify-center text-xs uppercase">
 					<span className="bg-background px-2 text-muted-foreground">
-						Or sign in with your email
+						{translations.email_or}
 					</span>
 				</div>
 			</div>
@@ -94,12 +97,12 @@ export const SignIn = ({
 			<div className="space-y-4">
 				<div className="space-y-2">
 					<Label htmlFor="email" className="font-medium text-sm">
-						Email Address
+						{translations.email_label}
 					</Label>
 					<Input
 						id="email"
 						type="email"
-						placeholder="Email Address"
+						placeholder={translations.email_label}
 						required
 						onChange={(e) => {
 							setEmail(e.target.value);
@@ -112,14 +115,14 @@ export const SignIn = ({
 				<div className="space-y-2">
 					<div className="flex items-center justify-between">
 						<Label htmlFor="password" className="font-medium text-sm">
-							Password
+							{translations.password_label}
 						</Label>
 						<button
 							type="button"
 							className="font-medium text-sm underline hover:no-underline"
 							onClick={() => onForgetPasswordClick()}
 						>
-							Forgot Password?
+							{translations.forgot_password}
 						</button>
 					</div>
 
@@ -127,7 +130,7 @@ export const SignIn = ({
 						<Input
 							id="password"
 							type={showPassword ? "text" : "password"}
-							placeholder="Password"
+							placeholder={translations.password_label}
 							autoComplete="current-password"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
@@ -157,19 +160,23 @@ export const SignIn = ({
 						setLoading(false);
 					}}
 				>
-					{loading ? <Loader2 size={20} className="animate-spin" /> : "Sign in"}
+					{loading ? (
+						<Loader2 size={20} className="animate-spin" />
+					) : (
+						translations.submit
+					)}
 				</Button>
 			</div>
 
 			<DialogFooter className="flex justify-center sm:justify-center">
 				<div className="text-center text-sm">
-					Don't have an account?{" "}
+					{translations.no_account}{" "}
 					<button
 						type="button"
 						className="font-medium underline hover:no-underline"
 						onClick={() => onSignUpClick()}
 					>
-						Register for free
+						{translations.register}
 					</button>
 				</div>
 			</DialogFooter>

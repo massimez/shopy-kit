@@ -5,9 +5,11 @@ import { OtpVerification } from "@workspace/ui/components/auth/otp-verification"
 import { ResetPasswordOtp } from "@workspace/ui/components/auth/reset-password-otp";
 import { SignIn } from "@workspace/ui/components/auth/sign-in";
 import { SignUp } from "@workspace/ui/components/auth/sign-up";
+import defaultTranslations from "@workspace/ui/components/auth/translations.json";
 import { Dialog, DialogContent } from "@workspace/ui/components/dialog";
 import { useOtpVerification } from "@workspace/ui/hooks/use-otp-verification";
 import { ArrowLeft } from "lucide-react";
+import { useLocale } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "@/i18n/routing";
@@ -37,6 +39,10 @@ export function AuthModal({
 	// biome-ignore lint/suspicious/noExplicitAny: <>
 	const [resetPasswordProps, setResetPasswordProps] = useState<any>(null);
 	const router = useRouter();
+	const locale = useLocale();
+	const translations =
+		defaultTranslations[locale as keyof typeof defaultTranslations] ||
+		defaultTranslations.en;
 
 	// biome-ignore lint/suspicious/noExplicitAny: <>
 	const openModal = (type: string, props: any) => {
@@ -200,22 +206,36 @@ export function AuthModal({
 								onSocialLoginClick={handleSocialLogin}
 								onSignUpClick={async () => setView("signUp")}
 								onForgetPasswordClick={async () => setView("forgetPassword")}
+								translations={translations.signIn}
 							/>
 						) : view === "signUp" ? (
 							<SignUp
 								onClickCreateAccount={handleSignUp}
 								onClickSignIn={() => setView("signIn")}
 								onSocialLoginClick={handleSocialLogin}
+								translations={translations.signUp}
 							/>
 						) : view === "forgetPassword" ? (
 							<ForgetPassword
 								sentResetCode={handleSendResetCode}
 								openSignIn={() => setView("signIn")}
+								translations={translations.forgetPassword}
 							/>
 						) : view === "resetPasswordOtp" ? (
-							<ResetPasswordOtp {...resetPasswordProps} />
+							<ResetPasswordOtp
+								{...resetPasswordProps}
+								translations={translations.resetPasswordOtp}
+							/>
 						) : (
-							<OtpVerification {...otpProps} />
+							<OtpVerification
+								{...otpProps}
+								translations={translations.otpVerification}
+								title={translations.otpVerification.title}
+								description={translations.otpVerification.description.replace(
+									"{email}",
+									otpProps?.email || "",
+								)}
+							/>
 						)}
 					</div>
 				</div>

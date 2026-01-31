@@ -12,11 +12,13 @@ import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState } from "react";
+import type defaultTranslations from "./translations.json";
 
 export const SignUp = ({
 	onClickCreateAccount,
 	onClickSignIn,
 	onSocialLoginClick,
+	translations,
 }: {
 	onClickCreateAccount: (signUpData: {
 		firstName: string;
@@ -27,6 +29,7 @@ export const SignUp = ({
 	}) => Promise<void>;
 	onClickSignIn: () => void;
 	onSocialLoginClick?: (name: string) => Promise<void>;
+	translations: typeof defaultTranslations.en.signUp;
 }) => {
 	const [firstName, setFirstName] = useState("");
 	const [lastName, setLastName] = useState("");
@@ -42,7 +45,7 @@ export const SignUp = ({
 		<div className="flex flex-col gap-6">
 			<DialogHeader className="space-y-2 text-center">
 				<DialogTitle className="text-center font-semibold text-2xl">
-					Create your account
+					{translations.title}
 				</DialogTitle>
 			</DialogHeader>
 
@@ -59,6 +62,7 @@ export const SignUp = ({
 							}}
 						>
 							<GoogleIcon />
+							{translations.google_continue}
 						</Button>
 						<Button
 							variant="outline"
@@ -97,7 +101,7 @@ export const SignUp = ({
 						</div>
 						<div className="relative flex justify-center text-xs uppercase">
 							<span className="bg-background px-2 text-muted-foreground">
-								Or sign up with your email
+								{translations.email_or}
 							</span>
 						</div>
 					</div>
@@ -109,11 +113,11 @@ export const SignUp = ({
 				<div className="grid grid-cols-2 gap-4">
 					<div className="space-y-2">
 						<Label htmlFor="first-name" className="font-medium text-sm">
-							First name
+							{translations.first_name_label}
 						</Label>
 						<Input
 							id="first-name"
-							placeholder="First name"
+							placeholder={translations.first_name_label}
 							required
 							onChange={(e) => {
 								setFirstName(e.target.value);
@@ -124,11 +128,11 @@ export const SignUp = ({
 					</div>
 					<div className="space-y-2">
 						<Label htmlFor="last-name" className="font-medium text-sm">
-							Last name
+							{translations.last_name_label}
 						</Label>
 						<Input
 							id="last-name"
-							placeholder="Last name"
+							placeholder={translations.last_name_label}
 							required
 							onChange={(e) => {
 								setLastName(e.target.value);
@@ -141,12 +145,12 @@ export const SignUp = ({
 
 				<div className="space-y-2">
 					<Label htmlFor="email" className="font-medium text-sm">
-						Email Address
+						{translations.email_label}
 					</Label>
 					<Input
 						id="email"
 						type="email"
-						placeholder="Email Address"
+						placeholder={translations.email_label}
 						required
 						onChange={(e) => {
 							setEmail(e.target.value);
@@ -158,7 +162,7 @@ export const SignUp = ({
 
 				<div className="space-y-2">
 					<Label htmlFor="password" className="font-medium text-sm">
-						Password
+						{translations.password_label}
 					</Label>
 					<div className="relative">
 						<Input
@@ -167,7 +171,7 @@ export const SignUp = ({
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
 							autoComplete="new-password"
-							placeholder="Password"
+							placeholder={translations.password_label}
 							className="h-12 pr-10"
 						/>
 						<button
@@ -189,7 +193,7 @@ export const SignUp = ({
 						htmlFor="password_confirmation"
 						className="font-medium text-sm"
 					>
-						Confirm Password
+						{translations.confirm_password_label}
 					</Label>
 					<div className="relative">
 						<Input
@@ -198,7 +202,7 @@ export const SignUp = ({
 							value={passwordConfirmation}
 							onChange={(e) => setPasswordConfirmation(e.target.value)}
 							autoComplete="new-password"
-							placeholder="Confirm Password"
+							placeholder={translations.confirm_password_label}
 							className="h-12 pr-10"
 						/>
 						<button
@@ -219,7 +223,7 @@ export const SignUp = ({
 
 				<div>
 					<p className="mt-6 mb-3 text-center text-muted-foreground text-xs">
-						By creating an account you agree to our terms and conditions.
+						{translations.terms}
 					</p>
 					<Button
 						type="submit"
@@ -243,7 +247,7 @@ export const SignUp = ({
 						{loading ? (
 							<Loader2 size={20} className="animate-spin" />
 						) : (
-							"Create an account"
+							translations.submit
 						)}
 					</Button>
 				</div>
@@ -251,13 +255,13 @@ export const SignUp = ({
 
 			<DialogFooter className="flex justify-center sm:justify-center">
 				<div className="text-center text-sm">
-					Already have an account?{" "}
+					{translations.has_account}{" "}
 					<button
 						type="button"
 						className="font-medium underline hover:no-underline"
 						onClick={() => onClickSignIn()}
 					>
-						Sign in
+						{translations.sign_in}
 					</button>
 				</div>
 			</DialogFooter>
