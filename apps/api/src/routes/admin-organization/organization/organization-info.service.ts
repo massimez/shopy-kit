@@ -3,6 +3,7 @@ import type z from "zod";
 import { db } from "@/lib/db";
 import { address, location, organizationInfo } from "@/lib/db/schema";
 import { getAuditData } from "@/lib/utils/audit";
+import { commitUploadsByFileKeys } from "@/routes/storage/storage.service";
 import type {
 	insertOrganizationInfoSchema,
 	updateOrganizationInfoSchema,
@@ -23,6 +24,17 @@ export async function createOrganizationInfo(
 			...getAuditData(user, "create"),
 		})
 		.returning();
+
+	if (data.images && data.images.length > 0) {
+		const keys = data.images
+			.map((img) => img.key)
+			.filter((key): key is string => !!key);
+
+		if (keys.length > 0) {
+			await commitUploadsByFileKeys(keys);
+		}
+	}
+
 	return newOrganizationInfo;
 }
 
@@ -70,6 +82,15 @@ export async function updateOrganizationInfo(
 			),
 		)
 		.returning();
+
+	if (data.images && data.images.length > 0) {
+		const keys = data.images
+			.map((img) => img.key)
+			.filter((key): key is string => !!key);
+		if (keys.length > 0) {
+			await commitUploadsByFileKeys(keys);
+		}
+	}
 	return updatedOrganizationInfo[0] || null;
 }
 

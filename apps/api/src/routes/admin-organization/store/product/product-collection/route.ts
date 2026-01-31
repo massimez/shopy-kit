@@ -124,10 +124,13 @@ export const productCollectionRoute = createRouter()
 		async (c) => {
 			try {
 				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const user = c.get("user") as { id: string };
+
 				const { id } = c.req.valid("param");
 				const deletedProductCollection = await deleteProductCollection(
 					id,
 					activeOrgId,
+					user,
 				);
 				if (!deletedProductCollection) {
 					return c.json(

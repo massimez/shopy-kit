@@ -10,9 +10,8 @@ import { adminMiddleware } from "@/middleware/admin";
 import { authMiddleware } from "@/middleware/auth";
 import { hasOrgPermission } from "@/middleware/org-permission";
 import {
-	type CommitParams,
 	cleanupOrphanFiles,
-	commitUploads,
+	commitUploadsByFileKeys,
 	deleteUploadedFile,
 	type PresignParams,
 	presignUpload,
@@ -26,9 +25,7 @@ const presignSchema = z.object({
 });
 
 const commitSchema = z.object({
-	uploadIds: z.array(z.uuid()),
-	entityType: z.string().optional(),
-	entityId: z.string().optional(),
+	fileKeys: z.array(z.string()),
 });
 
 // ---------------------------------------------------
@@ -72,8 +69,8 @@ const storageRoutes = createRouter()
 		jsonValidator(commitSchema),
 		async (c) => {
 			try {
-				const commitParams: CommitParams = c.req.valid("json");
-				const result = await commitUploads(commitParams);
+				const commitParams = c.req.valid("json");
+				const result = await commitUploadsByFileKeys(commitParams.fileKeys);
 
 				if (result.error) {
 					return c.json(
@@ -101,7 +98,7 @@ const storageRoutes = createRouter()
 	.delete(
 		"/:key",
 		authMiddleware,
-		hasOrgPermission("storage:write"),
+		hasOrgPermission("storage:delete"),
 		async (c) => {
 			try {
 				// biome-ignore lint/style/noNonNullAssertion: <>

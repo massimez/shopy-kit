@@ -54,6 +54,7 @@ export const statements = {
 	salary_advance: ["request", "read", "approve", "disburse"],
 	salary_component: ["create", "read", "update", "delete"],
 	salary_structure: ["create", "read", "update", "delete"],
+	storage: ["read", "write", "delete"],
 } as const;
 
 export type Resource = keyof typeof statements;
@@ -112,6 +113,7 @@ export const roles = {
 		salary_advance: ["request", "read", "approve", "disburse"],
 		salary_component: ["create", "read", "update", "delete"],
 		salary_structure: ["create", "read", "update", "delete"],
+		storage: ["read", "write", "delete"],
 	}),
 	admin: ac.newRole({
 		...adminAc.statements,
@@ -150,6 +152,7 @@ export const roles = {
 		salary_advance: ["request", "read", "approve", "disburse"],
 		salary_component: ["create", "read", "update"],
 		salary_structure: ["create", "read", "update"],
+		storage: ["read", "write"],
 	}),
 	manager: ac.newRole({
 		product: ["update", "read"],
@@ -159,6 +162,7 @@ export const roles = {
 		review: ["read"],
 		location: ["read"],
 		report: ["read"],
+		storage: ["read"],
 	}),
 	staff: ac.newRole({
 		product: ["read"],
@@ -166,5 +170,6 @@ export const roles = {
 		order: ["create", "update", "read"],
 		review: ["read"],
 		location: ["read"],
+		storage: ["read"],
 	}),
 } as const;

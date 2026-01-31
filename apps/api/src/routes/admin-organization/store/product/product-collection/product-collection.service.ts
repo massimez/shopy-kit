@@ -3,6 +3,10 @@ import type { z } from "zod";
 import { db } from "@/lib/db";
 import { productCollection } from "@/lib/db/schema";
 import { validateOrgId } from "@/lib/utils/validator";
+import {
+	commitUploadsByFileKeys,
+	deleteUploadedFile,
+} from "@/routes/storage/storage.service";
 import type {
 	insertProductCollectionSchema,
 	updateProductCollectionSchema,
@@ -25,6 +29,11 @@ export async function createProductCollection(
 			organizationId: orgId,
 		})
 		.returning();
+
+	if (newProductCollection.image) {
+		await commitUploadsByFileKeys([newProductCollection.image]);
+	}
+
 	return newProductCollection;
 }
 
@@ -116,6 +125,11 @@ export async function updateProductCollection(
 			),
 		)
 		.returning();
+
+	if (updatedProductCollection.image) {
+		await commitUploadsByFileKeys([updatedProductCollection.image]);
+	}
+
 	return updatedProductCollection;
 }
 
@@ -125,6 +139,7 @@ export async function updateProductCollection(
 export async function deleteProductCollection(
 	productCollectionId: string,
 	orgId: string,
+	user: { id: string },
 ) {
 	const [deletedProductCollection] = await db
 		.delete(productCollection)
@@ -135,5 +150,10 @@ export async function deleteProductCollection(
 			),
 		)
 		.returning();
+
+	if (deletedProductCollection.image) {
+		await deleteUploadedFile(deletedProductCollection.image, user, orgId);
+	}
+
 	return deletedProductCollection;
 }

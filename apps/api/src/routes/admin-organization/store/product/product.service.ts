@@ -8,6 +8,10 @@ import { getAuditData } from "@/lib/utils/audit";
 import { validateOrgId } from "@/lib/utils/validator";
 import type { offsetPaginationSchema } from "@/middleware/pagination";
 import {
+	batchDeleteUploads,
+	commitUploadsByFileKeys,
+} from "@/routes/storage/storage.service";
+import {
 	assignProductToCollections,
 	updateProductCollections,
 } from "./product-collection/product-collection-assignment.service";
@@ -45,6 +49,17 @@ export async function createProduct(
 			...getAuditData(user, "create"),
 		})
 		.returning();
+
+	const fileKeys: string[] = [];
+	if (images?.length) {
+		fileKeys.push(...images.map((i) => i.key));
+	}
+	if (thumbnailImage?.key) {
+		fileKeys.push(thumbnailImage.key);
+	}
+	if (fileKeys.length) {
+		await commitUploadsByFileKeys(fileKeys);
+	}
 
 	// Assign product to collections if provided
 	if (collectionIds && collectionIds.length > 0) {
@@ -253,6 +268,17 @@ export async function updateProduct(
 		)
 		.returning();
 
+	const fileKeys: string[] = [];
+	if (restData.images?.length) {
+		fileKeys.push(...restData.images.map((i) => i.key));
+	}
+	if (restData.thumbnailImage?.key) {
+		fileKeys.push(restData.thumbnailImage.key);
+	}
+	if (fileKeys.length) {
+		await commitUploadsByFileKeys(fileKeys);
+	}
+
 	// Update collection assignments if provided
 	if (collectionIds !== undefined) {
 		await updateProductCollections(productId, collectionIds, orgId);
@@ -281,5 +307,22 @@ export async function deleteProduct(
 			),
 		)
 		.returning();
+
+	if (deletedProduct) {
+		const fileKeys: string[] = [];
+		if (deletedProduct.images?.length) {
+			const keys = deletedProduct.images
+				.map((i) => i.key)
+				.filter((k): k is string => !!k);
+			fileKeys.push(...keys);
+		}
+		if (deletedProduct.thumbnailImage?.key) {
+			fileKeys.push(deletedProduct.thumbnailImage.key);
+		}
+		if (fileKeys.length) {
+			await batchDeleteUploads(fileKeys, user, orgId);
+		}
+	}
+
 	return deletedProduct;
 }
