@@ -152,7 +152,6 @@ export function AuthModalProvider({
 		await authClient.signIn.social(
 			{
 				provider: provider,
-				callbackURL: "/",
 			},
 			{
 				onError: (ctx: { error: { message: string } }) => {
