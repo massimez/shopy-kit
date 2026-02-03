@@ -146,7 +146,6 @@ export function CategorySidebar({
 												: "text-muted-foreground",
 										)}
 									>
-										All{" "}
 										{getCollectionTranslation(collection, locale)?.name ||
 											collection.name}
 									</Link>

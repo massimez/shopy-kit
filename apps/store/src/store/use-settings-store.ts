@@ -9,7 +9,7 @@ interface StoreSettingsState {
 export const useStoreSettings = create<StoreSettingsState>()(
 	persist(
 		(set) => ({
-			currency: "USD",
+			currency: "DZD",
 			setCurrency: (currency) => set({ currency }),
 		}),
 		{

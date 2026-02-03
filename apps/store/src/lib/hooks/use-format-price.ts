@@ -8,10 +8,13 @@ export function useFormatPrice() {
 	console.log(locale);
 	const formatPrice = useCallback(
 		(price: number | undefined | null) => {
+			const code = locale === "fr" ? "fr-DZ" : locale;
 			if (price === undefined || price === null) return "";
-			return new Intl.NumberFormat(locale, {
+			return new Intl.NumberFormat(code, {
 				style: "currency",
 				currency: currency,
+				minimumFractionDigits: currency === "DZD" ? 0 : 2,
+				maximumFractionDigits: currency === "DZD" ? 0 : 2,
 			}).format(price);
 		},
 		[currency, locale],
