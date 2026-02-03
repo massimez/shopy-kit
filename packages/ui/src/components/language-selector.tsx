@@ -112,9 +112,6 @@ export function LanguageSelector({
 						onClick={() => handleLocaleChange(locale.code)}
 						disabled={locale.code === currentLocale}
 					>
-						{showFlagNames && locale.flag && (
-							<span className="mr-2">{locale.flag}</span>
-						)}
 						<span className="mr-2">{locale.nativeName || locale.label}</span>
 						<span className="text-muted-foreground text-xs">
 							{locale.label !== locale.nativeName && locale.nativeName
