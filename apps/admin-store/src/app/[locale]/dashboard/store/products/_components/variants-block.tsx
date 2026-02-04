@@ -107,7 +107,7 @@ export const VariantsBlock = ({
 													</div>
 													<div>
 														<div className="font-medium text-sm">
-															{field.displayName || "Manual Variant"}
+															{field.displayName || ""}
 														</div>
 														{field.optionValues && (
 															<div className="mt-0.5 text-muted-foreground text-xs">

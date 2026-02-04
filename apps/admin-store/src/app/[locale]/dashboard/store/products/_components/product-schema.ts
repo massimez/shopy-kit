@@ -3,7 +3,7 @@ import { z } from "zod";
 
 export type ProductVariantFormValues = {
 	id?: string;
-	sku: string;
+	sku?: string;
 	price: number;
 	cost?: number;
 	compareAtPrice?: number;
@@ -151,7 +151,7 @@ export const productFormSchema = insertProductSchema
 			.array(
 				z.object({
 					id: z.string().optional(),
-					sku: z.string().min(1, "SKU is required"),
+					sku: z.string().optional(),
 					price: z.coerce.number().min(0, "Price must be positive"),
 					cost: z.coerce.number().min(0, "Cost must be positive").optional(),
 					compareAtPrice: z.coerce
@@ -177,7 +177,7 @@ export const productFormSchema = insertProductSchema
 					optionValues: z.record(z.string(), z.string()).optional(),
 				}),
 			)
-			.optional(),
+			.min(1, "At least one variant is required"),
 	});
 
 export type ProductFormSchema = z.infer<typeof productFormSchema>;

@@ -256,3 +256,42 @@ export function generateProductSku(
 	const randomChars = Math.random().toString(36).substring(2, 5).toUpperCase();
 	return sku ? `${sku}-${randomChars}` : randomChars;
 }
+
+/**
+ * Processes product variants and generates SKUs for variants that don't have one.
+ * @param variants - Array of product variants
+ * @param productName - The product name to use for SKU generation
+ * @param selectedLanguage - The currently selected language code
+ * @returns Array of variants with generated SKUs where needed
+ */
+export function processVariantsWithSku<
+	T extends {
+		sku?: string;
+		displayName?: string;
+		translations?: Array<{ languageCode: string; name?: string }>;
+	},
+>(
+	variants: T[] | undefined,
+	productName: string,
+	selectedLanguage: string,
+): T[] | undefined {
+	if (!variants) return variants;
+
+	return variants.map((variant) => {
+		if (!variant.sku || variant.sku.trim() === "") {
+			// Use displayName if available, otherwise use variant name from translations
+			const variantIdentifier =
+				variant.displayName ||
+				variant.translations?.find((t) => t.languageCode === selectedLanguage)
+					?.name ||
+				variant.translations?.[0]?.name ||
+				"";
+
+			return {
+				...variant,
+				sku: generateProductSku(productName, variantIdentifier),
+			};
+		}
+		return variant;
+	});
+}

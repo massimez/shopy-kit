@@ -68,7 +68,7 @@ export const product = pgTable("product", {
 	}),
 	name: varchar("name", { length: 255 }),
 	status: text("status").default("draft").notNull().$type<TProductStatus>(),
-	type: varchar("type", { length: 50 }).default("simple").notNull(), // simple, variable, digital
+	type: varchar("type", { length: 50 }).default("variable").notNull(), // variable, digital
 	taxRate: numeric("tax_rate", { precision: 5, scale: 2 })
 		.default("0.00")
 		.notNull(),

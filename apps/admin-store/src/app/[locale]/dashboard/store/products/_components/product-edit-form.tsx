@@ -116,6 +116,27 @@ export function ProductEditForm({
 		},
 	});
 
+	// Auto-create a default variant for new products
+	React.useEffect(() => {
+		// Only run for new products (no initialValues.id) and if no variants exist
+		if (
+			!initialValues?.id &&
+			(!form.getValues("variants") || form.getValues("variants")?.length === 0)
+		) {
+			form.setValue("variants", [
+				{
+					sku: "",
+					price: form.getValues("price") || 0,
+					cost: form.getValues("cost") || 0,
+					compareAtPrice: form.getValues("compareAtPrice") || 0,
+					maxStock: 0,
+					isActive: true,
+					translations: [],
+				},
+			]);
+		}
+	}, [initialValues?.id, form]);
+
 	return (
 		<Form {...form}>
 			<form
@@ -469,7 +490,7 @@ export function ProductEditForm({
 												defaultValue={field.value}
 											>
 												<FormControl>
-													<SelectTrigger>
+													<SelectTrigger className="min-w-36">
 														<SelectValue placeholder="Select status" />
 													</SelectTrigger>
 												</FormControl>
@@ -488,7 +509,7 @@ export function ProductEditForm({
 									control={form.control}
 									name="type"
 									render={({ field }) => (
-										<FormItem>
+										<FormItem className="hidden">
 											<FormLabel>Product Type</FormLabel>
 											<Select
 												onValueChange={field.onChange}

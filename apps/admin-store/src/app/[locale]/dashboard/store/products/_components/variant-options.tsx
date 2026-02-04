@@ -250,8 +250,11 @@ export const VariantOptions = ({
 			<CardHeader>
 				<CardTitle>Variant Options</CardTitle>
 				<CardDescription>
-					Create custom options like Size, Color, Material, etc. Variants will
-					be automatically generated from all combinations.
+					Create options like Size (S, M, L) or Color (Red, Blue, Green).
+					Variants will be generated automatically from all combinations.
+					<span className="mt-2 block text-muted-foreground text-xs">
+						💡 Tip: Leave this empty if your product doesn't have variations
+					</span>
 				</CardDescription>
 			</CardHeader>
 			<CardContent>

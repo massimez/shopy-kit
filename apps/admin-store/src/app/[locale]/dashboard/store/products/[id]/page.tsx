@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { DEFAULT_LOCALE } from "@/constants/locales";
 import { hc } from "@/lib/api-client";
 import { useActiveOrganization } from "@/lib/auth-client";
+import { processVariantsWithSku } from "@/lib/helpers";
 import { ProductEditForm } from "../_components/product-edit-form";
 import type { ProductFormValues } from "../_components/product-schema";
 import type { Product, ProductVariant } from "../_components/use-products";
@@ -158,10 +159,27 @@ export default function EditProductPage({
 			return;
 		}
 
+		// Get product name for SKU generation
+		const productName =
+			values.translations?.[selectedLanguage]?.name ||
+			values.translations?.en?.name ||
+			Object.values(values.translations || {})[0]?.name ||
+			"";
+
+		// Generate SKUs for variants that don't have one
+		const processedVariants = processVariantsWithSku(
+			values.variants,
+			productName,
+			selectedLanguage,
+		);
+
 		try {
 			await updateProduct({
 				productId: id,
-				data: values,
+				data: {
+					...values,
+					variants: processedVariants,
+				},
 				deletedVariantIds,
 			});
 			// Stay on the edit page after saving
