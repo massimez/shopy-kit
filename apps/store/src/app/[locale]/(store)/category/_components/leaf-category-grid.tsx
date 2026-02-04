@@ -1,10 +1,16 @@
 "use client";
 
+import { useLocale } from "next-intl";
 import { ProductCard } from "@/components/features/product-card";
 import { useDefaultLocation, useProducts } from "@/lib/hooks/use-storefront";
+import {
+	getProductTranslation,
+	getVariantTranslation,
+} from "@/lib/storefront-types";
 
 export function LeafCategoryGrid({ collectionId }: { collectionId: string }) {
 	const { data: location } = useDefaultLocation(true);
+	const locale = useLocale();
 
 	const { data: products = [], isLoading } = useProducts(
 		{
@@ -31,15 +37,14 @@ export function LeafCategoryGrid({ collectionId }: { collectionId: string }) {
 			{products.map((p) => {
 				// Inline mapping logic or extract utility
 				const firstVariant = p.variants?.[0];
-				const variantTranslation =
-					firstVariant?.translations?.find(
-						(t: { languageCode: string }) => t.languageCode === "en",
-					) || firstVariant?.translations?.[0];
+
+				const variantTranslation = getVariantTranslation(firstVariant, locale);
+
+				const productTranslation = getProductTranslation(p, locale);
 
 				const mappedProduct = {
 					id: p.id,
-					name:
-						p.translations?.find((t) => t.languageCode === "en")?.name || "",
+					name: productTranslation?.name || "",
 					price: firstVariant
 						? Number.parseFloat(firstVariant.price)
 						: p.minPrice || 0,

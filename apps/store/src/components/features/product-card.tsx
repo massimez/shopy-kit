@@ -5,13 +5,16 @@ import { Card, CardContent } from "@workspace/ui/components/card";
 
 import { Minus, PlusIcon, ShoppingCart } from "lucide-react";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Link } from "@/i18n/routing";
 import { useDefaultLocationId } from "@/lib/hooks/use-default-location";
 import { useFormatPrice } from "@/lib/hooks/use-format-price";
-import type { ProductVariant } from "@/lib/storefront-types";
+import {
+	getVariantTranslation,
+	type ProductVariant,
+} from "@/lib/storefront-types";
 import { useCartStore } from "@/store/use-cart-store";
 
 export interface Product {
@@ -41,6 +44,7 @@ export function ProductCard({ product }: ProductCardProps) {
 	const { formatPrice } = useFormatPrice();
 	const { locationId } = useDefaultLocationId();
 	const t = useTranslations("ProductCard");
+	const locale = useLocale();
 
 	const [selectedVariantId, setSelectedVariantId] = useState<
 		string | undefined
@@ -56,8 +60,8 @@ export function ProductCard({ product }: ProductCardProps) {
 		: product.price;
 
 	const currentVariantName = selectedVariant
-		? selectedVariant.translations?.find((t) => t.languageCode === "en")
-				?.name || selectedVariant.sku
+		? getVariantTranslation(selectedVariant, locale)?.name ||
+			selectedVariant.sku
 		: product.variantName;
 
 	// Find the current quantity of this item in the cart
@@ -174,9 +178,7 @@ export function ProductCard({ product }: ProductCardProps) {
 					{product.variants && product.variants.length > 1 ? (
 						<div className="relative z-10 flex items-center gap-1 pt-2">
 							{product.variants.slice(0, 3).map((v) => {
-								const name =
-									v.translations?.find((t) => t.languageCode === "en")?.name ||
-									v.sku;
+								const name = getVariantTranslation(v, locale)?.name || v.sku;
 								const isSelected = v.id === selectedVariantId;
 								return (
 									<Badge

@@ -11,6 +11,10 @@ import { useLocale } from "next-intl";
 import { ProductCard } from "@/components/features/product-card";
 import { Link } from "@/i18n/routing";
 import { useDefaultLocation, useProducts } from "@/lib/hooks/use-storefront";
+import {
+	getProductTranslation,
+	getVariantTranslation,
+} from "@/lib/storefront-types";
 import { cn } from "@/lib/utils";
 
 interface SubcategoryRowProps {
@@ -50,14 +54,13 @@ export function SubcategoryRow({
 	// Map products to component format (reusing logic from products-view if shared, or inline here)
 	const mappedProducts = products.map((p) => {
 		const firstVariant = p.variants?.[0];
-		const variantTranslation =
-			firstVariant?.translations?.find(
-				(t: { languageCode: string }) => t.languageCode === locale,
-			) || firstVariant?.translations?.[0];
+		const variantTranslation = getVariantTranslation(firstVariant, locale);
+
+		const productTranslation = getProductTranslation(p, locale);
 
 		return {
 			id: p.id,
-			name: p.translations?.find((t) => t.languageCode === locale)?.name || "",
+			name: productTranslation?.name || "",
 			price: firstVariant
 				? Number.parseFloat(firstVariant.price)
 				: p.minPrice || 0,

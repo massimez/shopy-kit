@@ -40,6 +40,10 @@ import { FrequentlyBoughtTogether } from "@/components/features";
 import { useFormatPrice } from "@/lib/hooks/use-format-price";
 import { useDefaultLocation, useProduct } from "@/lib/hooks/use-storefront";
 import type { ProductVariant } from "@/lib/storefront-types";
+import {
+	getProductTranslation,
+	getVariantTranslation,
+} from "@/lib/storefront-types";
 import { useCartStore } from "@/store/use-cart-store";
 
 interface ProductPageProps {
@@ -68,9 +72,7 @@ export default function ProductPage({ params }: ProductPageProps) {
 	);
 
 	// Get the localized translation
-	const translation =
-		product?.translations?.find((t) => t.languageCode === locale) ||
-		product?.translations?.find((t) => t.languageCode === "en");
+	const translation = getProductTranslation(product, locale);
 
 	// Process product data
 	const productData = useMemo(() => {
@@ -165,13 +167,10 @@ export default function ProductPage({ params }: ProductPageProps) {
 
 		if (currentQty === 0) {
 			// Add new item
-			const variantTranslation =
-				productData.selectedVariant.translations?.find(
-					(t) => t.languageCode === locale,
-				) ||
-				productData.selectedVariant.translations?.find(
-					(t) => t.languageCode === "en",
-				);
+			const variantTranslation = getVariantTranslation(
+				productData.selectedVariant,
+				locale,
+			);
 
 			addItem({
 				id: productData.selectedVariant.id,
@@ -347,11 +346,10 @@ export default function ProductPage({ params }: ProductPageProps) {
 						<div className="fade-in slide-in-from-bottom-4 animate-in space-y-4 delay-200 duration-500">
 							<div className="flex flex-wrap gap-3">
 								{productData.variants.map((variant) => {
-									const variantTranslation =
-										variant.translations?.find(
-											(t) => t.languageCode === locale,
-										) ||
-										variant.translations?.find((t) => t.languageCode === "en");
+									const variantTranslation = getVariantTranslation(
+										variant,
+										locale,
+									);
 									const isSelected = selectedVariantId === variant.id;
 
 									return (

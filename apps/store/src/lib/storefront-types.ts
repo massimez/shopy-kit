@@ -28,13 +28,45 @@ export interface Collection {
  * Falls back to English, then the first available translation
  */
 export function getCollectionTranslation(
-	collection: Collection,
+	collection: Pick<Collection, "translations">,
 	locale: string,
 ) {
 	return (
 		collection.translations?.find((t) => t.languageCode === locale) ||
 		collection.translations?.find((t) => t.languageCode === "en") ||
 		collection.translations?.[0]
+	);
+}
+
+/**
+ * Get the translation for a product based on the current locale
+ * Falls back to English, then the first available translation
+ */
+export function getProductTranslation(
+	product?: Pick<Product, "translations">,
+	locale?: string,
+) {
+	if (!product) return undefined;
+	return (
+		product.translations?.find((t) => t.languageCode === locale) ||
+		product.translations?.find((t) => t.languageCode === "en") ||
+		product.translations?.[0]
+	);
+}
+
+/**
+ * Get the translation for a product variant based on the current locale
+ * Falls back to English, then the first available translation
+ */
+export function getVariantTranslation(
+	variant?: Pick<ProductVariant, "translations">,
+	locale?: string,
+) {
+	if (!variant) return undefined;
+	return (
+		variant.translations?.find((t) => t.languageCode === locale) ||
+		variant.translations?.find((t) => t.languageCode === "en") ||
+		variant.translations?.[0]
 	);
 }
 
