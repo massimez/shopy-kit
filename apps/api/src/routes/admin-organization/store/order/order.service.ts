@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import type { z } from "zod";
+import { generateOrderNumber } from "@/helpers/generate-order-number";
 import type { User } from "@/lib/auth";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
@@ -184,7 +185,7 @@ export async function createOrder(
 			tx,
 		);
 
-		const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+		const orderNumber = generateOrderNumber();
 		const userId = user?.id || null;
 
 		// Populate customer info from user session if not provided

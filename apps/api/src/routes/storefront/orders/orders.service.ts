@@ -1,4 +1,5 @@
 import { and, desc, eq } from "drizzle-orm";
+import { generateOrderNumber } from "@/helpers/generate-order-number";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 import { order, orderItem } from "@/lib/db/schema/store/order";
@@ -217,7 +218,8 @@ export async function createStorefrontOrder(payload: CreateOrderInput) {
 			tx,
 		);
 
-		const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+		const orderNumber = generateOrderNumber();
+
 		const userId = payload.userId || null;
 
 		// Apply coupon if provided
