@@ -48,20 +48,35 @@ export function useInventoryStock(productVariantId: string) {
 
 export const useInventoryTransactions = (
 	productVariantId?: string,
-	params?: { limit?: string; offset?: string },
+	params?: {
+		limit?: string;
+		offset?: string;
+		setTotal?: (total: number) => void;
+	},
 ) => {
 	return useQuery({
-		queryKey: ["transactions", productVariantId || "all"],
+		queryKey: [
+			"transactions",
+			productVariantId || "all",
+			params?.limit,
+			params?.offset,
+		],
 		queryFn: async () => {
 			const response = productVariantId
 				? await hc.api.store.inventory["stock-transactions"][
 						":productVariantId"
 					].$get({
 						param: { productVariantId },
-						query: { limit: params?.limit ?? "300", offset: "0" },
+						query: {
+							limit: params?.limit ?? "10",
+							offset: params?.offset ?? "0",
+						},
 					})
 				: await hc.api.store.inventory["stock-transactions"].$get({
-						query: { limit: params?.limit ?? "300", offset: "0" },
+						query: {
+							limit: params?.limit ?? "10",
+							offset: params?.offset ?? "0",
+						},
 					});
 
 			if (!response.ok) {
@@ -76,7 +91,12 @@ export const useInventoryTransactions = (
 			if (json.error) {
 				throw new Error(json.error?.message || "Failed to fetch transactions");
 			}
-			return json.data;
+
+			if (params?.setTotal) {
+				params.setTotal(json.data.total);
+			}
+
+			return json.data.data;
 		},
 		enabled: true,
 	});

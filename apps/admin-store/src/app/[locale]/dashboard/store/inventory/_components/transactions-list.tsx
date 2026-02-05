@@ -2,6 +2,8 @@
 
 import { Card, CardContent, CardTitle } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
+import { PaginationControls } from "@workspace/ui/components/pagination-controls";
+
 import {
 	Table,
 	TableBody,
@@ -12,6 +14,7 @@ import {
 } from "@workspace/ui/components/table";
 import { Receipt } from "lucide-react";
 import { useState } from "react";
+import { useNuqsPagination } from "@/hooks/use-nuqs-pagination";
 import { useInventoryTransactions } from "../hooks/use-inventory";
 
 interface TransactionsListProps {
@@ -22,14 +25,19 @@ export const TransactionsList = ({
 	productVariantId,
 }: TransactionsListProps) => {
 	const [searchTerm, setSearchTerm] = useState("");
+	const pagination = useNuqsPagination({ pageParam: "transactionsPage" });
 
 	const {
 		data: transactionsResponse,
 		isLoading,
 		error,
-	} = useInventoryTransactions(productVariantId || "");
+	} = useInventoryTransactions(productVariantId || "", {
+		limit: pagination.limit.toString(),
+		offset: pagination.offset.toString(),
+		setTotal: pagination.setTotal,
+	});
 
-	const transactions = transactionsResponse?.data || [];
+	const transactions = transactionsResponse || [];
 
 	const filteredTransactions = transactions.filter(
 		(transaction) =>
@@ -69,51 +77,56 @@ export const TransactionsList = ({
 					</CardContent>
 				</Card>
 			) : (
-				<Table>
-					<TableHeader>
-						<TableRow>
-							<TableHead>SKU</TableHead>
-							<TableHead>Reason</TableHead>
-							<TableHead>Quantity Change</TableHead>
-							<TableHead>Location</TableHead>
-							<TableHead>Unit Cost</TableHead>
-							<TableHead>Reference</TableHead>
-							<TableHead>Date</TableHead>
-						</TableRow>
-					</TableHeader>
-					<TableBody>
-						{filteredTransactions.map((transaction) => (
-							<TableRow key={transaction.id}>
-								<TableCell>{transaction.variant?.sku || "N/A"}</TableCell>
-								<TableCell className="font-medium">
-									{transaction.reason?.replace("_", " ") || "N/A"}
-								</TableCell>
-								<TableCell>
-									<span
-										className={
-											transaction.quantityChange > 0
-												? "text-green-600"
-												: "text-red-600"
-										}
-									>
-										{transaction.quantityChange > 0 ? "+" : ""}
-										{transaction.quantityChange}
-									</span>
-								</TableCell>
-								<TableCell>{transaction.location.name || "N/A"}</TableCell>
-								<TableCell>
-									{Number.parseInt(transaction.unitCost || "0", 10).toFixed(2)}
-								</TableCell>
-								<TableCell>{transaction.referenceId || "-"}</TableCell>
-								<TableCell>
-									{transaction.createdAt
-										? new Date(transaction.createdAt).toLocaleDateString()
-										: "Unknown"}
-								</TableCell>
+				<>
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>SKU</TableHead>
+								<TableHead>Reason</TableHead>
+								<TableHead>Quantity Change</TableHead>
+								<TableHead>Location</TableHead>
+								<TableHead>Unit Cost</TableHead>
+								<TableHead>Reference</TableHead>
+								<TableHead>Date</TableHead>
 							</TableRow>
-						))}
-					</TableBody>
-				</Table>
+						</TableHeader>
+						<TableBody>
+							{filteredTransactions.map((transaction) => (
+								<TableRow key={transaction.id}>
+									<TableCell>{transaction.variant?.sku || "N/A"}</TableCell>
+									<TableCell className="font-medium">
+										{transaction.reason?.replace("_", " ") || "N/A"}
+									</TableCell>
+									<TableCell>
+										<span
+											className={
+												transaction.quantityChange > 0
+													? "text-green-600"
+													: "text-red-600"
+											}
+										>
+											{transaction.quantityChange > 0 ? "+" : ""}
+											{transaction.quantityChange}
+										</span>
+									</TableCell>
+									<TableCell>{transaction.location.name || "N/A"}</TableCell>
+									<TableCell>
+										{Number.parseInt(transaction.unitCost || "0", 10).toFixed(
+											2,
+										)}
+									</TableCell>
+									<TableCell>{transaction.referenceId || "-"}</TableCell>
+									<TableCell>
+										{transaction.createdAt
+											? new Date(transaction.createdAt).toLocaleDateString()
+											: "Unknown"}
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+					<PaginationControls pagination={pagination} className="mt-4" />
+				</>
 			)}
 		</div>
 	);

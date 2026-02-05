@@ -18,7 +18,7 @@ import {
 } from "@workspace/ui/components/tabs";
 import { Search, X } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageDashboardHeader } from "@/app/[locale]/(landing)/_components/sections/page-dashboard-header";
 import {
 	useActiveOrganization,
@@ -30,6 +30,7 @@ import { CollectionFilter } from "../_components/collection-filter";
 import { useProductCollections } from "../product-collections/hooks/use-product-collection";
 import {
 	InventoryList,
+	type ProductWithVariants,
 	TransactionModal,
 	TransactionsList,
 } from "./_components";
@@ -71,7 +72,7 @@ export default function InventoryPage() {
 		selectedLocationId === "ALL" ? undefined : selectedLocationId;
 
 	const {
-		data: inventoryData,
+		data: inventoryResponse,
 		isLoading,
 		error,
 	} = useGroupedInventory({
@@ -80,10 +81,14 @@ export default function InventoryPage() {
 		offset: pagination.offset.toString(),
 		search: searchQuery || undefined,
 		collectionId: selectedCollection || undefined,
-		setTotal: pagination.setTotal,
 	});
 
-	const inventory = inventoryData || [];
+	const inventory = (inventoryResponse?.data || []) as ProductWithVariants[];
+	const total = inventoryResponse?.total || 0;
+
+	useEffect(() => {
+		pagination.setTotal(total);
+	}, [total, pagination.setTotal]);
 
 	if (isLoading) return <div>Loading...</div>;
 	if (error) return <div>Error: {(error as Error).message}</div>;

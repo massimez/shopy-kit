@@ -12,8 +12,9 @@ interface UseNuqsPaginationOptions {
 export function useNuqsPagination({
 	limit = 10,
 	defaultTotal = 0,
-}: UseNuqsPaginationOptions = {}) {
-	const [page, setPage] = useQueryState("page", paginationPageParser);
+	pageParam = "page",
+}: UseNuqsPaginationOptions & { pageParam?: string } = {}) {
+	const [page, setPage] = useQueryState(pageParam, paginationPageParser);
 	const [total, setTotal] = useState(defaultTotal);
 
 	const totalPages = Math.ceil(total / limit);

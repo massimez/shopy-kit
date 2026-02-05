@@ -54,7 +54,7 @@ export const useGroupedInventory = ({
 
 			const data = json.data;
 
-			return data.data;
+			return { data: data.data, total: data.total };
 		},
 	});
 };

@@ -92,18 +92,6 @@ export const InventoryList = ({
 
 	return (
 		<div className="space-y-4">
-			<div className="flex items-center gap-4">
-				<p className="whitespace-nowrap text-muted-foreground text-sm">
-					{filteredInventory.length}{" "}
-					{filteredInventory.length === 1 ? "product" : "products"} (
-					{filteredInventory.reduce(
-						(total, product) => total + product.variants.length,
-						0,
-					)}{" "}
-					variants)
-				</p>
-			</div>
-
 			{filteredInventory.length === 0 ? (
 				<Card>
 					<CardContent className="flex flex-col items-center justify-center py-12 text-center">
