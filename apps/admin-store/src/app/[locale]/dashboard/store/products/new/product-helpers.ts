@@ -136,6 +136,7 @@ export async function createVariants(
 					weightKg: variant.weightKg?.toString(),
 					translations:
 						variantTranslations.length > 0 ? variantTranslations : undefined,
+					sku: variant.sku || "",
 				};
 
 				// Remove frontend-only fields
