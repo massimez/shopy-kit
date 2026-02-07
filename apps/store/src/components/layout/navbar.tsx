@@ -108,7 +108,7 @@ export function Navbar({ logo, storeName = "" }: NavbarProps) {
 								sizes="200px"
 								className="h-full w-auto object-contain transition-transform duration-300 group-hover:scale-105"
 							/>
-							<span className="font-bold text-2xl text-[#774ba9] tracking-tight transition-all duration-300 group-hover:text-[#8b5ac0]">
+							<span className="font-bold text-2xl text-primary tracking-tight transition-all duration-300 group-hover:text-[#8b5ac0]">
 								{storeName}
 							</span>
 						</div>

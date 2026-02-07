@@ -552,61 +552,89 @@ export default function ProductPage({ params }: ProductPageProps) {
 
 			{/* Mobile Sticky Add to Cart */}
 			{/* Mobile Sticky Add to Cart */}
-			<div className="fixed right-0 bottom-0 left-0 z-50 border-t bg-background/80 p-4 pb-6 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] backdrop-blur-xl supports-backdrop-filter:bg-background/60 lg:hidden">
-				<div className="flex items-center gap-4 pe-22">
-					{cartQuantity === 0 ? (
-						<Button
-							size="lg"
-							onClick={handleIncrement}
-							disabled={
-								!productData.inStock ||
-								(productData.stockQuantity <= 0 && !productData.allowBackorders)
-							}
-							className="h-12 flex-1 rounded-full font-semibold text-base shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-						>
-							{productData.stockQuantity <= 0 &&
-							!productData.allowBackorders ? (
-								"Out of Stock"
-							) : (
-								<>
-									<ShoppingCart className="mr-2 h-5 w-5" />
-									Add to Cart
-								</>
-							)}
-						</Button>
-					) : (
-						<div className="flex h-12 flex-1 items-center justify-between rounded-full border bg-muted/50 p-1">
-							<Button
-								variant="ghost"
-								size="icon"
-								onClick={handleDecrement}
-								className="h-10 w-10 rounded-full hover:bg-background hover:shadow-sm"
-							>
-								{cartQuantity === 1 ? (
-									<Minus className="h-4 w-4 text-red-500" />
-								) : (
-									<Minus className="h-4 w-4" />
-								)}
-							</Button>
-							<span className="flex min-w-8 items-center justify-center gap-1 px-2 text-center font-bold text-sm">
-								<span className="text-lg">{cartQuantity}</span>
-								<span className="text-muted-foreground">x</span>
-								<span>{formatPrice(productData.price)}</span>
+			<div className="fixed inset-x-0 bottom-0 z-40 border-border/10 border-t bg-background/80 p-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all duration-300 lg:hidden">
+				<div className="flex items-center gap-4">
+					{/* Price Info */}
+					<div className="flex flex-col">
+						<div className="flex items-baseline gap-2">
+							<span className="font-bold text-xl leading-none">
+								{formatPrice(productData.price)}
 							</span>
+							{productData.isOnSale && productData.compareAtPrice && (
+								<span className="font-medium text-muted-foreground text-xs line-through">
+									{formatPrice(productData.compareAtPrice)}
+								</span>
+							)}
+						</div>
+						{productData.stockQuantity < 5 && productData.stockQuantity > 0 ? (
+							<span className="font-medium text-[10px] text-red-500 uppercase tracking-wider">
+								Only {productData.stockQuantity} Left
+							</span>
+						) : (
+							<span className="font-medium text-[10px] text-emerald-600 uppercase tracking-wider">
+								{productData.inStock ? "In Stock" : "Out of Stock"}
+							</span>
+						)}
+					</div>
+
+					{/* Actions */}
+					<div className="flex-1">
+						{cartQuantity === 0 ? (
 							<Button
-								variant="ghost"
-								size="icon"
+								size="lg"
 								onClick={handleIncrement}
 								disabled={
-									!productData.allowBackorders &&
-									cartQuantity >= productData.stockQuantity
+									!productData.inStock ||
+									(productData.stockQuantity <= 0 &&
+										!productData.allowBackorders)
 								}
-								className="h-10 w-10 rounded-full hover:bg-background hover:shadow-sm"
+								className="h-12 w-full rounded-full font-bold text-base shadow-lg shadow-primary/25 transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
 							>
-								<Plus className="h-4 w-4" />
+								{productData.stockQuantity <= 0 &&
+								!productData.allowBackorders ? (
+									"Out of Stock"
+								) : (
+									<span className="flex items-center gap-2">
+										<ShoppingCart className="h-5 w-5" />
+										Add to Cart
+									</span>
+								)}
 							</Button>
-						</div>
-					)}
+						) : (
+							<div className="flex h-12 w-full items-center justify-between rounded-full border border-border/50 bg-muted/40 p-1 backdrop-blur-sm">
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={handleDecrement}
+									className="h-10 w-10 rounded-full hover:bg-background hover:shadow-sm active:scale-90"
+								>
+									{cartQuantity === 1 ? (
+										<Minus className="h-4 w-4 text-red-500" />
+									) : (
+										<Minus className="h-4 w-4" />
+									)}
+								</Button>
+								<span className="flex min-w-8 items-center justify-center gap-1 font-bold text-sm">
+									<span className="text-lg">{cartQuantity}</span>
+								</span>
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={handleIncrement}
+									disabled={
+										!productData.allowBackorders &&
+										cartQuantity >= productData.stockQuantity
+									}
+									className="h-10 w-10 rounded-full hover:bg-background hover:shadow-sm active:scale-90"
+								>
+									<Plus className="h-4 w-4" />
+								</Button>
+							</div>
+						)}
+					</div>
+
+					{/* Spacer for FAB */}
+					<div className="w-14 shrink-0" aria-hidden="true" />
 				</div>
 			</div>
 		</div>

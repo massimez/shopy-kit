@@ -1,4 +1,5 @@
 import { Card } from "@workspace/ui/components/card";
+import { MobileCartBar } from "@/components/features/cart/mobile-cart-bar";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
 import { storefrontClient } from "@/lib/storefront";
@@ -31,6 +32,8 @@ export default async function LayoutStore({
 			<div className="flex min-h-[calc(100vh-5rem)] gap-2.5">
 				<Card className="w-full flex-1 p-4">{children}</Card>
 			</div>
+			<MobileCartBar />
+
 			<Footer storeName={storeName} email={email} phone={phone} />
 		</div>
 	);

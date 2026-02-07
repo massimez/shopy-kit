@@ -128,19 +128,21 @@ export function ProductCard({ product }: ProductCardProps) {
 			{/* Image Container */}
 			<div className="relative aspect-square w-full overflow-hidden">
 				<div className="relative h-full w-full overflow-hidden rounded-lg bg-muted/20">
-					{product.image ? (
-						<Image
-							src={product.image}
-							alt={product.name}
-							fill
-							sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-							className="object-contain transition-transform duration-300 group-hover:scale-105"
-						/>
-					) : (
-						<div className="flex h-full items-center justify-center">
-							<ShoppingCart className="h-8 w-8 text-muted-foreground/30" />
-						</div>
-					)}
+					<Link href={`/product/${product.id}`} className="block h-full w-full">
+						{product.image ? (
+							<Image
+								src={product.image}
+								alt={product.name}
+								fill
+								sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+								className="object-contain transition-transform duration-300 group-hover:scale-105"
+							/>
+						) : (
+							<div className="flex h-full items-center justify-center">
+								<ShoppingCart className="h-8 w-8 text-muted-foreground/30" />
+							</div>
+						)}
+					</Link>
 
 					{/* Quantity Overlay */}
 					{quantity > 0 && (
