@@ -15,10 +15,12 @@ import {
 	Eye,
 	EyeOff,
 	Layers,
+	Package,
+	Smartphone,
 	Tag,
 	Trash2,
 } from "lucide-react";
-import type { Product, ProductVariant } from "./use-products";
+import type { Product } from "./use-products";
 
 interface ProductCardProps {
 	product: Product;
@@ -37,19 +39,14 @@ export const ProductCard = ({
 		(t) => t.languageCode === selectedLanguage,
 	);
 	const displayName = translation?.name || product.name || "Untitled Product";
-	const shortDescription = translation?.shortDescription;
-	// biome-ignore lint/suspicious/noExplicitAny: <>
-	const variants = (product as any).variants || [];
-
-	const getVariantTranslation = (variant: ProductVariant) => {
-		return variant.translations?.find(
-			(t) => t.languageCode === selectedLanguage,
-		);
-	};
+	const variants = product.variants || [];
+	const mainImage = product.thumbnailImage?.url || product.images?.[0]?.url;
 
 	const getStatusVariant = (status: string) => {
 		switch (status) {
 			case "published":
+				return "success";
+			case "active":
 				return "success";
 			case "draft":
 				return "secondary";
@@ -63,168 +60,133 @@ export const ProductCard = ({
 	const getTypeIcon = (type?: string) => {
 		switch (type) {
 			case "digital":
-				return "📱";
+				return <Smartphone className="size-8 text-muted-foreground/50" />;
 			case "variable":
-				return "🔄";
+				return <Layers className="size-8 text-muted-foreground/50" />;
 			default:
-				return "📦";
+				return <Package className="size-8 text-muted-foreground/50" />;
 		}
 	};
 
 	return (
-		<Card className="flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md">
-			<CardHeader className="space-y-2 pb-3">
-				<div className="flex items-start justify-between gap-2">
-					<div className="flex-1 space-y-1">
-						<div className="flex items-center gap-2">
-							<span className="text-lg">{getTypeIcon(product.type)}</span>
-							<h3 className="line-clamp-1 font-semibold text-base leading-tight">
-								{displayName}
-							</h3>
-						</div>
-						{shortDescription && (
-							<p className="line-clamp-2 text-muted-foreground text-sm">
-								{shortDescription}
-							</p>
-						)}
+		<Card className="group flex h-full flex-col gap-2 overflow-hidden border-border/50 bg-card py-0 transition-all hover:border-primary/50 hover:shadow-lg">
+			{/* Image Section */}
+			<div className="relative aspect-video w-full overflow-hidden bg-muted">
+				{mainImage ? (
+					// biome-ignore lint/performance/noImgElement: <>
+					<img
+						src={mainImage}
+						alt={displayName}
+						className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+					/>
+				) : (
+					<div className="flex h-full w-full items-center justify-center bg-muted/50">
+						{getTypeIcon(product.type)}
 					</div>
-					<div className="flex shrink-0 gap-1">
-						<Button
-							variant="ghost"
-							size="icon"
-							className="h-7 w-6"
-							onClick={() => onEdit(product)}
-						>
-							<Edit className="h-4 w-4" />
-						</Button>
-						<Button
-							variant="ghost"
-							size="icon"
-							className="h-7 w-6 text-destructive hover:text-destructive"
-							onClick={() => onDelete(product.id)}
-						>
-							<Trash2 className="h-4 w-4" />
-						</Button>
-					</div>
-				</div>
+				)}
 
-				<div className="flex flex-wrap gap-2">
-					<Badge variant={getStatusVariant(product.status)} className="text-xs">
-						{product.status === "active" ? (
+				{/* Status Badges Overlay */}
+				<div className="absolute top-2 left-2 flex flex-col gap-1">
+					<Badge
+						variant={getStatusVariant(product.status)}
+						className="h-5 px-1.5 text-[10px] shadow-sm backdrop-blur-md"
+					>
+						{product.status === "active" || product.status === "published" ? (
 							<Eye className="mr-1 h-3 w-3" />
 						) : (
 							<EyeOff className="mr-1 h-3 w-3" />
 						)}
-
 						{product.status.charAt(0).toUpperCase() + product.status.slice(1)}
 					</Badge>
 					{product.isFeatured && (
-						<Badge variant="outline" className="text-xs">
+						<Badge
+							variant="secondary"
+							className="h-5 w-fit bg-yellow-500/10 px-1.5 text-[10px] text-yellow-600 shadow-sm backdrop-blur-md dark:text-yellow-400"
+						>
 							⭐ Featured
 						</Badge>
 					)}
 				</div>
+			</div>
+
+			<CardHeader className="px-3 pb-1">
+				<div className="flex items-start justify-between gap-2">
+					<div className="w-full space-y-1">
+						<h3 className="line-clamp-1 font-semibold text-base leading-tight tracking-tight">
+							{displayName}
+						</h3>
+					</div>
+				</div>
 			</CardHeader>
 
-			<CardContent className="flex-1 space-y-3 pt-0 text-sm">
-				{product.currency && (
-					<div className="flex items-center gap-2 text-muted-foreground">
-						<DollarSign className="h-4 w-4" />
-						<span className="font-medium">{product.currency}</span>
-						{product.taxRate && (
-							<span className="text-xs">
-								(Tax: {(Number(product.taxRate) * 100).toFixed(1)}%)
-							</span>
-						)}
-					</div>
-				)}
+			<CardContent className="mt-0 flex flex-1 flex-col p-3 pt-0 text-sm">
+				<div className="flex items-center justify-between gap-2 text-xs">
+					{product.currency && (
+						<div className="flex items-center gap-1.5 font-medium text-foreground">
+							<DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+							{product.currency}
+						</div>
+					)}
 
-				{product.collectionIds && product.collectionIds.length > 0 && (
-					<div className="flex items-center gap-2 text-muted-foreground">
-						<Tag className="h-4 w-4" />
-						<span className="truncate text-xs">
-							Collections: {product.collectionIds.length}
-						</span>
-					</div>
-				)}
-
-				{/* Variants Section */}
-				{/* Variants Section */}
-				<div className="space-y-2 border-t pt-2">
-					<div className="flex items-center gap-2">
-						<Layers className="h-4 w-4 text-muted-foreground" />
-						<span className="font-medium text-xs">
-							Variants ({variants.length})
-						</span>
-					</div>
-					{variants.length > 0 && (
-						<div className="max-h-24 space-y-1 overflow-y-auto">
-							{variants.map((variant: ProductVariant) => {
-								const variantTranslation = getVariantTranslation(variant);
-								return (
-									<div
-										key={variant.id}
-										className="group flex items-center justify-between rounded bg-muted/50 px-2 py-1.5 text-xs"
-									>
-										<div className="min-w-0 flex-1">
-											<div className="truncate font-medium">
-												{variantTranslation?.name || variant.sku}
-											</div>
-											<div className="text-muted-foreground text-xs">
-												SKU: {variant.sku}
-											</div>
-										</div>
-										<div className="flex items-center gap-2">
-											<span className="font-medium text-muted-foreground">
-												{product.currency || "$"}{" "}
-												{Number(variant?.price).toFixed(2)}
-											</span>
-										</div>
-									</div>
-								);
-							})}
+					{product.collectionIds && product.collectionIds.length > 0 && (
+						<div className="flex items-center gap-1.5 text-muted-foreground">
+							<Tag className="h-3.5 w-3.5" />
+							<span>{product.collectionIds.length} Col.</span>
 						</div>
 					)}
 				</div>
 
-				<div className="grid grid-cols-2 gap-2 border-t pt-2 text-xs">
+				<div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-muted-foreground text-xs">
+					<div className="flex items-center gap-1.5">
+						<Layers className="h-3.5 w-3.5" />
+						<span>{variants.length} Var.</span>
+					</div>
+
 					{product.trackStock && (
-						<div className="text-muted-foreground">
-							<span className="font-medium">Stock:</span> Tracked
-						</div>
-					)}
-					{product.allowBackorders && (
-						<div className="text-muted-foreground">
-							<span className="font-medium">Backorders:</span> Allowed
-						</div>
-					)}
-					{product.minQuantity && (
-						<div className="text-muted-foreground">
-							<span className="font-medium">Min Qty:</span>{" "}
-							{product.minQuantity}
-						</div>
-					)}
-					{product.maxQuantity && (
-						<div className="text-muted-foreground">
-							<span className="font-medium">Max Qty:</span>{" "}
-							{product.maxQuantity}
+						<div className="flex items-center gap-1.5">
+							<Package className="h-3.5 w-3.5" />
+							<span>
+								{product.minQuantity} - {product.maxQuantity || "∞"}
+							</span>
 						</div>
 					)}
 				</div>
+
+				{product.allowBackorders && (
+					<div className="mt-2 flex">
+						<div className="rounded-sm bg-muted px-1.5 py-0.5 font-medium text-[10px] leading-none">
+							Backorder
+						</div>
+					</div>
+				)}
 			</CardContent>
 
-			<CardFooter className="flex items-center justify-between border-t bg-muted/30 py-2 text-muted-foreground text-xs">
-				<div className="flex items-center gap-1">
+			<CardFooter className="flex items-center justify-between border-t bg-muted/30 px-3 py-2 text-xs">
+				<div className="flex items-center gap-1 text-muted-foreground">
 					<Calendar className="h-3 w-3" />
-					<span>
-						Created {new Date(product.createdAt).toLocaleDateString()}
-					</span>
+					<span>{new Date(product.createdAt).toLocaleDateString()}</span>
 				</div>
-				{product.updatedAt && (
-					<div className="text-xs">
-						Updated {new Date(product.updatedAt).toLocaleDateString()}
-					</div>
-				)}
+
+				<div className="flex items-center gap-1">
+					<Button
+						variant="ghost"
+						size="icon"
+						className="h-7 w-7 text-muted-foreground hover:bg-background/80 hover:text-foreground"
+						onClick={() => onEdit(product)}
+					>
+						<Edit className="h-3.5 w-3.5" />
+						<span className="sr-only">Edit</span>
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon"
+						className="h-7 w-7 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+						onClick={() => onDelete(product.id)}
+					>
+						<Trash2 className="h-3.5 w-3.5" />
+						<span className="sr-only">Delete</span>
+					</Button>
+				</div>
 			</CardFooter>
 		</Card>
 	);
