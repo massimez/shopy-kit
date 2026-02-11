@@ -18,7 +18,15 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@workspace/ui/components/select";
-import { Loader2 } from "lucide-react";
+import {
+	Building2,
+	Globe,
+	Loader2,
+	Map as MapIcon,
+	MapPin,
+	Phone,
+	Store,
+} from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 import { hc } from "@/lib/api-client";
@@ -33,6 +41,7 @@ export interface AddressStepData {
 }
 
 const countries = [
+	{ value: "DZ", label: "Algeria" },
 	{ value: "US", label: "United States" },
 	{ value: "CA", label: "Canada" },
 	{ value: "GB", label: "United Kingdom" },
@@ -63,7 +72,6 @@ const countries = [
 	{ value: "BR", label: "Brazil" },
 	{ value: "MX", label: "Mexico" },
 	{ value: "AR", label: "Argentina" },
-	{ value: "DZ", label: "Algeria" },
 ];
 
 export function StoreAddressForm({
@@ -74,6 +82,7 @@ export function StoreAddressForm({
 	onSubmit: (data: AddressStepData) => Promise<void>;
 }) {
 	const [loading, setLoading] = React.useState(false);
+	const [country, setCountry] = React.useState("DZ");
 
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
@@ -85,7 +94,7 @@ export function StoreAddressForm({
 			city: formData.get("city") as string,
 			state: formData.get("state") as string,
 			zipCode: formData.get("zipCode") as string,
-			country: formData.get("country") as string,
+			country: country,
 			phone: formData.get("phone") as string,
 		};
 
@@ -127,93 +136,141 @@ export function StoreAddressForm({
 	};
 
 	return (
-		<Card className="border-border/50 shadow-xl">
+		<Card className="border-border/50 bg-background/60 shadow-xl backdrop-blur-xl">
 			<CardHeader>
-				<CardTitle className="text-2xl">Where is your store based?</CardTitle>
-				<CardDescription>
-					Add your primary business location. You can add more locations later.
-				</CardDescription>
+				<div className="flex items-center gap-3">
+					<div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+						<Store className="h-5 w-5" />
+					</div>
+					<div>
+						<CardTitle className="text-xl">
+							Where is your store based?
+						</CardTitle>
+						<CardDescription>
+							Add your primary business location
+						</CardDescription>
+					</div>
+				</div>
 			</CardHeader>
 			<CardContent>
-				<form id="address-form" onSubmit={handleSubmit} className="space-y-4">
-					<div className="grid gap-4 md:grid-cols-2">
+				<form id="address-form" onSubmit={handleSubmit} className="space-y-6">
+					<div className="space-y-4">
 						<div className="space-y-2">
 							<Label htmlFor="country">Country / Region</Label>
-							<Select name="country" required defaultValue="US">
-								<SelectTrigger id="country" disabled={loading}>
+							<Select
+								name="country"
+								required
+								value={country}
+								onValueChange={setCountry}
+								disabled={loading}
+							>
+								<SelectTrigger id="country" className="relative pl-9">
+									<Globe className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
 									<SelectValue placeholder="Select country" />
 								</SelectTrigger>
 								<SelectContent>
-									{countries.map((country) => (
-										<SelectItem key={country.value} value={country.value}>
-											{country.label}
+									{countries.map((c) => (
+										<SelectItem key={c.value} value={c.value}>
+											{c.label}
 										</SelectItem>
 									))}
 								</SelectContent>
 							</Select>
 						</div>
-						<div className="space-y-2">
-							<Label htmlFor="phone">Phone Number</Label>
-							<Input
-								id="phone"
-								name="phone"
-								type="tel"
-								placeholder="+1 (555) 000-0000"
-								disabled={loading}
-								required
-							/>
-						</div>
-					</div>
 
-					<div className="space-y-2">
-						<Label htmlFor="street">Address</Label>
-						<Input
-							id="street"
-							name="street"
-							placeholder="Street address, P.O. box, etc."
-							disabled={loading}
-							required
-						/>
-					</div>
+						<div className="space-y-2">
+							<Label htmlFor="street">Street Address</Label>
+							<div className="relative">
+								<MapPin className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
+								<Input
+									id="street"
+									name="street"
+									placeholder="123 Store St, Suite 100"
+									disabled={loading}
+									required
+									className="pl-9"
+								/>
+							</div>
+						</div>
 
-					<div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-						<div className="space-y-2">
-							<Label htmlFor="city">City</Label>
-							<Input
-								id="city"
-								name="city"
-								placeholder="City"
-								disabled={loading}
-								required
-							/>
+						<div className="grid gap-4 md:grid-cols-2">
+							<div className="space-y-2">
+								<Label htmlFor="city">City</Label>
+								<div className="relative">
+									<Building2 className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
+									<Input
+										id="city"
+										name="city"
+										placeholder="New York"
+										disabled={loading}
+										required
+										className="pl-9"
+									/>
+								</div>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="state">State / Province</Label>
+								<div className="relative">
+									<MapIcon className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
+									<Input
+										id="state"
+										name="state"
+										placeholder="NY"
+										disabled={loading}
+										required
+										className="pl-9"
+									/>
+								</div>
+							</div>
 						</div>
-						<div className="space-y-2">
-							<Label htmlFor="state">State / Province</Label>
-							<Input
-								id="state"
-								name="state"
-								placeholder="State"
-								disabled={loading}
-								required
-							/>
-						</div>
-						<div className="col-span-2 space-y-2 md:col-span-1">
-							<Label htmlFor="zipCode">ZIP / Postal Code</Label>
-							<Input
-								id="zipCode"
-								name="zipCode"
-								placeholder="ZIP"
-								disabled={loading}
-								required
-							/>
+
+						<div className="grid gap-4 md:grid-cols-2">
+							<div className="space-y-2">
+								<Label htmlFor="zipCode">ZIP / Postal Code</Label>
+								<div className="relative">
+									<MapPin className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
+									<Input
+										id="zipCode"
+										name="zipCode"
+										placeholder="10001"
+										disabled={loading}
+										required
+										className="pl-9"
+									/>
+								</div>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="phone">Phone Number</Label>
+								<div className="relative">
+									<Phone className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
+									<Input
+										id="phone"
+										name="phone"
+										type="tel"
+										placeholder="+1 (555) 000-0000"
+										disabled={loading}
+										required
+										className="pl-9"
+									/>
+								</div>
+							</div>
 						</div>
 					</div>
 				</form>
 			</CardContent>
-			<CardFooter className="flex justify-between border-t bg-muted/5 p-6">
-				<Button type="submit" form="address-form" disabled={loading} size="lg">
-					{loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-					Create & Finish
+			<CardFooter className="flex justify-end border-t bg-muted/50 p-6">
+				<Button
+					type="submit"
+					form="address-form"
+					disabled={loading}
+					size="lg"
+					className="w-full min-w-[150px] md:w-auto"
+				>
+					{loading ? (
+						<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+					) : (
+						"Finish Setup"
+					)}
 				</Button>
 			</CardFooter>
 		</Card>

@@ -68,7 +68,6 @@ const baseNavMain = [
 			{ title: "Expenses", url: "/dashboard/financial/expenses" },
 			{ title: "Payroll", url: "/dashboard/financial/payroll" },
 			{ title: "Accounting", url: "/dashboard/financial/accounting" },
-			{ title: "Reports", url: "/dashboard/financial/reports" },
 		],
 	},
 	{

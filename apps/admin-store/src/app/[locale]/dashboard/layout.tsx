@@ -1,9 +1,5 @@
 import "@workspace/ui/globals.css";
 
-import {
-	SidebarInset,
-	SidebarProvider,
-} from "@workspace/ui/components/sidebar";
 import { Toaster } from "@workspace/ui/components/sonner";
 import { cn } from "@workspace/ui/lib/utils";
 import type { Metadata } from "next";
@@ -14,9 +10,7 @@ import QueryProvider from "@/app/providers/query";
 import { ThemeProvider } from "@/app/providers/theme";
 import { ModalProvider } from "@/components/modals/modal-context";
 import ModalRenderer from "@/components/modals/modal-render";
-import { OrganizationGuard } from "@/components/organization-guard";
-import { AppSidebar } from "./layout/sidebar/app-sidebar";
-import { HeaderDashboard } from "./layout/sidebar/header";
+import { DashboardLayoutShell } from "./layout-shell";
 
 export const metadata: Metadata = {
 	title: "ShopyKit Dashboard",
@@ -54,15 +48,7 @@ export default async function MainLayout({ children, params }: LayoutProps) {
 									<ModalRenderer />
 									<Toaster position="top-center" richColors />
 									<CurrencyProvider>
-										<OrganizationGuard>
-											<SidebarProvider>
-												<AppSidebar />
-												<SidebarInset>
-													<HeaderDashboard />
-													<div className="p-4">{children}</div>
-												</SidebarInset>
-											</SidebarProvider>
-										</OrganizationGuard>
+										<DashboardLayoutShell>{children}</DashboardLayoutShell>
 									</CurrencyProvider>
 								</ModalProvider>
 							</NextIntlClientProvider>

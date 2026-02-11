@@ -3,8 +3,13 @@
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
 import { Check } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
 
 export function OnboardingCompletion() {
+	const router = useRouter();
+	const params = useParams();
+	const locale = params?.locale as string;
+
 	return (
 		<Card className="border-border/50 shadow-xl">
 			<CardContent className="flex flex-col items-center justify-center py-10 text-center">
@@ -21,7 +26,10 @@ export function OnboardingCompletion() {
 					<Button
 						className="w-full"
 						size="lg"
-						onClick={() => window.location.reload()}
+						onClick={() => {
+							router.push(`/${locale}/dashboard`);
+							router.refresh();
+						}}
 					>
 						Go to Dashboard
 					</Button>
