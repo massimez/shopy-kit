@@ -24,7 +24,6 @@ export function FinancialList<T>({
 		status: filters.status,
 		from: filters.from,
 		to: filters.to,
-		setTotal: pagination.setTotal,
 	});
 
 	const data = (result as unknown as { data: T[] })?.data || [];
@@ -43,7 +42,11 @@ export function FinancialList<T>({
 			/>
 
 			<Table data={data} isLoading={isLoading} />
-			<PaginationControls pagination={pagination} className="mt-4" />
+			<PaginationControls
+				pagination={pagination}
+				total={result?.meta?.total || 0}
+				className="mt-4"
+			/>
 		</div>
 	);
 }

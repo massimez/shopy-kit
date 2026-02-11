@@ -35,7 +35,6 @@ export function FinancialExpensesList<T>({
 		from: filters.from,
 		to: filters.to,
 		categoryId: filters.categoryId,
-		setTotal: pagination.setTotal,
 	});
 
 	// properties of result from useFinancialExpenses:
@@ -73,7 +72,11 @@ export function FinancialExpensesList<T>({
 			</FinancialFilterBar>
 
 			<Table data={data} isLoading={isLoading || isCategoriesLoading} />
-			<PaginationControls pagination={pagination} className="mt-4" />
+			<PaginationControls
+				pagination={pagination}
+				total={result?.meta?.total || 0}
+				className="mt-4"
+			/>
 		</div>
 	);
 }

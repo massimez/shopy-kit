@@ -15,18 +15,9 @@ export function useFinancialExpenses(
 		from?: string | null;
 		to?: string | null;
 		categoryId?: string | null;
-		setTotal?: (total: number) => void;
 	} = {},
 ) {
-	const {
-		limit = "50",
-		offset = "0",
-		status,
-		from,
-		to,
-		categoryId,
-		setTotal,
-	} = options;
+	const { limit = "50", offset = "0", status, from, to, categoryId } = options;
 
 	return useQuery({
 		queryKey: [
@@ -51,10 +42,6 @@ export function useFinancialExpenses(
 				},
 			});
 			const json = await res.json();
-
-			if (setTotal && json?.data?.meta) {
-				setTotal(json.data.meta.total);
-			}
 
 			return json.data;
 		},

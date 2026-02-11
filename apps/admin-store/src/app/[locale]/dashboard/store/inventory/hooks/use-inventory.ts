@@ -51,7 +51,6 @@ export const useInventoryTransactions = (
 	params?: {
 		limit?: string;
 		offset?: string;
-		setTotal?: (total: number) => void;
 	},
 ) => {
 	return useQuery({
@@ -92,11 +91,7 @@ export const useInventoryTransactions = (
 				throw new Error(json.error?.message || "Failed to fetch transactions");
 			}
 
-			if (params?.setTotal) {
-				params.setTotal(json.data.total);
-			}
-
-			return json.data.data;
+			return json.data;
 		},
 		enabled: true,
 	});

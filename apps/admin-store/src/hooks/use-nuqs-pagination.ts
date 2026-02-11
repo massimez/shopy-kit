@@ -1,43 +1,44 @@
 import { parseAsInteger, useQueryState } from "nuqs";
-
-import { useState } from "react";
+import { useCallback } from "react";
 
 export const paginationPageParser = parseAsInteger.withDefault(1);
 
 interface UseNuqsPaginationOptions {
 	limit?: number;
-	defaultTotal?: number;
+	pageParam?: string;
 }
 
 export function useNuqsPagination({
 	limit = 10,
-	defaultTotal = 0,
 	pageParam = "page",
-}: UseNuqsPaginationOptions & { pageParam?: string } = {}) {
+}: UseNuqsPaginationOptions = {}) {
 	const [page, setPage] = useQueryState(pageParam, paginationPageParser);
-	const [total, setTotal] = useState(defaultTotal);
 
-	const totalPages = Math.ceil(total / limit);
 	const offset = ((page || 1) - 1) * limit;
+
+	// Memoized navigation functions
+	const nextPage = useCallback(() => {
+		setPage((p) => (p ?? 1) + 1);
+	}, [setPage]);
+
+	const previousPage = useCallback(() => {
+		setPage((p) => Math.max(1, (p ?? 1) - 1));
+	}, [setPage]);
+
+	const goToPage = useCallback(
+		(p: number) => {
+			setPage(p);
+		},
+		[setPage],
+	);
 
 	return {
 		page: page || 1,
 		limit,
 		offset,
-		total,
-		totalPages,
-		hasNextPage: (page || 1) < totalPages,
-		hasPreviousPage: (page || 1) > 1,
-		nextPage: () => setPage((p) => Math.min(totalPages, (p ?? 1) + 1)),
-		previousPage: () => setPage((p) => Math.max(1, (p ?? 1) - 1)),
-		goToPage: (p: number) => setPage(p),
-		setPage: (p: number) => setPage(p),
-		setTotal: (newTotal: number) => {
-			setTotal(newTotal);
-			const newTotalPages = Math.ceil(newTotal / limit);
-			if ((page || 1) > newTotalPages && newTotal > 0) {
-				setPage(1);
-			}
-		},
+		nextPage,
+		previousPage,
+		goToPage,
+		setPage,
 	};
 }

@@ -34,10 +34,9 @@ export const TransactionsList = ({
 	} = useInventoryTransactions(productVariantId || "", {
 		limit: pagination.limit.toString(),
 		offset: pagination.offset.toString(),
-		setTotal: pagination.setTotal,
 	});
 
-	const transactions = transactionsResponse || [];
+	const transactions = transactionsResponse?.data || [];
 
 	const filteredTransactions = transactions.filter(
 		(transaction) =>
@@ -125,7 +124,11 @@ export const TransactionsList = ({
 							))}
 						</TableBody>
 					</Table>
-					<PaginationControls pagination={pagination} className="mt-4" />
+					<PaginationControls
+						pagination={pagination}
+						total={transactionsResponse?.total || 0}
+						className="mt-4"
+					/>
 				</>
 			)}
 		</div>

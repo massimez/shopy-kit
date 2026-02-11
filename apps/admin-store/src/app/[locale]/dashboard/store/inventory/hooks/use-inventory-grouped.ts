@@ -7,7 +7,6 @@ type InventoryParams = {
 	offset?: string;
 	search?: string;
 	collectionId?: string;
-	setTotal?: (total: number) => void;
 };
 
 export const useGroupedInventory = ({

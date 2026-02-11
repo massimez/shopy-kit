@@ -11,9 +11,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@workspace/ui/components/select";
-
 import { Search, X } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
+import { toast } from "sonner";
 import { PageDashboardHeader } from "@/app/[locale]/(landing)/_components/sections/page-dashboard-header";
 import { DEFAULT_LOCALE, LOCALES } from "@/constants/locales";
 import { useNuqsPagination } from "@/hooks/use-nuqs-pagination";
@@ -27,6 +27,7 @@ import { useProducts } from "./use-products";
 export const ProductsClient = () => {
 	const queryClient = useQueryClient();
 
+	// Query state management
 	const [selectedLanguage, setSelectedLanguage] = useQueryState(
 		"filterLocale",
 		parseAsString.withDefault(DEFAULT_LOCALE),
@@ -51,65 +52,96 @@ export const ProductsClient = () => {
 		offset: pagination.offset.toString(),
 		search: searchQuery || undefined,
 		collectionId: selectedCollection || undefined,
-		setTotal: pagination.setTotal,
 	});
 
 	const products = productsData?.data || [];
+	// Memoized computed values
+	const hasActiveFilters = searchQuery || selectedCollection;
 
+	// Handler functions
 	const handleClearFilters = () => {
 		setSearchQuery(null);
 		setSelectedCollection(null);
 		pagination.setPage(1);
 	};
 
-	const hasActiveFilters = searchQuery || selectedCollection;
+	const handleSearchChange = (value: string) => {
+		setSearchQuery(value || null);
+		pagination.setPage(1);
+	};
+
+	const handleClearSearch = () => {
+		setSearchQuery(null);
+		pagination.setPage(1);
+	};
+
+	const handleCollectionChange = (value: string | null) => {
+		setSelectedCollection(value);
+		pagination.setPage(1);
+	};
+
+	const handleLanguageChange = (value: string) => {
+		setSelectedLanguage(value);
+		pagination.setPage(1);
+	};
+
+	const handleDeleteProduct = async (productId: string) => {
+		try {
+			await hc.api.store.products[":id"].$delete({
+				param: { id: productId },
+			});
+
+			// Invalidate and refetch
+			await queryClient.invalidateQueries({ queryKey: ["products"] });
+
+			toast.success("Product deleted successfully");
+		} catch (error) {
+			console.error("Failed to delete product:", error);
+			toast.error("Failed to delete product. Please try again.");
+		}
+	};
 
 	return (
 		<div className="p-4">
-			<div className="mb-6 flex flex-col justify-between">
+			{/* Header Section */}
+			<div className="mb-6 flex flex-col justify-between gap-4">
 				<PageDashboardHeader title="Products" />
+
+				{/* Filters and Actions */}
 				<div className="flex flex-wrap items-center gap-4">
-					<div className="relative max-w-sm flex-1">
-						<Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+					{/* Search Input */}
+					<div className="relative min-w-[200px] max-w-sm flex-1">
+						<Search className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
 						<Input
 							placeholder="Search products..."
 							value={searchQuery}
-							onChange={(e) => {
-								setSearchQuery(e.target.value || null);
-								pagination.setPage(1);
-							}}
+							onChange={(e) => handleSearchChange(e.target.value)}
 							className="pr-9 pl-9"
+							aria-label="Search products"
 						/>
 						{searchQuery && (
 							<button
 								type="button"
-								onClick={() => {
-									setSearchQuery(null);
-									pagination.setPage(1);
-								}}
-								className="-translate-y-1/2 absolute top-1/2 right-3 text-muted-foreground hover:text-foreground"
+								onClick={handleClearSearch}
+								className="-translate-y-1/2 absolute top-1/2 right-3 text-muted-foreground transition-colors hover:text-foreground"
+								aria-label="Clear search"
 							>
 								<X className="h-4 w-4" />
 							</button>
 						)}
 					</div>
+
+					{/* Collection Filter */}
 					<CollectionFilter
 						collections={collections}
 						selectedCollectionId={selectedCollection || null}
-						onSelect={(val) => {
-							setSelectedCollection(val || null);
-							pagination.setPage(1);
-						}}
+						onSelect={handleCollectionChange}
 					/>
-					<Select
-						onValueChange={(val) => {
-							setSelectedLanguage(val);
-							pagination.setPage(1);
-						}}
-						defaultValue={selectedLanguage}
-					>
+
+					{/* Language Selector */}
+					<Select onValueChange={handleLanguageChange} value={selectedLanguage}>
 						<SelectTrigger className="w-[180px]">
-							<SelectValue placeholder="select language" />
+							<SelectValue placeholder="Select language" />
 						</SelectTrigger>
 						<SelectContent>
 							{LOCALES.map((locale) => (
@@ -119,28 +151,41 @@ export const ProductsClient = () => {
 							))}
 						</SelectContent>
 					</Select>
+
+					{/* Clear Filters Button */}
 					{hasActiveFilters && (
-						<Button variant="outline" onClick={handleClearFilters}>
+						<Button
+							variant="outline"
+							onClick={handleClearFilters}
+							aria-label="Clear all filters"
+						>
 							Clear Filters
 						</Button>
 					)}
-					<Link href={"/dashboard/store/products/new"}>
+
+					{/* Add Product Button */}
+					<Link href="/dashboard/store/products/new">
 						<Button>Add Product</Button>
 					</Link>
 				</div>
 			</div>
+
+			{/* Product List */}
 			<ProductList
 				products={products}
 				selectedLanguage={selectedLanguage}
 				isLoading={isLoading}
-				onDeleteProduct={async (productId) => {
-					await hc.api.store.products[":id"].$delete({
-						param: { id: productId },
-					});
-					queryClient.invalidateQueries({ queryKey: ["products"] });
-				}}
+				onDeleteProduct={handleDeleteProduct}
 			/>
-			<PaginationControls pagination={pagination} className="mt-4" />
+
+			{/* Pagination - Now with total passed directly */}
+			{!isLoading && products.length > 0 && (
+				<PaginationControls
+					pagination={pagination}
+					total={productsData?.total ?? 0}
+					className="mt-4"
+				/>
+			)}
 		</div>
 	);
 };

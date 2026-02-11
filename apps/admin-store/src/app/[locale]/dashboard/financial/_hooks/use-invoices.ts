@@ -12,10 +12,9 @@ export function useInvoices(
 		status?: string | null;
 		from?: string | null;
 		to?: string | null;
-		setTotal?: (total: number) => void;
 	} = {},
 ) {
-	const { limit = "10", offset = "0", status, from, to, setTotal } = options;
+	const { limit = "10", offset = "0", status, from, to } = options;
 
 	return useQuery({
 		queryKey: ["financial", "invoices", type, limit, offset, status, from, to],
@@ -31,10 +30,6 @@ export function useInvoices(
 				},
 			});
 			const json = await res.json();
-
-			if (setTotal && json?.data?.meta) {
-				setTotal(json.data.meta.total);
-			}
 
 			return json.data;
 		},

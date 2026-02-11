@@ -18,7 +18,7 @@ import {
 } from "@workspace/ui/components/tabs";
 import { Search, X } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { PageDashboardHeader } from "@/app/[locale]/(landing)/_components/sections/page-dashboard-header";
 import {
 	useActiveOrganization,
@@ -84,11 +84,6 @@ export default function InventoryPage() {
 	});
 
 	const inventory = (inventoryResponse?.data || []) as ProductWithVariants[];
-	const total = inventoryResponse?.total || 0;
-
-	useEffect(() => {
-		pagination.setTotal(total);
-	}, [total, pagination.setTotal]);
 
 	if (isLoading) return <div>Loading...</div>;
 	if (error) return <div>Error: {(error as Error).message}</div>;
@@ -199,7 +194,11 @@ export default function InventoryPage() {
 						onAddTransaction={handleOpenTransactionModal}
 						hasActiveFilters={hasActiveFilters}
 					/>
-					<PaginationControls pagination={pagination} className="mt-4" />
+					<PaginationControls
+						pagination={pagination}
+						total={inventoryResponse?.total || 0}
+						className="mt-4"
+					/>
 				</TabsContent>
 
 				<TabsContent value="transactions" className="mt-6">

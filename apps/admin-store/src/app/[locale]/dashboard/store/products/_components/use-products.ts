@@ -90,7 +90,6 @@ export const getProducts = async ({
 	languageCode,
 	search,
 	collectionId,
-	setTotal,
 }: ProductsParams = {}) => {
 	const res = await hc.api.store.products.$get({
 		query: { limit, offset, languageCode, search, collectionId },
@@ -110,8 +109,6 @@ export const getProducts = async ({
 		throw new Error("Invalid response format");
 	}
 
-	setTotal?.(json.data.total);
-
 	return json.data;
 };
 
@@ -121,7 +118,6 @@ export const useProducts = ({
 	languageCode,
 	search,
 	collectionId,
-	setTotal,
 }: ProductsParams = {}) => {
 	return useQuery({
 		queryKey: ["products", limit, offset, languageCode, search, collectionId],
@@ -132,7 +128,6 @@ export const useProducts = ({
 				languageCode,
 				search,
 				collectionId,
-				setTotal,
 			}),
 	});
 };

@@ -57,7 +57,6 @@ const OrdersPage = () => {
 			limit: pagination.limit.toString(),
 			offset: pagination.offset.toString(),
 			search: searchQuery || undefined,
-			setTotal: pagination.setTotal,
 		});
 
 	const orders = (paginatedOrdersResult?.data || []).map((order) => ({
@@ -163,7 +162,11 @@ const OrdersPage = () => {
 				onCompleteOrder={handleCompleteOrder}
 				onCancelOrder={handleCancelOrder}
 			/>
-			<PaginationControls pagination={pagination} className="mt-4" />
+			<PaginationControls
+				pagination={pagination}
+				total={paginatedOrdersResult?.total || 0}
+				className="mt-4"
+			/>
 			<EditOrderDialog
 				order={editingOrder}
 				open={isEditDialogOpen}

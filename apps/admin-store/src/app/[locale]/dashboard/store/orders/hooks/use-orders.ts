@@ -14,7 +14,6 @@ export const useOrders = ({
 	limit = "10",
 	offset = "0",
 	search,
-	setTotal,
 }: UseOrdersParams = {}) => {
 	const query = {
 		limit,
@@ -32,7 +31,6 @@ export const useOrders = ({
 				query,
 			});
 			const res = await result.json();
-			setTotal?.(res.data?.total || 0);
 			return res.data;
 		},
 		staleTime: 1000,
