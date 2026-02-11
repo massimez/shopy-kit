@@ -172,7 +172,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
 			{/* Content */}
 			<CardContent className="flex flex-1 flex-col px-2 pt-0 pb-2 text-left">
-				<h3 className="mt-0.5 mb-1 line-clamp-2 font-bold text-foreground text-xs leading-tight">
+				<h3 className="mt-0.5 mb-1 line-clamp-2 h-8 font-bold text-foreground text-xs leading-tight">
 					{product.name}
 				</h3>
 

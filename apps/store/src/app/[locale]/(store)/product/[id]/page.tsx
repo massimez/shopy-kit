@@ -238,7 +238,7 @@ export default function ProductPage({ params }: ProductPageProps) {
 												src={image}
 												alt={`${productData.name} - View ${index + 1}`}
 												fill
-												className="object-cover transition-transform duration-500 hover:scale-105 lg:object-fill"
+												className="object-cover transition-transform duration-500 hover:scale-105"
 											/>
 										</div>
 									</CarouselItem>
