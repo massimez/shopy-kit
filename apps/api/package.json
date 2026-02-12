@@ -27,20 +27,20 @@
 		}
 	},
 	"dependencies": {
-		"@aws-sdk/client-s3": "^3.937.0",
-		"@aws-sdk/s3-request-presigner": "^3.937.0",
-		"better-auth": "1.4.3",
-		"bullmq": "^5.65.0",
+		"@aws-sdk/client-s3": "^3.988.0",
+		"@aws-sdk/s3-request-presigner": "^3.989.0",
+		"better-auth": "catalog:",
+		"bullmq": "^5.68.0",
 		"drizzle-orm": "^0.44.7",
 		"drizzle-zod": "^0.8.3",
-		"hono": "4.10.6",
-		"ioredis": "^5.8.2",
-		"postgres": "^3.4.7",
-		"resend": "^6.5.2",
-		"zod": "4.1.13"
+		"hono": "4.11.9",
+		"ioredis": "^5.9.3",
+		"postgres": "^3.4.8",
+		"resend": "^6.9.2",
+		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"drizzle-kit": "^0.31.6",
-		"tsdown": "0.17.0-beta.1"
+		"drizzle-kit": "catalog:",
+		"tsdown": "catalog:"
 	}
 }
