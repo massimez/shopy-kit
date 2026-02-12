@@ -111,7 +111,7 @@ export const ProductsClient = () => {
 				<div className="flex flex-wrap items-center gap-4">
 					{/* Search Input */}
 					<div className="relative min-w-[200px] max-w-sm flex-1">
-						<Search className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+						<Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 						<Input
 							placeholder="Search products..."
 							value={searchQuery}
@@ -123,7 +123,7 @@ export const ProductsClient = () => {
 							<button
 								type="button"
 								onClick={handleClearSearch}
-								className="-translate-y-1/2 absolute top-1/2 right-3 text-muted-foreground transition-colors hover:text-foreground"
+								className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
 								aria-label="Clear search"
 							>
 								<X className="h-4 w-4" />

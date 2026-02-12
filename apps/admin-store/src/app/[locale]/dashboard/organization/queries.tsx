@@ -14,13 +14,9 @@ export const useGetLocations = (organizationId?: string) => {
 		queryKey: ["organization", organizationId, "locations"],
 		queryFn: async () => {
 			const res = await hc.api.organizations.locations.$get();
-			if (res.ok) {
-				const data = await res.json();
+			const data = await res.json();
 
-				return data;
-			}
-
-			return null;
+			return data;
 		},
 		enabled: Boolean(organizationId),
 		staleTime: 1000 * 60 * 5, // cache for 5 minutes (tune to your needs)

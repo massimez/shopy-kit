@@ -34,7 +34,7 @@ export function CartButton({
 			>
 				<ShoppingBag className={cn("h-6 w-6 stroke-[1.5]", classNameIcon)} />
 				{cartCount > 0 && (
-					<span className="-top-1 -right-1 absolute flex h-4 w-4 items-center justify-center rounded-full bg-red-600 font-medium text-[10px] text-white">
+					<span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 font-medium text-[10px] text-white">
 						{cartCount > 99 ? "99+" : cartCount}
 					</span>
 				)}

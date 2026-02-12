@@ -34,7 +34,7 @@ export default async function LayoutStore({
 			<Navbar logo={logo} storeName={storeName} />
 			<div className="flex min-h-[calc(100vh-5rem)] gap-2.5">
 				<Card className="hidden w-[236px] px-4 lg:flex">
-					<CategorySidebarContainer className="scrollbar-hide -mt-1.5 sticky top-20 max-h-[calc(100vh-8rem)] w-full shrink-0 flex-col overflow-y-auto" />
+					<CategorySidebarContainer className="scrollbar-hide sticky top-20 -mt-1.5 max-h-[calc(100vh-8rem)] w-full shrink-0 flex-col overflow-y-auto" />
 				</Card>
 				<Card className="w-full flex-1 overflow-hidden p-4">{children}</Card>
 				<Card className="hidden px-4 xl:flex">

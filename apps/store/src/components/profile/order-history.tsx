@@ -153,7 +153,7 @@ export function OrderHistory({ orders, isLoadingOrders }: OrderHistoryProps) {
 				{orders && orders.length > 0 && (
 					<div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center">
 						<div className="relative flex-1">
-							<Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+							<Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 							<Input
 								placeholder={t("searchPlaceholder")}
 								value={searchQuery}
@@ -286,7 +286,7 @@ export function OrderHistory({ orders, isLoadingOrders }: OrderHistoryProps) {
 							<div className="rounded-full bg-linear-to-br from-primary/20 to-primary/5 p-6">
 								<ShoppingBag className="h-12 w-12 text-primary" />
 							</div>
-							<div className="-right-2 -top-2 absolute rounded-full bg-background p-2 shadow-lg">
+							<div className="absolute -top-2 -right-2 rounded-full bg-background p-2 shadow-lg">
 								<Package className="h-6 w-6 text-muted-foreground" />
 							</div>
 						</div>

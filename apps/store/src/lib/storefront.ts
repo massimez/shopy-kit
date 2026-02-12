@@ -26,7 +26,7 @@ export const storefrontClient = {
 		collectionId?: string;
 		limit?: number;
 		offset?: number;
-		sort?: string;
+		sort?: "price_asc" | "price_desc" | "newest" | "name_asc" | "name_desc";
 		q?: string;
 		minPrice?: number;
 		maxPrice?: number;
@@ -39,12 +39,8 @@ export const storefrontClient = {
 				...(params.q ? { q: params.q } : {}),
 				limit: (params.limit ?? 10).toString(),
 				offset: (params.offset ?? 0).toString(),
-				...(params.minPrice !== undefined
-					? { minPrice: params.minPrice.toString() }
-					: {}),
-				...(params.maxPrice !== undefined
-					? { maxPrice: params.maxPrice.toString() }
-					: {}),
+				...(params.minPrice !== undefined ? { minPrice: params.minPrice } : {}),
+				...(params.maxPrice !== undefined ? { maxPrice: params.maxPrice } : {}),
 				...(params.locationId ? { locationId: params.locationId } : {}),
 			},
 		});

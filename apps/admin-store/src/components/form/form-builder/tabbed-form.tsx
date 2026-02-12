@@ -42,7 +42,7 @@ const TabHeader: React.FC<{
 	>
 		{t(tab.labelKey)}
 		{hasErrors && (
-			<span className="-top-1 -right-1 absolute h-2 w-2 rounded-full bg-destructive" />
+			<span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
 		)}
 	</TabsTrigger>
 );

@@ -72,7 +72,7 @@ export default function OrderSuccessPage() {
 						<div className="rounded-full bg-linear-to-br from-green-500 to-emerald-600 p-6 shadow-lg">
 							<CheckCircle2 className="size-8 text-white md:size-16" />
 						</div>
-						<div className="-z-10 absolute inset-0 animate-ping rounded-full bg-green-500/50" />
+						<div className="absolute inset-0 -z-10 animate-ping rounded-full bg-green-500/50" />
 					</div>
 				</div>
 				<h1 className="mb-2 font-bold text-2xl md:text-4xl">

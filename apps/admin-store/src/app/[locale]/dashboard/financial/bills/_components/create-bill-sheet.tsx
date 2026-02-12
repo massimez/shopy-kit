@@ -431,7 +431,7 @@ export function CreateBillSheet({
 																Price
 															</FormLabel>
 															<div className="relative">
-																<span className="-translate-y-1/2 absolute top-1/2 left-2 text-muted-foreground">
+																<span className="absolute top-1/2 left-2 -translate-y-1/2 text-muted-foreground">
 																	$
 																</span>
 																<Input

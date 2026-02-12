@@ -314,7 +314,7 @@ export function GalleryViewer({
 							variant="ghost"
 							size="icon"
 							type="button"
-							className="-translate-y-1/2 absolute top-1/2 left-2 z-50 hidden h-10 w-10 text-white hover:bg-white/20 active:scale-90 sm:left-4 sm:flex sm:h-12 sm:w-12"
+							className="absolute top-1/2 left-2 z-50 hidden h-10 w-10 -translate-y-1/2 text-white hover:bg-white/20 active:scale-90 sm:left-4 sm:flex sm:h-12 sm:w-12"
 							onClick={(e) => {
 								e.stopPropagation();
 								navigatePrevious();
@@ -331,7 +331,7 @@ export function GalleryViewer({
 							variant="ghost"
 							size="icon"
 							type="button"
-							className="-translate-y-1/2 absolute top-1/2 right-2 z-50 hidden h-10 w-10 text-white hover:bg-white/20 active:scale-90 sm:right-4 sm:flex sm:h-12 sm:w-12"
+							className="absolute top-1/2 right-2 z-50 hidden h-10 w-10 -translate-y-1/2 text-white hover:bg-white/20 active:scale-90 sm:right-4 sm:flex sm:h-12 sm:w-12"
 							onClick={(e) => {
 								e.stopPropagation();
 								navigateNext();
@@ -344,7 +344,7 @@ export function GalleryViewer({
 
 					{/* Swipe indicator for mobile */}
 					{imageFiles.length > 1 && (
-						<div className="-translate-x-1/2 absolute bottom-20 left-1/2 z-50 rounded-full bg-black/70 px-3 py-1.5 text-white/80 text-xs backdrop-blur-sm sm:hidden">
+						<div className="absolute bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1.5 text-white/80 text-xs backdrop-blur-sm sm:hidden">
 							Swipe to navigate
 						</div>
 					)}

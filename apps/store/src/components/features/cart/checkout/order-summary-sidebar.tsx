@@ -129,7 +129,7 @@ export function OrderSummarySidebar({
 
 						{/* Total */}
 						<div className="relative overflow-hidden rounded-xl bg-linear-to-br from-primary to-primary/80 p-5 text-white shadow-lg">
-							<div className="-translate-y-8 absolute top-0 right-0 h-32 w-32 translate-x-8 rounded-full bg-white/10" />
+							<div className="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-white/10" />
 							<div className="relative flex items-center justify-between">
 								<div>
 									<p className="mb-1 text-sm opacity-90">Total Amount</p>

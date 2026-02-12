@@ -108,7 +108,7 @@ const OrdersPage = () => {
 				<PageDashboardHeader title="Orders" />
 				<div className="flex items-center gap-4">
 					<div className="relative max-w-sm flex-1">
-						<Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+						<Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 						<Input
 							placeholder="Search orders..."
 							value={searchQuery}
@@ -125,7 +125,7 @@ const OrdersPage = () => {
 									setSearchQuery(null);
 									pagination.setPage(1);
 								}}
-								className="-translate-y-1/2 absolute top-1/2 right-3 text-muted-foreground hover:text-foreground"
+								className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
 							>
 								<X className="h-4 w-4" />
 							</button>

@@ -57,7 +57,7 @@ export function MobileCartBar() {
 					<div className="relative">
 						<ShoppingBag className="size-7 text-primary-foreground" />
 						{cartCount > 0 && (
-							<span className="-top-2 -right-2 zoom-in absolute flex h-5 w-5 animate-in items-center justify-center rounded-full border-2 border-background bg-red-600 font-bold text-[10px] text-white">
+							<span className="zoom-in absolute -top-2 -right-2 flex h-5 w-5 animate-in items-center justify-center rounded-full border-2 border-background bg-red-600 font-bold text-[10px] text-white">
 								{cartCount > 99 ? "99+" : cartCount}
 							</span>
 						)}

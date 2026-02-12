@@ -28,7 +28,7 @@ export function ModeToggle({
 				<Button variant={variant} size="icon" className={className}>
 					<Sun
 						className={cn(
-							"dark:-rotate-90 h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:scale-0",
+							"h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0",
 							iconClassName,
 						)}
 					/>

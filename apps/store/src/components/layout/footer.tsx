@@ -126,7 +126,7 @@ export function Footer({
 								variant="outline"
 								size="icon"
 								className={cn(
-									"hover:-translate-y-1 h-10 w-10 rounded-full border-muted-foreground/20 bg-background transition-all hover:border-primary/50 hover:shadow-md",
+									"h-10 w-10 rounded-full border-muted-foreground/20 bg-background transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-md",
 									social.color,
 								)}
 								asChild

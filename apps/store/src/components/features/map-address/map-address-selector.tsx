@@ -190,7 +190,7 @@ function MapContent({ onSelect, defaultLocation }: MapAddressSelectorProps) {
 							placeholder="Search for an address..."
 							className="rounded-md pl-10 font-bold backdrop-blur-xs"
 						/>
-						<Search className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 z-50 h-4 w-4 text-muted-foreground" />
+						<Search className="pointer-events-none absolute top-1/2 left-3 z-50 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 					</div>
 
 					{isSearching && predictionResults.length > 0 && (
@@ -223,7 +223,7 @@ function MapContent({ onSelect, defaultLocation }: MapAddressSelectorProps) {
 				/>
 
 				{/* Center Pin Overlay */}
-				<div className="-translate-x-1/2 -translate-y-1/2 pointer-events-none absolute top-1/2 left-1/2 pb-8">
+				<div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pb-8">
 					<MapPin className="h-8 w-8 fill-background text-primary drop-shadow-md" />
 				</div>
 

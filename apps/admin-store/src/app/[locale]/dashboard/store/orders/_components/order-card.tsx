@@ -161,7 +161,7 @@ export const OrderCard = ({
 
 	return (
 		<>
-			<Card className="hover:-translate-y-0.5 flex h-full w-full flex-col transition-all duration-200 hover:shadow-lg">
+			<Card className="flex h-full w-full flex-col transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
 				<CardHeader className="pb-3">
 					<div className="flex items-start justify-between gap-4">
 						<div className="min-w-0 flex-1">

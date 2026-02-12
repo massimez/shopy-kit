@@ -111,7 +111,7 @@ export function CouponInput() {
 				)}
 			>
 				<div className="relative flex-1">
-					<Tag className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+					<Tag className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 					<Input
 						id="coupon-code"
 						type="text"

@@ -364,7 +364,7 @@ export default function ProductPage({ params }: ProductPageProps) {
 										>
 											{variantTranslation?.name || variant.sku}
 											{isSelected && (
-												<div className="-top-2 -right-2 absolute rounded-full bg-primary p-0.5 text-white shadow-sm ring-2 ring-background">
+												<div className="absolute -top-2 -right-2 rounded-full bg-primary p-0.5 text-white shadow-sm ring-2 ring-background">
 													<Check className="h-3 w-3" />
 												</div>
 											)}
@@ -387,7 +387,7 @@ export default function ProductPage({ params }: ProductPageProps) {
 										(productData.stockQuantity <= 0 &&
 											!productData.allowBackorders)
 									}
-									className="hover:-translate-y-0.5 h-12 w-full rounded-full py-2 text-base shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:flex-1"
+									className="h-12 w-full rounded-full py-2 text-base shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-primary/40 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:flex-1"
 								>
 									<ShoppingCart className="mr-2 size-5" />
 									{productData.stockQuantity <= 0 &&

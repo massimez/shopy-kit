@@ -13,7 +13,7 @@ export const FooterMain = () => {
 					<div className="space-y-4">
 						<div className="flex items-center space-x-3">
 							<div className="relative">
-								<div className="-inset-1 absolute rounded-lg bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-75 blur" />
+								<div className="absolute -inset-1 rounded-lg bg-linear-to-r from-blue-600 via-purple-600 to-pink-600 opacity-75 blur" />
 								<div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-background">
 									<Zap className="h-5 w-5 text-primary" />
 								</div>

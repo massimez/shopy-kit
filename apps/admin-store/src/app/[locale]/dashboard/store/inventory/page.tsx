@@ -122,7 +122,7 @@ export default function InventoryPage() {
 					<div className="mb-6 flex flex-col justify-between gap-4">
 						<div className="flex flex-wrap items-center gap-4">
 							<div className="relative max-w-sm flex-1">
-								<Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+								<Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 								<Input
 									placeholder="Search products..."
 									value={searchQuery}
@@ -139,7 +139,7 @@ export default function InventoryPage() {
 											setSearchQuery(null);
 											pagination.setPage(1);
 										}}
-										className="-translate-y-1/2 absolute top-1/2 right-3 text-muted-foreground hover:text-foreground"
+										className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
 									>
 										<X className="h-4 w-4" />
 									</button>

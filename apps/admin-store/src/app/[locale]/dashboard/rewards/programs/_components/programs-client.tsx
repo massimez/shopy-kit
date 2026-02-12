@@ -79,7 +79,7 @@ export const ProgramsClient = () => {
 							key={program.id}
 							href={`/dashboard/rewards/programs/${program.id}`}
 						>
-							<Card className="group hover:-translate-y-1 relative h-full transition-all duration-200 hover:shadow-lg hover:shadow-primary/5">
+							<Card className="group relative h-full transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5">
 								<CardHeader className="space-y-3">
 									<div className="flex items-start justify-between">
 										<div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-primary/20 to-primary/10">

@@ -98,7 +98,7 @@ const ClientDetailPage = ({ params }: ClientDetailPageProps) => {
 							variant="ghost"
 							className="group mb-2 transition-all hover:bg-white/50"
 						>
-							<ArrowLeft className="group-hover:-translate-x-1 mr-2 h-4 w-4 transition-transform" />
+							<ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
 							Back to Clients
 						</Button>
 					</Link>
