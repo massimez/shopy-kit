@@ -195,10 +195,10 @@ const OTPInput = ({
 	);
 
 	const handleInputChange = useCallback(
-		(event: ChangeEvent<HTMLInputElement>) => {
+		(event: React.SyntheticEvent<HTMLInputElement>) => {
 			if (disabled) return;
 
-			const { value: valueCur } = event.target;
+			const { value: valueCur } = event.target as HTMLInputElement;
 
 			// Handle paste of multiple characters
 			if (valueCur.length > 1) {
@@ -227,7 +227,7 @@ const OTPInput = ({
 				}
 
 				// Clear the input to prevent display of multiple characters
-				event.target.value = "";
+				event.currentTarget.value = "";
 				return;
 			}
 
@@ -257,7 +257,7 @@ const OTPInput = ({
 
 			// Clear invalid input
 			if (valueCur && !isInputValueValid(valueCur)) {
-				event.target.value = "";
+				event.currentTarget.value = "";
 			}
 		},
 		[
