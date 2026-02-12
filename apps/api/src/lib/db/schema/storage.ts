@@ -1,5 +1,6 @@
 import {
 	bigint,
+	foreignKey,
 	integer,
 	jsonb,
 	pgTable,
@@ -30,29 +31,57 @@ export const organizationStorageLimits = pgTable(
 	},
 );
 
-export const uploads = pgTable("uploads", {
-	id: uuid("id").defaultRandom().primaryKey(),
+export const storageFolders = pgTable(
+	"storage_folders",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		name: varchar("name", { length: 255 }).notNull(),
+		parentId: uuid("parent_id"),
+		organizationId: text("organization_id"),
+		...softAudit,
+	},
+	(table) => [
+		foreignKey({
+			columns: [table.parentId],
+			foreignColumns: [table.id],
+		}).onDelete("cascade"),
+	],
+);
 
-	fileKey: text("file_key").notNull(),
-	bucket: varchar("bucket", { length: 100 }).notNull(),
-	contentType: varchar("content_type", { length: 100 }),
-	size: integer("size"), // in bytes
+export const uploads = pgTable(
+	"uploads",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
 
-	//structured metadata (like dimensions, thumbnails, etc.)
-	metadata: jsonb("metadata").default(null),
+		fileKey: text("file_key").notNull(),
+		bucket: varchar("bucket", { length: 100 }).notNull(),
+		contentType: varchar("content_type", { length: 100 }),
+		size: integer("size"), // in bytes
 
-	// Who initiated the upload (optional)
-	userId: text("user_id"),
-	organizationId: text("organization_id"),
+		//structured metadata (like dimensions, thumbnails, etc.)
+		metadata: jsonb("metadata").default(null),
 
-	// Upload status
-	status: varchar("status", { length: 20 })
-		.notNull()
-		.$default(() => "pending"), // "pending" | "committed" | "failed"
+		folderId: uuid("folder_id"),
 
-	// When the upload token was generated
-	expiresAt: timestamp("expires_at", { withTimezone: true }).defaultNow(),
+		// Who initiated the upload (optional)
+		userId: text("user_id"),
+		organizationId: text("organization_id"),
 
-	// Audit fields
-	...softAudit,
-});
+		// Upload status
+		status: varchar("status", { length: 20 })
+			.notNull()
+			.$default(() => "pending"), // "pending" | "committed" | "failed"
+
+		// When the upload token was generated
+		expiresAt: timestamp("expires_at", { withTimezone: true }).defaultNow(),
+
+		// Audit fields
+		...softAudit,
+	},
+	(table) => [
+		foreignKey({
+			columns: [table.folderId],
+			foreignColumns: [storageFolders.id],
+		}).onDelete("set null"),
+	],
+);

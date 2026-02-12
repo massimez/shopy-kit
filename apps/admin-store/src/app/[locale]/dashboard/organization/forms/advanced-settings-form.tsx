@@ -3,14 +3,12 @@
 import { useFormContext } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { GalleryViewer } from "@/components/file-upload/gallery-viewer";
-import { UploadZone } from "@/components/file-upload/upload-zone";
 import {
 	FormBuilder,
 	type FormBuilderConfig,
 } from "@/components/form/form-builder";
 import type { SlotComponent } from "@/components/form/form-builder/types";
-import { useEntityImageUpload } from "@/hooks/use-entity-image-upload";
+import { ImageUploadField } from "@/components/form/image-upload-field";
 import type { FileMetadata } from "@/hooks/use-file-upload";
 import {
 	useActiveOrganization,
@@ -68,7 +66,6 @@ const OrganizationImagesSlot: SlotComponent<
 	AdvancedSettingsFormValues
 > = () => {
 	const { setValue } = useFormContext<AdvancedSettingsFormValues>();
-	// const t = useTranslations("common"); // removed
 	const { activeOrganization } = useActiveOrganization();
 	const organizationId = activeOrganization?.id;
 	const { data: organizationInfo } = useGetOrganizationInfo(
@@ -76,39 +73,34 @@ const OrganizationImagesSlot: SlotComponent<
 	);
 	const { mutateAsync: updateOrganizationInfo } = useUpdateOrganizationInfo();
 
-	const handleUpdateOrganizationImages = async (images: FileMetadata[]) => {
+	const handleUpdateOrganizationImages = async (
+		images: FileMetadata[] | string[] | string | null,
+	) => {
 		if (!organizationId || !organizationInfo?.id) {
 			return;
 		}
 
+		// Convert to FileMetadata array
+		const imageArray = Array.isArray(images) ? (images as FileMetadata[]) : [];
+
 		await updateOrganizationInfo({
 			organizationId,
 			organizationInfoId: organizationInfo.id,
-			images: images,
+			images: imageArray,
 		});
-		setValue("images", images); // Sync with form state
+		setValue("images", imageArray); // Sync with form state
 	};
 
-	const { stateImages, actions, handleRemove } = useEntityImageUpload({
-		initialImages: (organizationInfo?.images as FileMetadata[]) ?? [],
-		onUpdateImages: handleUpdateOrganizationImages,
-	});
-
 	return (
-		<div>
-			<div className="block font-medium text-gray-700 text-sm dark:text-gray-300">
-				Organization Images
-			</div>
-			<p className="mb-2 text-gray-500 text-xs dark:text-gray-400">
-				You can upload up to 6 images
-			</p>
-			<UploadZone state={stateImages} actions={actions} />
-			<GalleryViewer
-				className="mt-4"
-				files={stateImages.files}
-				onRemove={handleRemove}
-			/>
-		</div>
+		<ImageUploadField
+			value={(organizationInfo?.images as FileMetadata[]) ?? []}
+			onChange={handleUpdateOrganizationImages}
+			label="Organization Images"
+			description="You can upload up to 6 images"
+			multiple
+			maxFiles={6}
+			showLibrary
+		/>
 	);
 };
 

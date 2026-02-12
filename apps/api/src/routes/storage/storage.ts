@@ -12,7 +12,12 @@ import { hasOrgPermission } from "@/middleware/org-permission";
 import {
 	cleanupOrphanFiles,
 	commitUploadsByFileKeys,
+	createFolder,
+	deleteFolder,
 	deleteUploadedFile,
+	listFolders,
+	listUploads,
+	moveUploadedFile,
 	type PresignParams,
 	presignUpload,
 } from "./storage.service";
@@ -22,6 +27,7 @@ const presignSchema = z.object({
 	contentType: z.string(),
 	visibility: z.enum(["public", "private"]).optional().default("public"),
 	size: z.number().optional(),
+	folderId: z.string().nullable().optional(),
 });
 
 const commitSchema = z.object({
@@ -130,6 +136,44 @@ const storageRoutes = createRouter()
 		},
 	)
 
+	// PATCH: Move uploaded file
+	.patch(
+		"/:key",
+		authMiddleware,
+		hasOrgPermission("storage:write"),
+		jsonValidator(z.object({ folderId: z.string().nullable() })),
+		async (c) => {
+			try {
+				// biome-ignore lint/style/noNonNullAssertion: <>
+				const user = c.get("user")!;
+				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const { key } = c.req.param();
+				const { folderId } = c.req.valid("json");
+
+				const result = await moveUploadedFile(key, folderId, user, activeOrgId);
+
+				if (result.error) {
+					return c.json(
+						createErrorResponse("MoveError", result.error, [
+							{
+								code: "FILE_MOVE_FAILED",
+								path: ["folderId"],
+								message: result.error,
+							},
+						]),
+						400,
+					);
+				}
+
+				return c.json(
+					createSuccessResponse(result.data, "File moved successfully"),
+				);
+			} catch (error) {
+				return handleRouteError(c, error, "move upload");
+			}
+		},
+	)
+
 	// POST: Cleanup orphan files (admin only or scheduled job)
 	.post("/cleanup", authMiddleware, adminMiddleware, async (c) => {
 		try {
@@ -139,6 +183,116 @@ const storageRoutes = createRouter()
 			);
 		} catch (error) {
 			return handleRouteError(c, error, "cleanup orphan files");
+		}
+	})
+
+	// GET: List uploads
+	// FOLDERS: Create a new folder
+	.post(
+		"/folders",
+		authMiddleware,
+		hasOrgPermission("storage:write"),
+		jsonValidator(
+			z.object({
+				name: z.string().min(1),
+				parentId: z.string().optional(),
+			}),
+		),
+		async (c) => {
+			try {
+				// biome-ignore lint/style/noNonNullAssertion: <>
+				const user = c.get("user")!;
+				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const { name, parentId } = c.req.valid("json");
+
+				const result = await createFolder(
+					{ name, parentId, organizationId: activeOrgId },
+					user,
+				);
+
+				return c.json(
+					createSuccessResponse(result, "Folder created successfully"),
+				);
+			} catch (error) {
+				return handleRouteError(c, error, "create folder");
+			}
+		},
+	)
+
+	// FOLDERS: List folders
+	.get(
+		"/folders",
+		authMiddleware,
+		hasOrgPermission("storage:read"),
+		async (c) => {
+			try {
+				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const query = c.req.query();
+				const parentId = query.parentId;
+
+				const result = await listFolders(
+					activeOrgId,
+					parentId === "null" || parentId === undefined ? null : parentId,
+				);
+
+				return c.json(createSuccessResponse(result));
+			} catch (error) {
+				return handleRouteError(c, error, "list folders");
+			}
+		},
+	)
+
+	// FOLDERS: Delete folder
+	.delete(
+		"/folders/:id",
+		authMiddleware,
+		hasOrgPermission("storage:delete"),
+		async (c) => {
+			try {
+				const activeOrgId = c.get("session")?.activeOrganizationId as string;
+				const { id } = c.req.param();
+
+				await deleteFolder(id, activeOrgId);
+
+				return c.json(
+					createSuccessResponse(null, "Folder deleted successfully"),
+				);
+			} catch (error) {
+				return handleRouteError(c, error, "delete folder");
+			}
+		},
+	)
+
+	// GET: List uploads
+	.get("/", authMiddleware, hasOrgPermission("storage:read"), async (c) => {
+		try {
+			// biome-ignore lint/style/noNonNullAssertion: <>
+			const user = c.get("user")!;
+			const activeOrgId = c.get("session")?.activeOrganizationId as string;
+			const {
+				page = "1",
+				limit = "50",
+				status,
+				search,
+				folderId,
+			} = c.req.query();
+
+			const offset =
+				(Number.parseInt(page, 10) - 1) * Number.parseInt(limit, 10);
+
+			const result = await listUploads(user, {
+				organizationId: activeOrgId,
+				status: status as "pending" | "committed" | "deleted",
+				limit: Number.parseInt(limit, 10),
+				offset,
+				search,
+				folderId:
+					folderId === "null" || folderId === undefined ? null : folderId,
+			});
+
+			return c.json(createSuccessResponse(result));
+		} catch (error) {
+			return handleRouteError(c, error, "list uploads");
 		}
 	});
 

@@ -11,15 +11,12 @@ import {
 	useGetOrganizationInfo,
 	useUpdateOrganizationInfo,
 } from "@/app/[locale]/dashboard/organization/queries";
-import { GalleryViewer } from "@/components/file-upload/gallery-viewer";
-import { UploadZone } from "@/components/file-upload/upload-zone";
 import {
 	FormBuilder,
 	type FormBuilderConfig,
 } from "@/components/form/form-builder";
 import type { SlotComponent } from "@/components/form/form-builder/types";
-import { useEntityImageUpload } from "@/hooks/use-entity-image-upload";
-import type { FileMetadata } from "@/hooks/use-file-upload";
+import { ImageUploadField } from "@/components/form/image-upload-field";
 import { authClient } from "@/lib/auth-client";
 
 const organizationSchema = z.object({
@@ -37,53 +34,16 @@ const OrganizationLogoSlot: SlotComponent<OrganizationFormValues> = () => {
 	const { setValue, watch } = useFormContext<OrganizationFormValues>();
 	const logo = watch("logo");
 
-	const handleUpdateLogo = async (images: FileMetadata[]) => {
-		if (images.length > 0) {
-			const newLogo = images[0]?.url;
-			if (newLogo) {
-				setValue("logo", newLogo, { shouldDirty: true });
-			}
-		} else {
-			setValue("logo", null, { shouldDirty: true });
-		}
-	};
-
-	// We wrap the single logo string in a FileMetadata array for the hook
-	const initialImages: FileMetadata[] = logo
-		? [
-				{
-					url: logo,
-					name: "Logo",
-					key: logo,
-					type: "image/png", // Dummy type
-					size: 0, // Dummy size
-				},
-			]
-		: [];
-
-	const { stateImages, actions, handleRemove } = useEntityImageUpload({
-		initialImages: initialImages,
-		onUpdateImages: handleUpdateLogo,
-	});
-
-	// Restrict to 1 image
-	const canUpload = stateImages.files.length === 0;
-
 	return (
-		<div>
-			<div className="mb-2 block font-medium text-gray-700 text-sm dark:text-gray-300">
-				Organization Logo
-			</div>
-			{canUpload && <UploadZone state={stateImages} actions={actions} />}
-			<GalleryViewer
-				className="mt-4"
-				files={stateImages.files}
-				onRemove={async (id) => {
-					await handleRemove(id);
-					handleUpdateLogo([]);
-				}}
-			/>
-		</div>
+		<ImageUploadField
+			value={logo}
+			onChange={(value) =>
+				setValue("logo", value as string | null, { shouldDirty: true })
+			}
+			label="Organization Logo"
+			maxFiles={1}
+			showLibrary
+		/>
 	);
 };
 

@@ -23,6 +23,7 @@ interface UseEntityImageUploadOptions {
 	initialImages?: FileMetadata[];
 	onUpdateImages?: (images: FileMetadata[]) => Promise<void>;
 	translationKeys?: Partial<typeof DEFAULT_TRANSLATION_KEYS>;
+	folderId?: string | null;
 }
 
 interface UploadResult {
@@ -34,6 +35,7 @@ export function useEntityImageUpload({
 	initialImages = [],
 	onUpdateImages,
 	translationKeys,
+	folderId,
 }: UseEntityImageUploadOptions = {}) {
 	const t = useTranslations("common");
 	const keys = { ...DEFAULT_TRANSLATION_KEYS, ...translationKeys };
@@ -99,7 +101,7 @@ export function useEntityImageUpload({
 			updateProgress(uploadId, 25);
 
 			const originalFile = fileItem.file;
-			const { key, publicUrl } = await uploadPublic(originalFile);
+			const { key, publicUrl } = await uploadPublic(originalFile, folderId);
 			updateProgress(uploadId, 75);
 
 			// Clean up old preview URL

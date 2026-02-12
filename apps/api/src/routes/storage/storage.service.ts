@@ -1,7 +1,8 @@
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { and, eq, inArray, lt, sql } from "drizzle-orm";
+import { and, eq, ilike, inArray, lt, sql } from "drizzle-orm";
 
+import { formatBytes, STORAGE_CONFIG } from "@/config/storage.config";
 import { envData } from "@/env";
 import type { User } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -33,29 +34,15 @@ export interface StorageUsageInfo {
 
 /* -------------------------------- Constants ------------------------------- */
 
-const PRESIGN_EXPIRES_SECONDS = 10 * 60; // 10 minutes
-const PENDING_EXPIRES_MS = 10 * 60 * 1000;
-const CLEANUP_BATCH_SIZE = 50;
-const DEFAULT_STORAGE_LIMIT = 1_073_741_824; // 1GB
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
-
-// Allowed content types - extend as needed
-const ALLOWED_CONTENT_TYPES = [
-	"image/jpeg",
-	"image/jpg",
-	"image/png",
-	"image/gif",
-	"image/webp",
-	"image/svg+xml",
-	"application/pdf",
-	"text/plain",
-	"text/csv",
-	"application/json",
-	"application/vnd.ms-excel",
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-	"application/msword",
-	"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-];
+// Import constants from centralized config
+const {
+	PRESIGN_EXPIRES_SECONDS,
+	PENDING_EXPIRES_MS,
+	CLEANUP_BATCH_SIZE,
+	DEFAULT_STORAGE_LIMIT,
+	MAX_FILE_SIZE,
+	ALLOWED_CONTENT_TYPES,
+} = STORAGE_CONFIG;
 
 function validateFileSize(size: number | undefined): number {
 	if (!size) {
@@ -66,14 +53,18 @@ function validateFileSize(size: number | undefined): number {
 	}
 	if (size > MAX_FILE_SIZE) {
 		throw new Error(
-			`File size exceeds maximum allowed size of ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+			`File size exceeds maximum allowed size of ${formatBytes(MAX_FILE_SIZE)}`,
 		);
 	}
 	return size;
 }
 
 function validateContentType(contentType: string): void {
-	if (!ALLOWED_CONTENT_TYPES.includes(contentType)) {
+	if (
+		!ALLOWED_CONTENT_TYPES.includes(
+			contentType as (typeof ALLOWED_CONTENT_TYPES)[number],
+		)
+	) {
 		throw new Error(
 			`Content type '${contentType}' is not allowed. Allowed types: ${ALLOWED_CONTENT_TYPES.join(", ")}`,
 		);
@@ -91,7 +82,13 @@ function sanitizeFileName(fileName: string): string {
 /* --------------------------- Presign Upload URL ---------------------------- */
 
 export async function presignUpload(
-	{ fileName, contentType, visibility, size }: PresignParams,
+	{
+		fileName,
+		contentType,
+		visibility,
+		size,
+		folderId,
+	}: PresignParams & { folderId?: string | null },
 	user: User,
 	tenantId: string,
 	organizationId?: string,
@@ -119,6 +116,7 @@ export async function presignUpload(
 				status: "pending",
 				userId: user.id,
 				organizationId,
+				folderId: folderId || null,
 				expiresAt: new Date(Date.now() + PENDING_EXPIRES_MS),
 			})
 			.returning();
@@ -210,7 +208,11 @@ function extractFileKeys(fileKeys: string[]) {
 
 export async function commitUploadsByFileKeys(inputKeys: string[]) {
 	const fileKeys = extractFileKeys(inputKeys);
-	console.log(fileKeys);
+
+	logInfo("commitUploadsByFileKeys", "Processing file keys", {
+		inputCount: inputKeys.length,
+		extractedCount: fileKeys.length,
+	});
 
 	try {
 		const result = await db.transaction(async (tx) => {
@@ -369,7 +371,7 @@ export async function deleteUploadedFile(
 			return { error: "Upload not found", data: null };
 		}
 
-		// Authorization check
+		// Authorization check - verify resource ownership
 		const isOrgAuthorized =
 			upload.organizationId && upload.organizationId === activeOrgId;
 		const isUserAuthorized =
@@ -450,6 +452,83 @@ export async function deleteUploadedFile(
 		}
 
 		return { error: "Failed to delete file", data: null };
+	}
+}
+
+/* --------------------------- Move Upload -------------------------------- */
+
+export async function moveUploadedFile(
+	key: string,
+	folderId: string | null,
+	user: { id: string },
+	activeOrgId?: string,
+) {
+	try {
+		const upload = await db.query.uploads.findFirst({
+			where: eq(uploads.fileKey, key),
+		});
+
+		if (!upload) {
+			return { error: "Upload not found", data: null };
+		}
+
+		// Authorization check - verify resource ownership
+		const isOrgAuthorized =
+			upload.organizationId && upload.organizationId === activeOrgId;
+		const isUserAuthorized =
+			!upload.organizationId && upload.userId === user.id;
+
+		if (!isOrgAuthorized && !isUserAuthorized) {
+			logWarning("moveUploadedFile", "Unauthorized move attempt", {
+				key,
+				userId: user.id,
+				uploadUserId: upload.userId,
+				activeOrgId,
+			});
+			return { error: "Forbidden", data: null };
+		}
+
+		// Verify destination folder exists and belongs to correct org
+		if (folderId) {
+			const folder = await db.query.storageFolders.findFirst({
+				where: eq(storageFolders.id, folderId),
+			});
+
+			if (!folder) {
+				return { error: "Destination folder not found", data: null };
+			}
+
+			if (
+				folder.organizationId !== activeOrgId &&
+				!(!folder.organizationId && !activeOrgId)
+			) {
+				return {
+					error: "Destination folder belongs to another organization",
+					data: null,
+				};
+			}
+		}
+
+		// Update folder
+		const [updated] = await db
+			.update(uploads)
+			.set({
+				folderId,
+				updatedAt: new Date(),
+			})
+			.where(eq(uploads.id, upload.id))
+			.returning();
+
+		logInfo("moveUploadedFile", "File moved successfully", {
+			key,
+			fromFolder: upload.folderId,
+			toFolder: folderId,
+		});
+
+		return { data: updated, error: null };
+	} catch (error) {
+		logError("moveUploadedFile", error, { key, folderId });
+		return { error: "Failed to move file", data: null };
 	}
 }
 
@@ -623,9 +702,18 @@ export async function listUploads(
 		status?: "pending" | "committed" | "deleted";
 		limit?: number;
 		offset?: number;
+		search?: string;
+		folderId?: string | null;
 	} = {},
 ) {
-	const { organizationId, status, limit = 50, offset = 0 } = options;
+	const {
+		organizationId,
+		status,
+		limit = 50,
+		offset = 0,
+		search,
+		folderId,
+	} = options;
 
 	const conditions = [];
 
@@ -639,6 +727,19 @@ export async function listUploads(
 		conditions.push(eq(uploads.status, status));
 	}
 
+	if (search) {
+		// Basic search on fileKey - this will find files where path contains the search term
+		conditions.push(ilike(uploads.fileKey, `%${search}%`));
+	}
+
+	if (folderId !== undefined) {
+		if (folderId === null) {
+			conditions.push(isNull(uploads.folderId));
+		} else {
+			conditions.push(eq(uploads.folderId, folderId));
+		}
+	}
+
 	const results = await db
 		.select()
 		.from(uploads)
@@ -647,5 +748,133 @@ export async function listUploads(
 		.offset(offset)
 		.orderBy(sql`${uploads.createdAt} DESC`);
 
-	return results;
+	return results.map((upload) => ({
+		...upload,
+		publicUrl: `${envData.CDN_BASE_URL?.replace(/\/$/, "")}/${upload.fileKey}`,
+	}));
 }
+
+/* -------------------------- Folder Management ----------------------------- */
+
+import { isNull } from "drizzle-orm";
+import { storageFolders } from "@/lib/db/schema";
+
+export interface CreateFolderParams {
+	name: string;
+	parentId?: string;
+	organizationId?: string;
+}
+
+export async function createFolder(params: CreateFolderParams, user: User) {
+	const { name, parentId, organizationId } = params;
+
+	// Basic validation
+	if (!name || name.trim().length === 0) {
+		throw new Error("Folder name is required");
+	}
+
+	// Verify parent folder exists and belongs to organization if provided
+	if (parentId) {
+		const parent = await db.query.storageFolders.findFirst({
+			where: eq(storageFolders.id, parentId),
+		});
+
+		if (!parent) {
+			throw new Error("Parent folder not found");
+		}
+
+		if (parent.organizationId !== organizationId) {
+			throw new Error("Parent folder belongs to a different organization");
+		}
+	}
+
+	const [folder] = await db
+		.insert(storageFolders)
+		.values({
+			name: name.trim(),
+			parentId: parentId || null,
+			organizationId,
+			createdBy: user.id,
+			updatedBy: user.id,
+		})
+		.returning();
+
+	return folder;
+}
+
+export async function listFolders(
+	organizationId: string | undefined,
+	parentId?: string | null,
+) {
+	const conditions = [];
+
+	if (organizationId) {
+		conditions.push(eq(storageFolders.organizationId, organizationId));
+	}
+
+	if (parentId) {
+		conditions.push(eq(storageFolders.parentId, parentId));
+	} else {
+		conditions.push(isNull(storageFolders.parentId));
+	}
+
+	conditions.push(isNull(storageFolders.deletedAt));
+
+	return db
+		.select()
+		.from(storageFolders)
+		.where(and(...conditions))
+		.orderBy(storageFolders.name);
+}
+
+export async function deleteFolder(folderId: string, organizationId?: string) {
+	// Check if folder exists
+	const folder = await db.query.storageFolders.findFirst({
+		where: eq(storageFolders.id, folderId),
+	});
+
+	if (!folder) {
+		throw new Error("Folder not found");
+	}
+
+	if (folder.organizationId !== organizationId) {
+		throw new Error("Unauthorized access to folder");
+	}
+
+	// Use transaction to delete folder and contents recursively (soft delete)
+	// For now, simpler implementation: verify folder is empty of subfolders and files
+	// Or just soft delete the folder. The usage query assumes folder structure.
+
+	// Check for subfolders
+	const subfolders = await db.query.storageFolders.findFirst({
+		where: and(
+			eq(storageFolders.parentId, folderId),
+			isNull(storageFolders.deletedAt),
+		),
+	});
+
+	if (subfolders) {
+		throw new Error("Folder is not empty (contains subfolders)");
+	}
+
+	// Check for files
+	const files = await db.query.uploads.findFirst({
+		where: and(eq(uploads.folderId, folderId), ne(uploads.status, "deleted")),
+	});
+
+	if (files) {
+		throw new Error("Folder is not empty (contains files)");
+	}
+
+	// Soft delete
+	await db
+		.update(storageFolders)
+		.set({
+			deletedAt: new Date(),
+		})
+		.where(eq(storageFolders.id, folderId));
+
+	return { success: true };
+}
+
+import { ne } from "drizzle-orm";

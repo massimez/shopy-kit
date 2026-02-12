@@ -7,7 +7,10 @@ interface UploadResult {
 }
 
 // Main upload function
-export async function uploadPublic(file: File): Promise<UploadResult> {
+export async function uploadPublic(
+	file: File,
+	folderId?: string | null,
+): Promise<UploadResult> {
 	// Validate file
 	if (!file || !(file instanceof File)) {
 		throw new Error("Invalid file provided");
@@ -21,6 +24,7 @@ export async function uploadPublic(file: File): Promise<UploadResult> {
 				contentType: file.type,
 				visibility: "public",
 				size: file.size,
+				folderId: folderId || undefined,
 			},
 		});
 
@@ -104,4 +108,159 @@ export async function deleteFile(key: string): Promise<boolean> {
 		});
 		throw error;
 	}
+}
+
+export async function moveFile(
+	key: string,
+	folderId: string | null,
+): Promise<MediaFile> {
+	if (!key || typeof key !== "string") {
+		throw new Error("Invalid file key provided");
+	}
+
+	try {
+		const res = await hc.api.storage[":key"].$patch({
+			param: { key: encodeURIComponent(key) },
+			json: { folderId },
+		});
+
+		if (!res.ok) {
+			const errorDetail = await extractErrorMessage(res);
+			throw new Error(`Failed to move file: ${errorDetail}`);
+		}
+
+		const { data } = await res.json();
+		if (!data) {
+			throw new Error("No data returned from move operation");
+		}
+		return data as MediaFile;
+	} catch (error) {
+		console.error("Error in moveFile:", {
+			key,
+			folderId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+		throw error;
+	}
+}
+
+export interface MediaFile {
+	id: string;
+	fileKey: string;
+	bucket: string;
+	contentType: string | null;
+	size: number | null;
+	// biome-ignore lint/suspicious/noExplicitAny: <>
+	metadata: any;
+	userId: string | null;
+	organizationId: string | null;
+	folderId: string | null;
+	status: string;
+	expiresAt: string | null;
+	createdAt: string;
+	updatedAt: string | null;
+	deletedAt: string | null;
+	createdBy: string | null;
+	updatedBy: string | null;
+	publicUrl: string;
+}
+
+export interface ListUploadsOptions {
+	page?: number;
+	limit?: number;
+	status?: "pending" | "committed" | "deleted";
+	search?: string;
+	folderId?: string | null;
+}
+
+export async function listFiles(
+	options: ListUploadsOptions = {},
+): Promise<MediaFile[]> {
+	const { page = 1, limit = 50, status, search, folderId } = options;
+
+	const res = await hc.api.storage.$get({
+		query: {
+			page: page.toString(),
+			limit: limit.toString(),
+			...(status && { status }),
+			...(search && { search }),
+			folderId: folderId === null ? "null" : folderId,
+		},
+	});
+
+	if (!res.ok) {
+		const errorDetail = await extractErrorMessage(res);
+		throw new Error(`Failed to list files: ${errorDetail}`);
+	}
+
+	const { data } = await res.json();
+	return data ?? [];
+}
+
+/* -------------------------- Folder Management ----------------------------- */
+
+export interface StorageFolder {
+	id: string;
+	name: string;
+	parentId: string | null;
+	organizationId: string | null;
+	createdAt: string;
+	updatedAt: string | null;
+	deletedAt: string | null;
+	createdBy: string | null;
+	updatedBy: string | null;
+}
+
+export async function createFolder(
+	name: string,
+	parentId?: string | null,
+): Promise<StorageFolder> {
+	const res = await hc.api.storage.folders.$post({
+		json: {
+			name,
+			parentId: parentId || undefined,
+		},
+	});
+
+	if (!res.ok) {
+		const errorDetail = await extractErrorMessage(res);
+		throw new Error(`Failed to create folder: ${errorDetail}`);
+	}
+
+	const { data } = await res.json();
+	if (!data) {
+		throw new Error("No data returned from create folder operation");
+	}
+	return data as StorageFolder;
+}
+
+export async function listFolders(
+	parentId?: string | null,
+): Promise<StorageFolder[]> {
+	const res = await hc.api.storage.folders.$get({
+		query: {
+			parentId: parentId === null ? "null" : parentId,
+		},
+	});
+
+	if (!res.ok) {
+		const errorDetail = await extractErrorMessage(res);
+		throw new Error(`Failed to list folders: ${errorDetail}`);
+	}
+
+	const { data } = await res.json();
+	return data ?? [];
+}
+
+export async function deleteFolder(id: string): Promise<boolean> {
+	const res = await hc.api.storage.folders[":id"].$delete({
+		param: { id },
+	});
+
+	if (!res.ok) {
+		const errorDetail = await extractErrorMessage(res);
+		throw new Error(`Failed to delete folder: ${errorDetail}`);
+	}
+
+	return true;
 }
